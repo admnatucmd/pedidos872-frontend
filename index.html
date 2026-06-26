@@ -1425,15 +1425,19 @@ document.getElementById('startDate')?.addEventListener('change', renderizarTabel
 document.getElementById('endDate')?.addEventListener('change', renderizarTabela);
 document.getElementById('statusFilter')?.addEventListener('change', renderizarTabela);
 
-// ===== FUNÇÕES DE DATA =====
 function getSemanaAtual() {
     const hoje = new Date();
-    const diaSemana = hoje.getDay();
-    const diffSabado = (6 - diaSemana + 7) % 7;
+    const diaSemana = hoje.getDay(); // 5 (Sexta)
+    
+    // ===== CALCULAR O ÚLTIMO SÁBADO =====
+    const diffSabado = (diaSemana - 6 + 7) % 7; // (5 - 6 + 7) % 7 = 6
+    
     const sabado = new Date(hoje);
-    sabado.setDate(hoje.getDate() - diffSabado);
+    sabado.setDate(hoje.getDate() - diffSabado); // 26/06 - 6 = 20/06
+    
     const sexta = new Date(sabado);
-    sexta.setDate(sabado.getDate() + 6);
+    sexta.setDate(sabado.getDate() + 6); // 20/06 + 6 = 26/06
+    
     return { sabado, sexta };
 }
 
@@ -2103,6 +2107,7 @@ function mostrarPagosPorMes() {
     container.innerHTML = html;
     container.style.display = 'block';
 }
+
 
 
 // Inicializar
