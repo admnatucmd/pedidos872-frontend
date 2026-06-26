@@ -2167,8 +2167,8 @@ function baixarBoletosPagosDoMes(mesAno) {
     const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
     const nomeMes = meses[mes - 1];
     
-    // ===== LINHA 1: Cabeçalho com os dias =====
-    let linha1 = ';' + nomeMes + '/' + String(ano).slice(-2);
+    // ===== LINHA 1: Cabeçalho com os dias (começa vazio) =====
+    let linha1 = ''; // ← CORRIGIDO: coluna A vazia
     for (let d = 1; d <= ultimoDia; d++) {
         linha1 += ';' + String(d).padStart(2, '0') + '/' + nomeMes;
     }
@@ -2225,7 +2225,6 @@ function formatarNumeroCSV(valor) {
     if (valor === 0) return '0,00';
     return valor.toFixed(2).replace('.', ',');
 }
-
 
 
 // Inicializar
