@@ -2024,7 +2024,14 @@ function mostrarPagosPorMes() {
                         <span class="badge">${itens.length} boletos pagos</span>
                         <span class="mes-total"><span class="mes-label">Total:</span> ${formatarMoedaBR(total)}</span>
                     </div>
-                    <span class="expand-icon" id="icon-${mesId}">▼</span>
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <button class="btn-download" 
+                                onclick="event.stopPropagation(); baixarBoletosPagosDoMes('${mes}')" 
+                                style="background:#28a745; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600;">
+                            ⬇️ Baixar boletos pagos do mês
+                        </button>
+                        <span class="expand-icon" id="icon-${mesId}">▼</span>
+                    </div>
                 </div>
                 <div class="mes-accordion-body" id="body-${mesId}">
         `;
@@ -2045,13 +2052,11 @@ function mostrarPagosPorMes() {
             return dataB - dataA;
         });
         
-        // ===== USAR ÍNDICE PARA ID =====
         let pedidoIndex = 0;
         pedidosOrdenados.forEach(pedidoId => {
             pedidoIndex++;
             const item = pedidosPagos[pedidoId];
             const totalPedido = item.parcelas.reduce((sum, p) => sum + p.parcela.valor, 0);
-            // ===== USAR ÍNDICE EM VEZ DO ID DO PEDIDO =====
             const pId = 'pago_' + mesId + '_' + pedidoIndex;
             
             const dataVencimento = item.parcelas[0].parcela.vencimento;
@@ -2107,7 +2112,6 @@ function mostrarPagosPorMes() {
     container.innerHTML = html;
     container.style.display = 'block';
 }
-
 
 
 function baixarBoletosPagosDoMes(mesAno) {
