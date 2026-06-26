@@ -2110,6 +2110,120 @@ function mostrarPagosPorMes() {
 
 
 
+function baixarBoletosPagosDoMes(mesAno) {
+    // ===== EXTRAIR MÊS E ANO =====
+    const partes = mesAno.split('/');
+    const mes = parseInt(partes[0]);
+    const ano = parseInt(partes[1]);
+    
+    // ===== FILTRAR BOLETOS PAGOS DO MÊS =====
+    const boletosPagos = [];
+    
+    pedidosData.forEach(p => {
+        const processarParcelas = (parcelas, tipo) => {
+            parcelas.forEach(parc => {
+                if (parc.status === 'Pagos' || isPago(p.pedido, parc.num, tipo)) {
+                    const dataParc = dataParaComparacao(parc.vencimento);
+                    if (dataParc.getMonth() + 1 === mes && dataParc.getFullYear() === ano) {
+                        boletosPagos.push({
+                            dia: dataParc.getDate(),
+                            valor: parc.valor,
+                            tipo: tipo
+                        });
+                    }
+                }
+            });
+        };
+        processarParcelas(p.parcelasProduto, 'produto');
+        processarParcelas(p.parcelasRoyalties, 'royalties');
+        processarParcelas(p.parcelasPropaganda, 'propaganda');
+    });
+    
+    if (boletosPagos.length === 0) {
+        alert('Nenhum boleto pago encontrado para este mês.');
+        return;
+    }
+    
+    // ===== CALCULAR DIAS DO MÊS =====
+    const ultimoDia = new Date(ano, mes, 0).getDate();
+    
+    // ===== ORGANIZAR VALORES POR DIA E TIPO =====
+    const dias = {};
+    for (let d = 1; d <= ultimoDia; d++) {
+        dias[d] = { produto: 0, royalties: 0, propaganda: 0 };
+    }
+    
+    boletosPagos.forEach(b => {
+        if (b.tipo === 'produto') dias[b.dia].produto += b.valor;
+        else if (b.tipo === 'royalties') dias[b.dia].royalties += b.valor;
+        else if (b.tipo === 'propaganda') dias[b.dia].propaganda += b.valor;
+    });
+    
+    // ===== GERAR LINHAS DO CSV =====
+    const meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    const nomeMes = meses[mes - 1];
+    
+    // ===== LINHA 1: Cabeçalho com os dias =====
+    let linha1 = ';' + nomeMes + '/' + String(ano).slice(-2);
+    for (let d = 1; d <= ultimoDia; d++) {
+        linha1 += ';' + String(d).padStart(2, '0') + '/' + nomeMes;
+    }
+    
+    // ===== LINHA 2: Reposição de Estoque (SOMA) =====
+    let linha2 = 'Reposição de Estoque';
+    for (let d = 1; d <= ultimoDia; d++) {
+        const soma = dias[d].produto + dias[d].royalties + dias[d].propaganda;
+        linha2 += ';' + formatarNumeroCSV(soma);
+    }
+    
+    // ===== LINHA 3: Produtos = Natura =====
+    let linha3 = 'Produtos = Natura';
+    for (let d = 1; d <= ultimoDia; d++) {
+        linha3 += ';' + formatarNumeroCSV(dias[d].produto);
+    }
+    
+    // ===== LINHA 4: Produtos = Outras Marcas (vazio) =====
+    let linha4 = 'Produtos = Outras Marcas';
+    for (let d = 1; d <= ultimoDia; d++) {
+        linha4 += ';';
+    }
+    
+    // ===== LINHA 5: Royalties =====
+    let linha5 = 'Royalties';
+    for (let d = 1; d <= ultimoDia; d++) {
+        linha5 += ';' + formatarNumeroCSV(dias[d].royalties);
+    }
+    
+    // ===== LINHA 6: Fundo de Propaganda =====
+    let linha6 = 'Fundo de Propaganda';
+    for (let d = 1; d <= ultimoDia; d++) {
+        linha6 += ';' + formatarNumeroCSV(dias[d].propaganda);
+    }
+    
+    // ===== MONTAR O CSV =====
+    const csvContent = [linha1, linha2, linha3, linha4, linha5, linha6].join('\n');
+    
+    // ===== BAIXAR O ARQUIVO =====
+    const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = `boletos_pagos_${mesAno.replace('/', '_')}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    
+    showNotification(`✅ Arquivo baixado: boletos_pagos_${mesAno.replace('/', '_')}.csv`, 'success');
+}
+
+function formatarNumeroCSV(valor) {
+    if (valor === 0) return '0,00';
+    return valor.toFixed(2).replace('.', ',');
+}
+
+
+
 // Inicializar
 // (A função carregarDados será chamada após o login)
 </script>
