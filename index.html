@@ -2041,10 +2041,15 @@ function mostrarPagosPorMes() {
             return dataB - dataA;
         });
         
+        // ===== USAR ÍNDICE PARA ID =====
+        let pedidoIndex = 0;
         pedidosOrdenados.forEach(pedidoId => {
+            pedidoIndex++;
             const item = pedidosPagos[pedidoId];
             const totalPedido = item.parcelas.reduce((sum, p) => sum + p.parcela.valor, 0);
-            const pId = item.pedido.pedido.replace(/[^a-zA-Z0-9]/g, '_');
+            // ===== USAR ÍNDICE EM VEZ DO ID DO PEDIDO =====
+            const pId = 'pago_' + mesId + '_' + pedidoIndex;
+            
             const dataVencimento = item.parcelas[0].parcela.vencimento;
             
             html += `
@@ -2098,7 +2103,6 @@ function mostrarPagosPorMes() {
     container.innerHTML = html;
     container.style.display = 'block';
 }
-
 
 
 // Inicializar
