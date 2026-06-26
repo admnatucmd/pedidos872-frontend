@@ -395,8 +395,6 @@
 // ============================================================
 
 const API_BASE_URL = 'https://pedidos-backend-hss3.onrender.com';
-// const CSV_URL agora será definida após o login
-let CSV_URL = '';
 const STORAGE_KEY = 'pagamentos_confirmados';
 
 let pedidosData = [];
@@ -436,17 +434,13 @@ async function fazerLogin() {
         const data = await response.json();
         
         if (data.success) {
-            // ===== SALVAR A URL DA PLANILHA =====
-            CSV_URL = data.planilhaURL || '';
-            localStorage.setItem('planilhaURL', CSV_URL);
-            localStorage.setItem('usuario', data.user);
-            localStorage.setItem('loja', data.loja);
-            
             currentUser = data.user;
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appContent').style.display = 'block';
+            localStorage.setItem('usuario', data.user);
+            localStorage.setItem('loja', data.loja);
             
-            // ===== CARREGAR DADOS DA PLANILHA CORRETA =====
+            // ===== CARREGAR DADOS (NÃO PRECISA MAIS DE CSV_URL) =====
             carregarDados();
             showNotification(`✅ Bem-vindo, ${data.user}!`, 'success');
         } else {
@@ -459,6 +453,7 @@ async function fazerLogin() {
         console.error('Erro no login:', error);
     }
 }
+
 
 async function verificarLogin() {
     try {
@@ -474,15 +469,13 @@ async function verificarLogin() {
         const data = await response.json();
         
         if (data.success) {
-            // ===== RECUPERAR A URL DA PLANILHA =====
-            CSV_URL = data.planilhaURL || localStorage.getItem('planilhaURL') || '';
-            
             currentUser = data.user;
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appContent').style.display = 'block';
             localStorage.setItem('usuario', data.user);
             localStorage.setItem('loja', data.loja);
             
+            // ===== CARREGAR DADOS (NÃO PRECISA MAIS DE CSV_URL) =====
             carregarDados();
             return true;
         }
@@ -492,6 +485,7 @@ async function verificarLogin() {
         return false;
     }
 }
+
 
 async function fazerLogout() {
     try {
@@ -594,39 +588,56 @@ const nomesMeses = {
 
 function getNomeMes(numero) { return nomesMeses[numero] || numero; }
 
-// ===== CARREGAR DADOS =====
+// ===== CARREGAR DADOS VIA API DO BACKEND =====
 async function carregarDados() {
     const loadingDiv = document.getElementById('loadingMsg');
     const errorDiv = document.getElementById('errorMsg');
     const table = document.getElementById('dataTable');
     const statusDiv = document.getElementById('syncStatus');
     
-    // ===== VERIFICAR SE TEM URL DA PLANILHA =====
-    if (!CSV_URL) {
-        errorDiv.innerHTML = '❌ URL da planilha não configurada. Faça login novamente.';
-        errorDiv.style.display = 'block';
-        return;
-    }
-    
     loadingDiv.style.display = 'block';
     errorDiv.style.display = 'none';
     table.style.display = 'none';
     document.getElementById('statsContainer').classList.add('stats-hidden');
-    statusDiv.textContent = '🔄 Sincronizando...';
+    statusDiv.textContent = '🔄 Carregando dados da planilha...';
     
     try {
+        // ===== BUSCAR PAGAMENTOS =====
         await buscarPagamentosBackend();
         statusDiv.textContent = '✅ Backend conectado';
         statusDiv.style.color = '#28a745';
         
-        const response = await fetch(CSV_URL);
-        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        // ===== BUSCAR DADOS DA PLANILHA VIA API =====
+        const response = await fetch(`${API_BASE_URL}/api/sheet-data`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
         
-        const csvText = await response.text();
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error('Erro ao buscar dados da planilha');
+        }
+        
+        // ===== CONVERTER DADOS PARA CSV =====
+        const csvText = converterDadosParaCSV(result.data);
+        
+        // ===== PROCESSAR CSV =====
         pedidosData = processarCSV(csvText);
         
-        if (pedidosData.length === 0) throw new Error('Nenhum pedido encontrado');
+        if (pedidosData.length === 0) {
+            throw new Error('Nenhum pedido encontrado na planilha');
+        }
         
+        // ===== RENDERIZAR =====
         document.getElementById('mesContainer').style.display = 'none';
         document.getElementById('semanaInfo').style.display = 'none';
         document.getElementById('submenuBoletos').style.display = 'none';
@@ -637,16 +648,45 @@ async function carregarDados() {
         document.getElementById('statsContainer').classList.remove('stats-hidden');
         document.getElementById('lastUpdate').innerHTML = `📆 Dados carregados: ${new Date().toLocaleString('pt-BR')}`;
         
+        statusDiv.textContent = '✅ Dados carregados com sucesso!';
+        statusDiv.style.color = '#28a745';
+        
     } catch (error) {
-        console.error(error);
-        statusDiv.textContent = '❌ Offline - usando dados locais';
+        console.error('❌ Erro ao carregar dados:', error);
+        statusDiv.textContent = '❌ Erro ao carregar dados';
         statusDiv.style.color = '#dc3545';
-        errorDiv.innerHTML = `❌ Erro ao carregar dados: ${error.message}<br><br><button onclick="carregarDados()">Tentar novamente</button>`;
+        errorDiv.innerHTML = `
+            ❌ Erro ao carregar dados: ${error.message}
+            <br><br>
+            <button onclick="carregarDados()" class="btn" style="background:#28a745;">Tentar novamente</button>
+        `;
         errorDiv.style.display = 'block';
         document.getElementById('statsContainer').classList.add('stats-hidden');
     }
     
     loadingDiv.style.display = 'none';
+}
+
+
+// ===== CONVERTER DADOS DO SHEETS PARA CSV =====
+function converterDadosParaCSV(data) {
+    if (!data || data.length === 0) {
+        return '';
+    }
+    
+    let csv = '';
+    for (let row of data) {
+        // Cada linha é um array de valores
+        const rowStr = row.map(cell => {
+            // Escapar células que contêm vírgulas
+            if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"') || cell.includes('\n'))) {
+                return `"${cell.replace(/"/g, '""')}"`;
+            }
+            return cell;
+        }).join(',');
+        csv += rowStr + '\n';
+    }
+    return csv;
 }
 
 // ===== FUNÇÕES DE FORMATAÇÃO =====
