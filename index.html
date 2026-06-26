@@ -2173,17 +2173,7 @@ function baixarBoletosPagosDoMes(mesAno) {
         linha1 += ';' + String(d).padStart(2, '0') + '/' + nomeMes;
     }
     
-    // ===== LINHA 2: Reposição de Estoque (SOMA DOS ARREDONDADOS) =====
-    let linha2 = 'Reposição de Estoque';
-    for (let d = 1; d <= ultimoDia; d++) {
-        // ===== ARREDONDAR CADA VALOR ANTES DE SOMAR =====
-        const produtoArredondado = arredondarValor(dias[d].produto);
-        const royaltiesArredondado = arredondarValor(dias[d].royalties);
-        const propagandaArredondado = arredondarValor(dias[d].propaganda);
-        const soma = produtoArredondado + royaltiesArredondado + propagandaArredondado;
-        linha2 += ';' + formatarNumeroCSV(soma);
-    }
-    
+
     // ===== LINHA 3: Produtos = Natura (ARREDONDADO) =====
     let linha3 = 'Produtos = Natura';
     for (let d = 1; d <= ultimoDia; d++) {
