@@ -624,14 +624,11 @@ async function carregarDados() {
         const result = await response.json();
         
         if (!result.success) {
-            throw new Error('Erro ao buscar dados da planilha');
+            throw new Error(result.error || 'Erro ao buscar dados da planilha');
         }
         
-        // ===== CONVERTER DADOS PARA CSV =====
-        const csvText = converterDadosParaCSV(result.data);
-        
-        // ===== PROCESSAR CSV =====
-        pedidosData = processarCSV(csvText);
+        // ===== PROCESSAR DADOS DIRETAMENTE (SEM CONVERTER PARA CSV) =====
+        pedidosData = processarDadosPlanilha(result.data);
         
         if (pedidosData.length === 0) {
             throw new Error('Nenhum pedido encontrado na planilha');
@@ -668,26 +665,6 @@ async function carregarDados() {
 }
 
 
-// ===== CONVERTER DADOS DO SHEETS PARA CSV =====
-function converterDadosParaCSV(data) {
-    if (!data || data.length === 0) {
-        return '';
-    }
-    
-    let csv = '';
-    for (let row of data) {
-        // Cada linha é um array de valores
-        const rowStr = row.map(cell => {
-            // Escapar células que contêm vírgulas
-            if (typeof cell === 'string' && (cell.includes(',') || cell.includes('"') || cell.includes('\n'))) {
-                return `"${cell.replace(/"/g, '""')}"`;
-            }
-            return cell;
-        }).join(',');
-        csv += rowStr + '\n';
-    }
-    return csv;
-}
 
 // ===== FUNÇÕES DE FORMATAÇÃO =====
 function formatarMoedaBR(valor) {
@@ -852,48 +829,65 @@ function extrairParcelaInfo(texto) {
     };
 }
 
-function processarCSV(csvTexto) {
-    const linhas = csvTexto.trim().split(/\r?\n/);
-    if (linhas.length < 2) return [];
+// ===== PROCESSAR DADOS DIRETAMENTE DA PLANILHA =====
+function processarDadosPlanilha(data) {
+    if (!data || data.length < 2) return [];
     
-    const idxPedido = 0, idxData = 1, idxNF = 2, idxValorTotal = 3;
-    const idxValorProdutos = 4, idxRoyalties = 5, idxPropaganda = 6, idxParcelas = 7;
-    const idxProdutoParcelas = 10, idxRoyaltiesParcelas = 29, idxPropagandaParcelas = 48;
-    const produtoValores = [11, 14, 17, 20, 23, 26];
-    const royaltiesValores = [30, 33, 36, 39, 42, 45];
-    const propagandaValores = [49, 52, 55, 58, 61, 64];
-    const produtoPix = [12, 15, 18, 21, 24, 27];
-    const produtoBarras = [13, 16, 19, 22, 25, 28];
-    const royaltiesBarras = [32, 35, 38, 41, 44, 47];
-    const propagandaBarras = [51, 54, 57, 60, 63, 66];
+    // A primeira linha é o cabeçalho
+    const cabecalho = data[0];
+    
+    // Mapear índices das colunas a partir do cabeçalho
+    const idxPedido = cabecalho.indexOf('Pedido');
+    const idxData = cabecalho.indexOf('Data');
+    const idxNF = cabecalho.indexOf('NF');
+    const idxValorTotal = cabecalho.indexOf('Valor Total');
+    const idxValorProdutos = cabecalho.indexOf('Produtos');
+    const idxRoyalties = cabecalho.indexOf('Royalties');
+    const idxPropaganda = cabecalho.indexOf('Propaganda');
+    const idxParcelas = cabecalho.indexOf('Parcelas');
+    const idxProdutoParcelas = cabecalho.indexOf('Parcelas Produto');
+    const idxRoyaltiesParcelas = cabecalho.indexOf('Parcelas Royalties');
+    const idxPropagandaParcelas = cabecalho.indexOf('Parcelas Propaganda');
+    
+    // Índices das parcelas de produto
+    const produtoValores = [];
+    const produtoPix = [];
+    const produtoBarras = [];
+    for (let i = 1; i <= 6; i++) {
+        const base = 11 + (i - 1) * 3;
+        produtoValores.push(base);
+        produtoPix.push(base + 1);
+        produtoBarras.push(base + 2);
+    }
     
     const pedidos = [];
     
-    for (let i = 1; i < linhas.length; i++) {
-        const valores = parseCSVLinha(linhas[i]);
+    for (let i = 1; i < data.length; i++) {
+        const valores = data[i];
         if (valores.length < 10) continue;
         
-        const pedidoId = valores[idxPedido]?.replace(/"/g, '').trim();
+        const pedidoId = valores[idxPedido]?.toString().trim() || '';
         if (!pedidoId || pedidoId === 'Pedido') continue;
         
-        const dataEmissao = valores[idxData]?.replace(/"/g, '').trim() || '';
+        // ===== VERIFICA SE É "Sem Data" =====
+        const dataEmissao = valores[idxData]?.toString().trim() || '';
         const isSemData = dataEmissao === 'Sem Data';
         
+        // ===== SE FOR "Sem Data", cria um registro com dados mínimos =====
         if (isSemData) {
             let valorTotal = 0;
             if (valores[idxValorTotal]) {
-                valorTotal = parseFloat(valores[idxValorTotal].replace(/["']/g, '').replace('R$', '').replace(/\./g, '').replace(',', '.'));
-                if (isNaN(valorTotal)) valorTotal = 0;
+                valorTotal = parseFloat(String(valores[idxValorTotal]).replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0;
             }
             
             let totalParcelas = 0;
             if (valores[idxParcelas]) {
-                const match = valores[idxParcelas].match(/(\d+)x/);
+                const match = String(valores[idxParcelas]).match(/(\d+)x/);
                 if (match) totalParcelas = parseInt(match[1]);
             }
             
             pedidos.push({
-                pedido: pedidoId, 
+                pedido: pedidoId,
                 dataEmissao: 'Sem Data',
                 notaFiscal: 'Sem NF',
                 valorTotal: valorTotal,
@@ -915,101 +909,134 @@ function processarCSV(csvTexto) {
             continue;
         }
         
+        // ===== PROCESSAMENTO NORMAL =====
         let valorTotal = 0;
         if (valores[idxValorTotal]) {
-            valorTotal = parseFloat(valores[idxValorTotal].replace(/["']/g, '').replace('R$', '').replace(/\./g, '').replace(',', '.'));
-            if (isNaN(valorTotal)) valorTotal = 0;
+            valorTotal = parseFloat(String(valores[idxValorTotal]).replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0;
         }
         
         let valorProdutos = 0, valorRoyaltiesVal = 0, valorPropagandaVal = 0;
         if (valores[idxValorProdutos]) {
-            valorProdutos = parseFloat(valores[idxValorProdutos].replace(/["']/g, '').replace('R$', '').replace(/\./g, '').replace(',', '.'));
-            if (isNaN(valorProdutos)) valorProdutos = 0;
+            valorProdutos = parseFloat(String(valores[idxValorProdutos]).replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0;
         }
         if (valores[idxRoyalties]) {
-            valorRoyaltiesVal = parseFloat(valores[idxRoyalties].replace(/["']/g, '').replace('R$', '').replace(/\./g, '').replace(',', '.'));
-            if (isNaN(valorRoyaltiesVal)) valorRoyaltiesVal = 0;
+            valorRoyaltiesVal = parseFloat(String(valores[idxRoyalties]).replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0;
         }
         if (valores[idxPropaganda]) {
-            valorPropagandaVal = parseFloat(valores[idxPropaganda].replace(/["']/g, '').replace('R$', '').replace(/\./g, '').replace(',', '.'));
-            if (isNaN(valorPropagandaVal)) valorPropagandaVal = 0;
+            valorPropagandaVal = parseFloat(String(valores[idxPropaganda]).replace('R$', '').replace(/\./g, '').replace(',', '.')) || 0;
         }
         
         let totalParcelas = 0;
         if (valores[idxParcelas]) {
-            const match = valores[idxParcelas].match(/(\d+)x/);
+            const match = String(valores[idxParcelas]).match(/(\d+)x/);
             if (match) totalParcelas = parseInt(match[1]);
         }
         
-        const parcelasProduto = [], parcelasRoyalties = [], parcelasPropaganda = [];
-        let parcelasProdutoCount = 0, parcelasRoyaltiesCount = 0, parcelasPropagandaCount = 0;
+        const parcelasProduto = [];
+        const parcelasRoyalties = [];
+        const parcelasPropaganda = [];
         
+        let parcelasProdutoCount = 0;
         if (valores[idxProdutoParcelas]) {
-            const match = valores[idxProdutoParcelas].match(/(\d+)x/);
+            const match = String(valores[idxProdutoParcelas]).match(/(\d+)x/);
             if (match) parcelasProdutoCount = parseInt(match[1]);
         }
         
+        // ===== EXTRAIR PARCELAS DE PRODUTO =====
         for (let p = 0; p < produtoValores.length && p < parcelasProdutoCount; p++) {
             const idxValor = produtoValores[p];
             let codigoPix = '', codigoBarras = '';
             
             if (produtoPix[p] < valores.length) {
-                codigoPix = valores[produtoPix[p]]?.replace(/"/g, '').trim() || '';
+                codigoPix = String(valores[produtoPix[p]] || '').trim();
                 if (codigoPix === 'Nenhum' || codigoPix === '') codigoPix = '';
             }
             if (produtoBarras[p] < valores.length) {
-                codigoBarras = valores[produtoBarras[p]]?.replace(/"/g, '').trim() || '';
+                codigoBarras = String(valores[produtoBarras[p]] || '').trim();
                 if (codigoBarras === 'Nenhum' || codigoBarras === '') codigoBarras = '';
             }
             
-            if (idxValor < valores.length && valores[idxValor] && valores[idxValor] !== 'Nenhum') {
-                const info = extrairParcelaInfo(valores[idxValor]);
+            if (idxValor < valores.length && valores[idxValor] && String(valores[idxValor]) !== 'Nenhum') {
+                const info = extrairParcelaInfo(String(valores[idxValor]));
                 if (info) {
-                    parcelasProduto.push({ num: p + 1, valor: info.valor, vencimento: info.vencimento, status: info.status, codigoPix: codigoPix, codigoBarras: codigoBarras });
+                    parcelasProduto.push({
+                        num: p + 1,
+                        valor: info.valor,
+                        vencimento: info.vencimento,
+                        status: info.status,
+                        codigoPix: codigoPix,
+                        codigoBarras: codigoBarras
+                    });
                 }
             }
         }
         
+        // ===== EXTRAIR PARCELAS DE ROYALTIES =====
+        let parcelasRoyaltiesCount = 0;
         if (valores[idxRoyaltiesParcelas]) {
-            const match = valores[idxRoyaltiesParcelas].match(/(\d+)x/);
+            const match = String(valores[idxRoyaltiesParcelas]).match(/(\d+)x/);
             if (match) parcelasRoyaltiesCount = parseInt(match[1]);
         }
+        
+        // Índices das parcelas de royalties (30, 33, 36, 39, 42, 45)
+        const royaltiesValores = [30, 33, 36, 39, 42, 45];
+        const royaltiesBarras = [32, 35, 38, 41, 44, 47];
         
         for (let p = 0; p < royaltiesValores.length && p < parcelasRoyaltiesCount; p++) {
             const idxValor = royaltiesValores[p];
             let codigoBarras = '';
             
             if (royaltiesBarras[p] < valores.length) {
-                codigoBarras = valores[royaltiesBarras[p]]?.replace(/"/g, '').trim() || '';
+                codigoBarras = String(valores[royaltiesBarras[p]] || '').trim();
                 if (codigoBarras === 'Nenhum' || codigoBarras === '') codigoBarras = '';
             }
             
-            if (idxValor < valores.length && valores[idxValor] && valores[idxValor] !== 'Nenhum') {
-                const info = extrairParcelaInfo(valores[idxValor]);
+            if (idxValor < valores.length && valores[idxValor] && String(valores[idxValor]) !== 'Nenhum') {
+                const info = extrairParcelaInfo(String(valores[idxValor]));
                 if (info) {
-                    parcelasRoyalties.push({ num: p + 1, valor: info.valor, vencimento: info.vencimento, status: info.status, codigoPix: '', codigoBarras: codigoBarras });
+                    parcelasRoyalties.push({
+                        num: p + 1,
+                        valor: info.valor,
+                        vencimento: info.vencimento,
+                        status: info.status,
+                        codigoPix: '',
+                        codigoBarras: codigoBarras
+                    });
                 }
             }
         }
         
+        // ===== EXTRAIR PARCELAS DE PROPAGANDA =====
+        let parcelasPropagandaCount = 0;
         if (valores[idxPropagandaParcelas]) {
-            const match = valores[idxPropagandaParcelas].match(/(\d+)x/);
+            const match = String(valores[idxPropagandaParcelas]).match(/(\d+)x/);
             if (match) parcelasPropagandaCount = parseInt(match[1]);
         }
+        
+        // Índices das parcelas de propaganda (49, 52, 55, 58, 61, 64)
+        const propagandaValores = [49, 52, 55, 58, 61, 64];
+        const propagandaBarras = [51, 54, 57, 60, 63, 66];
         
         for (let p = 0; p < propagandaValores.length && p < parcelasPropagandaCount; p++) {
             const idxValor = propagandaValores[p];
             let codigoBarras = '';
             
             if (propagandaBarras[p] < valores.length) {
-                codigoBarras = valores[propagandaBarras[p]]?.replace(/"/g, '').trim() || '';
+                codigoBarras = String(valores[propagandaBarras[p]] || '').trim();
                 if (codigoBarras === 'Nenhum' || codigoBarras === '') codigoBarras = '';
             }
             
-            if (idxValor < valores.length && valores[idxValor] && valores[idxValor] !== 'Nenhum') {
-                const info = extrairParcelaInfo(valores[idxValor]);
+            if (idxValor < valores.length && valores[idxValor] && String(valores[idxValor]) !== 'Nenhum') {
+                const info = extrairParcelaInfo(String(valores[idxValor]));
                 if (info) {
-                    parcelasPropaganda.push({ num: p + 1, valor: info.valor, vencimento: info.vencimento, status: info.status, codigoPix: '', codigoBarras: codigoBarras });
+                    parcelasPropaganda.push({
+                        num: p + 1,
+                        valor: info.valor,
+                        vencimento: info.vencimento,
+                        status: info.status,
+                        codigoPix: '',
+                        codigoBarras: codigoBarras
+                    });
                 }
             }
         }
@@ -1026,9 +1053,9 @@ function processarCSV(csvTexto) {
         }
         
         pedidos.push({
-            pedido: pedidoId, 
+            pedido: pedidoId,
             dataEmissao: dataEmissaoFinal,
-            notaFiscal: valores[idxNF]?.replace(/"/g, '').trim() || 'N/A',
+            notaFiscal: String(valores[idxNF] || '').trim() || 'N/A',
             valorTotal: valorTotal,
             valorProdutos: valorProdutos,
             valorRoyalties: valorRoyaltiesVal,
