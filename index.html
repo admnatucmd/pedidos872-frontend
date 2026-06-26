@@ -395,7 +395,8 @@
 // ============================================================
 
 const API_BASE_URL = 'https://pedidos-backend-hss3.onrender.com';
-const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQkNuXfqcyRvNHefPchVpyjvQt4cBQCj38Atn1jSFUtErI1cIk3zFbv3xNwGdSWEOS04-QnmeuJayDo/pub?gid=0&single=true&output=csv";
+// const CSV_URL agora será definida após o login
+let CSV_URL = '';
 const STORAGE_KEY = 'pagamentos_confirmados';
 
 let pedidosData = [];
@@ -435,11 +436,17 @@ async function fazerLogin() {
         const data = await response.json();
         
         if (data.success) {
+            // ===== SALVAR A URL DA PLANILHA =====
+            CSV_URL = data.planilhaURL || '';
+            localStorage.setItem('planilhaURL', CSV_URL);
+            localStorage.setItem('usuario', data.user);
+            localStorage.setItem('loja', data.loja);
+            
             currentUser = data.user;
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appContent').style.display = 'block';
-            localStorage.setItem('usuario', data.user);
-            localStorage.setItem('loja', data.loja);
+            
+            // ===== CARREGAR DADOS DA PLANILHA CORRETA =====
             carregarDados();
             showNotification(`✅ Bem-vindo, ${data.user}!`, 'success');
         } else {
@@ -467,11 +474,15 @@ async function verificarLogin() {
         const data = await response.json();
         
         if (data.success) {
+            // ===== RECUPERAR A URL DA PLANILHA =====
+            CSV_URL = data.planilhaURL || localStorage.getItem('planilhaURL') || '';
+            
             currentUser = data.user;
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appContent').style.display = 'block';
             localStorage.setItem('usuario', data.user);
             localStorage.setItem('loja', data.loja);
+            
             carregarDados();
             return true;
         }
@@ -494,6 +505,7 @@ async function fazerLogout() {
         currentUser = null;
         localStorage.removeItem('usuario');
         localStorage.removeItem('loja');
+        localStorage.removeItem('planilhaURL');
         document.getElementById('appContent').style.display = 'none';
         document.getElementById('loginScreen').style.display = 'flex';
         document.getElementById('loginUser').value = '';
@@ -570,15 +582,8 @@ window.fetch = async function(...args) {
 };
 
 // ============================================================
-// TODAS AS FUNÇÕES ORIGINAIS DO SISTEMA DE PEDIDOS
+// FUNÇÕES DO SISTEMA DE PEDIDOS
 // ============================================================
-
-// (Aqui você coloca TODAS as funções que já tinha no index.html original)
-// Incluindo: carregarDados, calcularTotais, renderizarTabela, 
-// formatarParcelasHTML, handlePagamentoChange, etc.
-
-// Vou copiar as funções principais aqui, mas você pode manter as suas
-// desde que a autenticação esteja funcionando.
 
 // ===== CONFIGURAÇÃO =====
 const nomesMeses = {
@@ -595,6 +600,13 @@ async function carregarDados() {
     const errorDiv = document.getElementById('errorMsg');
     const table = document.getElementById('dataTable');
     const statusDiv = document.getElementById('syncStatus');
+    
+    // ===== VERIFICAR SE TEM URL DA PLANILHA =====
+    if (!CSV_URL) {
+        errorDiv.innerHTML = '❌ URL da planilha não configurada. Faça login novamente.';
+        errorDiv.style.display = 'block';
+        return;
+    }
     
     loadingDiv.style.display = 'block';
     errorDiv.style.display = 'none';
@@ -1966,9 +1978,13 @@ function mostrarPagosPorMes() {
     container.style.display = 'block';
 }
 
+
+
 // Inicializar
 // (A função carregarDados será chamada após o login)
 </script>
+
+
 
 </body>
 </html>
