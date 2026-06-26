@@ -2173,43 +2173,40 @@ function baixarBoletosPagosDoMes(mesAno) {
         linha1 += ';' + String(d).padStart(2, '0') + '/' + nomeMes;
     }
     
-    // ===== LINHA 2: Reposição de Estoque (SOMA DOS ARREDONDADOS) =====
-    let linha2 = 'Reposição de Estoque';
+    // ============================================================
+    // ⭐ LINHA 2: Produtos = Natura (ARREDONDADO)
+    // ============================================================
+    let linha2 = 'Produtos = Natura';
     for (let d = 1; d <= ultimoDia; d++) {
-        // ===== ARREDONDAR CADA VALOR ANTES DE SOMAR =====
-        const produtoArredondado = arredondarValor(dias[d].produto);
-        const royaltiesArredondado = arredondarValor(dias[d].royalties);
-        const propagandaArredondado = arredondarValor(dias[d].propaganda);
-        const soma = produtoArredondado + royaltiesArredondado + propagandaArredondado;
-        linha2 += ';' + formatarNumeroCSV(soma);
+        linha2 += ';' + formatarNumeroCSV(arredondarValor(dias[d].produto));
     }
     
-    // ===== LINHA 3: Produtos = Natura (ARREDONDADO) =====
-    let linha3 = 'Produtos = Natura';
+    // ============================================================
+    // ⭐ LINHA 3: Produtos = Outras Marcas (vazio)
+    // ============================================================
+    let linha3 = 'Produtos = Outras Marcas';
     for (let d = 1; d <= ultimoDia; d++) {
-        linha3 += ';' + formatarNumeroCSV(arredondarValor(dias[d].produto));
+        linha3 += ';';
     }
     
-    // ===== LINHA 4: Produtos = Outras Marcas (vazio) =====
-    let linha4 = 'Produtos = Outras Marcas';
+    // ============================================================
+    // ⭐ LINHA 4: Royalties (ARREDONDADO)
+    // ============================================================
+    let linha4 = 'Royalties';
     for (let d = 1; d <= ultimoDia; d++) {
-        linha4 += ';';
+        linha4 += ';' + formatarNumeroCSV(arredondarValor(dias[d].royalties));
     }
     
-    // ===== LINHA 5: Royalties (ARREDONDADO) =====
-    let linha5 = 'Royalties';
+    // ============================================================
+    // ⭐ LINHA 5: Fundo de Propaganda (ARREDONDADO)
+    // ============================================================
+    let linha5 = 'Fundo de Propaganda';
     for (let d = 1; d <= ultimoDia; d++) {
-        linha5 += ';' + formatarNumeroCSV(arredondarValor(dias[d].royalties));
+        linha5 += ';' + formatarNumeroCSV(arredondarValor(dias[d].propaganda));
     }
     
-    // ===== LINHA 6: Fundo de Propaganda (ARREDONDADO) =====
-    let linha6 = 'Fundo de Propaganda';
-    for (let d = 1; d <= ultimoDia; d++) {
-        linha6 += ';' + formatarNumeroCSV(arredondarValor(dias[d].propaganda));
-    }
-    
-    // ===== MONTAR O CSV =====
-    const csvContent = [linha1, linha2, linha3, linha4, linha5, linha6].join('\n');
+    // ===== MONTAR O CSV (LINHAS 1, 2, 3, 4, 5) =====
+    const csvContent = [linha1, linha2, linha3, linha4, linha5].join('\n');
     
     // ===== BAIXAR O ARQUIVO =====
     const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -2224,6 +2221,7 @@ function baixarBoletosPagosDoMes(mesAno) {
     
     showNotification(`✅ Arquivo baixado: boletos_pagos_${mesAno.replace('/', '_')}.csv`, 'success');
 }
+
 
 function arredondarValor(valor) {
     // Arredonda para o inteiro mais próximo (0.50 → 1, 0.49 → 0)
