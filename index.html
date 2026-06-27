@@ -4,402 +4,147 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gestão de Pedidos e Boletos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
-<style>
+    <style>
         /* ===== RESET E BASE ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        :root {
-            --primary: #6388f1;
-            --primary-dark: #4f46e5;
-            --secondary: #6c757d;
-            --success: #10b981;
-            --light: #f8f9fa;
-            --dark: #374151;
-            --border: #e5e7eb;
-            --shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
-            --font-main: 'Poppins', 'Segoe UI', sans-serif;
-            --bg-color: #f8fafc;
-        }
-        
-        body {
-            font-family: var(--font-main) !important;
-            background: var(--bg-color);
-            color: var(--dark);
-            line-height: 1.6;
-        }
-        
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 16px;
-            box-shadow: var(--shadow);
-            overflow: hidden;
-        }
-        
-        .header {
-            background: 
-                repeating-linear-gradient(0deg, rgba(255,255,255,0.05), rgba(255,255,255,0.05) 2px, transparent 2px, transparent 4px),
-                linear-gradient(135deg, #0f172a, #1e1b4b) !important;
-            color: white;
-            padding: 20px 25px;
-            font-family: var(--font-main) !important;
-        }
-        
-        .header h1 {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 5px;
-        }
-        .header .subtitle {
-            font-size: 13px;
-            opacity: 0.85;
-        }
-        .last-update {
-            font-size: 12px;
-            margin-top: 8px;
-            opacity: 0.8;
-        }
+        body { font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eef2f5; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
+        .header { background: linear-gradient(135deg, #0b4f6c, #022c3a); color: white; padding: 20px 25px; }
+        .header h1 { font-size: 24px; margin-bottom: 5px; }
+        .header .subtitle { font-size: 13px; opacity: 0.85; }
+        .last-update { font-size: 12px; margin-top: 8px; opacity: 0.8; }
 
         /* ===== FILTROS ===== */
-        .filters {
-            padding: 20px;
-            background: var(--light);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            align-items: flex-end;
-        }
+        .filters { padding: 20px; background: #f8f9fa; border-bottom: 1px solid #e0e0e0; display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; }
         .filter-group { flex: 1; min-width: 150px; }
-        .filter-group label {
-            display: block;
-            font-size: 12px;
-            font-weight: 600;
-            margin-bottom: 5px;
-            color: #555;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-        .filter-group input, .filter-group select {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            font-family: var(--font-main);
-        }
-        .btn {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 8px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            font-family: var(--font-main);
-            transition: all 0.2s ease;
-        }
-        .btn:hover { background: var(--primary-dark); }
+        .filter-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #555; text-transform: uppercase; }
+        .filter-group input, .filter-group select { width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; }
+        .btn { background: #0b4f6c; color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .btn:hover { background: #063a4f; }
 
         /* ===== BOTÕES DE AÇÃO ===== */
-        .btn-actions {
-            background: var(--light);
-            padding: 12px 20px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            border-bottom: 1px solid var(--border);
-        }
-        .btn-actions .btn {
-            background: var(--primary);
-            padding: 8px 16px;
-            font-size: 13px;
-            font-family: var(--font-main);
-        }
-        .btn-actions .btn:hover { background: var(--primary-dark); }
-        .btn-actions .btn.active { background: var(--success); }
-        .btn-actions .btn.active:hover { background: #059669; }
-        .btn-actions .btn.voltar { background: var(--secondary); }
+        .btn-actions { background: #f0f4f8; padding: 12px 20px; display: flex; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #e0e0e0; }
+        .btn-actions .btn { background: #0b4f6c; padding: 8px 16px; font-size: 13px; }
+        .btn-actions .btn:hover { background: #063a4f; }
+        .btn-actions .btn.active { background: #28a745; }
+        .btn-actions .btn.active:hover { background: #218838; }
+        .btn-actions .btn.voltar { background: #6c757d; }
         .btn-actions .btn.voltar:hover { background: #5a6268; }
 
         /* ===== SUBMENU ===== */
-        .submenu-container {
-            padding: 8px 20px;
-            background: var(--light);
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
-        .btn-submenu {
-            background: #e9ecef;
-            color: #333;
-            border: 1px solid var(--border);
-            padding: 6px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s;
-            font-family: var(--font-main);
-        }
-        .btn-submenu:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-        .btn-submenu.active {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
+        .submenu-container { padding: 8px 20px; background: #f8f9fa; border-bottom: 1px solid #e0e0e0; display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-submenu { background: #e9ecef; color: #333; border: 1px solid #ccc; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+        .btn-submenu:hover { background: #0b4f6c; color: white; border-color: #0b4f6c; }
+        .btn-submenu.active { background: #0b4f6c; color: white; border-color: #0b4f6c; }
 
         /* ===== STATS ===== */
-        .stats {
-            background: var(--light);
-            padding: 12px 20px;
-            display: flex;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .stats span { font-weight: 700; color: var(--primary); }
+        .stats { background: #e9ecef; padding: 12px 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+        .stats span { font-weight: 700; color: #0b4f6c; }
         .stats-hidden { display: none !important; }
 
         /* ===== TABELA PRINCIPAL ===== */
         .table-wrapper { padding: 20px; overflow-x: auto; }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-            font-family: var(--font-main);
-        }
-        th {
-            background: var(--light);
-            color: var(--dark);
-            padding: 12px 10px;
-            text-align: left;
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-            white-space: nowrap;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            border-bottom: 2px solid var(--border);
-        }
-        td {
-            padding: 10px;
-            border-bottom: 1px solid var(--border);
-            vertical-align: middle;
-        }
-        .pedido-row {
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-        .pedido-row:hover { background: #f8f9fa; }
-        .expand-icon {
-            display: inline-block;
-            margin-right: 8px;
-            font-weight: bold;
-            color: var(--primary);
-        }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #1f5e7e; color: white; padding: 12px 10px; text-align: left; font-weight: 600; position: sticky; top: 0; white-space: nowrap; }
+        td { padding: 10px; border-bottom: 1px solid #e9ecef; vertical-align: middle; }
+        .pedido-row { cursor: pointer; transition: background 0.2s; }
+        .pedido-row:hover { background: #e8f4f8; }
+        .expand-icon { display: inline-block; margin-right: 8px; font-weight: bold; color: #0b4f6c; }
         .parcelas-detail { display: none; background: #f8fafd; }
         .parcelas-detail.show { display: table-row; }
-        .detail-card {
-            padding: 16px;
-            background: white;
-            border-radius: 12px;
-            margin: 8px;
-            border-left: 4px solid var(--primary);
-        }
-        .parcela-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 16px;
-            margin-top: 12px;
-        }
-        .parcela-tipo {
-            background: var(--light);
-            border-radius: 12px;
-            padding: 12px;
-            flex: 1;
-            min-width: 280px;
-        }
-        .parcela-tipo h4 {
-            color: var(--primary);
-            margin-bottom: 10px;
-            padding-bottom: 5px;
-            border-bottom: 2px solid var(--border);
-            font-weight: 600;
-        }
-        .parcela-item {
-            padding: 10px 6px;
-            border-bottom: 1px solid var(--border);
-            font-size: 12px;
-        }
+        .detail-card { padding: 16px; background: white; border-radius: 12px; margin: 8px; border-left: 4px solid #0b4f6c; }
+        .parcela-grid { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 12px; }
+        .parcela-tipo { background: #f0f4f8; border-radius: 12px; padding: 12px; flex: 1; min-width: 280px; }
+        .parcela-tipo h4 { color: #0b4f6c; margin-bottom: 10px; padding-bottom: 5px; border-bottom: 2px solid #cbdde9; }
+        .parcela-item { padding: 10px 6px; border-bottom: 1px solid #e0e8f0; font-size: 12px; }
         .parcela-item:last-child { border-bottom: none; }
-        .parcela-item strong { color: var(--primary-dark); }
-        .parcela-paga {
-            background: #d4edda !important;
-            border-radius: 4px;
-        }
-        .status-pagos { color: var(--success); font-weight: bold; }
+        .parcela-item strong { color: #1f5e7e; }
+        .parcela-paga { background: #d4edda !important; border-radius: 4px; }
+        .status-pagos { color: #28a745; font-weight: bold; }
         .status-a-vencer { color: #e67e22; font-weight: bold; }
         .status-em-atraso { color: #dc3545; font-weight: bold; }
 
         /* ===== BOTÕES DE CÓPIA ===== */
-        .btn-copiar {
-            background: var(--light);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            padding: 3px 8px;
-            font-size: 10px;
-            cursor: pointer;
-            margin: 2px;
-            transition: all 0.2s;
-            font-family: var(--font-main);
-        }
-        .btn-copiar:hover {
-            background: var(--primary);
-            color: white;
-            border-color: var(--primary);
-        }
-        .btn-pix {
-            background: #d4edda;
-            border-color: var(--success);
-            color: #155724;
-        }
-        .btn-pix:hover { background: var(--success); color: white; }
-        .btn-barras {
-            background: #cce5ff;
-            border-color: var(--primary);
-            color: #004085;
-        }
-        .btn-barras:hover { background: var(--primary); color: white; }
+        .btn-copiar { background: #e9ecef; border: 1px solid #ccc; border-radius: 4px; padding: 3px 8px; font-size: 10px; cursor: pointer; margin: 2px; transition: all 0.2s; }
+        .btn-copiar:hover { background: #0b4f6c; color: white; border-color: #0b4f6c; }
+        .btn-pix { background: #d4edda; border-color: #28a745; color: #155724; }
+        .btn-pix:hover { background: #28a745; color: white; border-color: #28a745; }
+        .btn-barras { background: #cce5ff; border-color: #007bff; color: #004085; }
+        .btn-barras:hover { background: #007bff; color: white; border-color: #007bff; }
         .codigos-container { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 4px; }
 
         /* ===== CHECKBOX DE PAGAMENTO ===== */
-        .pagamento-checkbox {
-            display: inline-flex;
-            align-items: center;
-            gap: 4px;
-            font-size: 11px;
-            cursor: pointer;
-            padding: 2px 6px;
-            border-radius: 4px;
-            transition: all 0.2s;
-            font-family: var(--font-main);
-        }
-        .pagamento-checkbox input[type="checkbox"] {
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-            accent-color: var(--success);
-        }
-        .pagamento-checkbox.pago {
-            color: var(--success);
-            font-weight: bold;
-            background: #d4edda;
-        }
-        .pagamento-checkbox.nao-pago {
-            color: #dc3545;
-            background: #f8d7da;
-        }
-        .btn-salvar-local {
-            background: var(--success);
-            color: white;
-            border: none;
-            padding: 4px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 11px;
-            margin-top: 8px;
-            font-family: var(--font-main);
-        }
-        .btn-salvar-local:hover { background: #059669; }
-        .btn-exportar {
-            background: var(--primary);
-            color: white;
-            border: none;
-            padding: 4px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 11px;
-            margin-top: 8px;
-            font-family: var(--font-main);
-        }
-        .btn-exportar:hover { background: var(--primary-dark); }
-        .status-salvo { font-size: 11px; color: var(--success); margin-left: 8px; }
+        .pagamento-checkbox { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: all 0.2s; }
+        .pagamento-checkbox input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #28a745; }
+        .pagamento-checkbox.pago { color: #28a745; font-weight: bold; background: #d4edda; }
+        .pagamento-checkbox.nao-pago { color: #dc3545; background: #f8d7da; }
+        .btn-salvar-local { background: #28a745; color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; margin-top: 8px; }
+        .btn-salvar-local:hover { background: #218838; }
+        .btn-exportar { background: #0b4f6c; color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; margin-top: 8px; }
+        .btn-exportar:hover { background: #063a4f; }
+        .status-salvo { font-size: 11px; color: #28a745; margin-left: 8px; }
         .sync-status { font-size: 11px; color: #667; margin-top: 4px; }
-        .sync-status.ok { color: var(--success); }
+        .sync-status.ok { color: #28a745; }
         .sync-status.error { color: #dc3545; }
 
         /* ===== LISTA DE MESES (ACORDION) ===== */
-        .mes-container-accordion { padding: 0 20px; background: var(--light); }
-        .mes-accordion-item { border-bottom: 1px solid var(--border); }
+        .mes-container-accordion { padding: 0 20px; background: #f8f9fa; }
+        .mes-accordion-item { border-bottom: 1px solid #e0e0e0; }
         .mes-accordion-item:last-child { border-bottom: none; }
         
-        .mes-accordion-header {
-            background: white;
-            padding: 10px 16px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
+        .mes-accordion-header { 
+            background: white; 
+            padding: 10px 16px; 
+            cursor: pointer; 
+            display: flex; 
+            justify-content: space-between; 
             align-items: center;
             transition: background 0.2s;
             border-radius: 4px;
             margin: 2px 0;
             flex-wrap: wrap;
             gap: 8px;
-            font-family: var(--font-main);
         }
-        .mes-accordion-header:hover { background: #f8f9fa; }
-        .mes-accordion-header .mes-info {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            font-size: 14px;
+        .mes-accordion-header:hover { background: #e8f4f8; }
+        .mes-accordion-header .mes-info { 
+            display: flex; 
+            gap: 15px; 
+            flex-wrap: wrap; 
+            font-size: 14px; 
             align-items: center;
             flex: 1;
         }
-        .mes-accordion-header .mes-info strong {
-            color: var(--primary);
-            font-size: 15px;
-            min-width: 140px;
-            font-weight: 600;
-        }
-        .mes-accordion-header .mes-info .badge {
-            background: var(--primary);
-            color: white;
-            padding: 2px 12px;
-            border-radius: 12px;
+        .mes-accordion-header .mes-info strong { color: #0b4f6c; font-size: 15px; min-width: 140px; }
+        .mes-accordion-header .mes-info .badge { 
+            background: #0b4f6c; 
+            color: white; 
+            padding: 2px 12px; 
+            border-radius: 12px; 
             font-size: 12px;
             white-space: nowrap;
         }
-        .mes-accordion-header .expand-icon {
-            font-size: 18px;
-            color: var(--primary);
-            transition: transform 0.3s;
-        }
+        .mes-accordion-header .expand-icon { font-size: 18px; color: #0b4f6c; transition: transform 0.3s; }
         .mes-accordion-header.active .expand-icon { transform: rotate(180deg); }
         
         .mes-total { font-weight: bold; color: #1a5c2e; min-width: 130px; }
-        .mes-pago { font-weight: bold; color: var(--success); min-width: 130px; }
+        .mes-pago { font-weight: bold; color: #28a745; min-width: 130px; }
         .mes-pendente { font-weight: bold; color: #e67e22; min-width: 140px; }
-        .mes-pendente.zerado { color: var(--success); }
+        .mes-pendente.zerado { color: #28a745; }
         .mes-label { font-weight: 600; color: #555; font-size: 13px; }
         
-        .mes-accordion-body {
-            display: none;
-            background: #f8fafd;
+        .mes-accordion-body { 
+            display: none; 
+            background: #f8fafd; 
             padding: 16px;
-            border-top: 1px solid var(--border);
+            border-top: 1px solid #e0e0e0;
         }
         .mes-accordion-body.show { display: block; }
         
         .mes-accordion-body .pedido-card {
             background: white;
-            border: 1px solid var(--border);
+            border: 1px solid #ddd;
             border-radius: 8px;
             padding: 10px 16px;
             margin-bottom: 8px;
@@ -409,44 +154,31 @@
             justify-content: space-between;
             align-items: center;
             flex-wrap: wrap;
-            font-family: var(--font-main);
         }
-        .mes-accordion-body .pedido-card:hover {
-            background: #f8f9fa;
-            border-color: var(--primary);
-        }
-        .mes-accordion-body .pedido-card .pedido-info {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            font-size: 13px;
+        .mes-accordion-body .pedido-card:hover { background: #f0f4f8; border-color: #0b4f6c; }
+        .mes-accordion-body .pedido-card .pedido-info { 
+            display: flex; 
+            gap: 15px; 
+            flex-wrap: wrap; 
+            font-size: 13px; 
             align-items: center;
             flex: 1;
         }
-        .mes-accordion-body .pedido-card .pedido-info strong {
-            color: var(--primary);
-            min-width: 100px;
-            font-weight: 600;
-        }
-        .mes-accordion-body .pedido-card .pedido-total {
-            font-weight: bold;
-            color: var(--success);
-            min-width: 120px;
-            text-align: right;
-        }
+        .mes-accordion-body .pedido-card .pedido-info strong { color: #0b4f6c; min-width: 100px; }
+        .mes-accordion-body .pedido-card .pedido-total { font-weight: bold; color: #28a745; min-width: 120px; text-align: right; }
         
-        .pedido-detalhes-accordion {
-            display: none;
-            background: #f8fafd;
+        .pedido-detalhes-accordion { 
+            display: none; 
+            background: #f8fafd; 
             padding: 12px 20px;
-            border-left: 3px solid var(--primary);
+            border-left: 3px solid #0b4f6c;
             margin: 0 16px 12px 16px;
             border-radius: 4px;
         }
         .pedido-detalhes-accordion.show { display: block; }
 
         .btn-ver-pedido {
-            background: var(--primary);
+            background: #0b4f6c;
             color: white;
             border: none;
             padding: 4px 12px;
@@ -455,15 +187,16 @@
             font-size: 11px;
             transition: all 0.2s;
             white-space: nowrap;
-            font-family: var(--font-main);
         }
-        .btn-ver-pedido:hover { background: var(--primary-dark); }
+        .btn-ver-pedido:hover { background: #063a4f; }
 
         /* ===== BOLETOS A PAGAR ===== */
-        .boletos-container { padding: 10px 20px; }
+        .boletos-container {
+            padding: 10px 20px;
+        }
         .boletos-container .boleto-card {
             background: white;
-            border: 1px solid var(--border);
+            border: 1px solid #ddd;
             border-radius: 8px;
             margin-bottom: 8px;
             overflow: hidden;
@@ -477,9 +210,8 @@
             transition: background 0.2s;
             flex-wrap: wrap;
             gap: 10px;
-            font-family: var(--font-main);
         }
-        .boletos-container .boleto-header:hover { background: #f8f9fa; }
+        .boletos-container .boleto-header:hover { background: #f0f4f8; }
         .boletos-container .boleto-header .boleto-info {
             display: flex;
             gap: 15px;
@@ -488,16 +220,12 @@
             font-size: 13px;
             flex: 1;
         }
-        .boletos-container .boleto-header .boleto-info strong {
-            color: var(--primary);
-            min-width: 100px;
-            font-weight: 600;
-        }
+        .boletos-container .boleto-header .boleto-info strong { color: #0b4f6c; min-width: 100px; }
         .boletos-container .boleto-body {
             display: none;
             padding: 16px;
             background: #f8fafd;
-            border-top: 1px solid var(--border);
+            border-top: 1px solid #e0e0e0;
         }
         .boletos-container .boleto-body.show { display: block; }
         .boletos-container .boleto-body .parcela-item {
@@ -507,9 +235,7 @@
             margin-bottom: 6px;
             border-left: 3px solid #e67e22;
         }
-        .boletos-container .boleto-body .parcela-item.pago {
-            border-left-color: var(--success);
-        }
+        .boletos-container .boleto-body .parcela-item.pago { border-left-color: #28a745; }
         .boleto-vencimento {
             background: #fff3cd;
             padding: 2px 10px;
@@ -524,83 +250,25 @@
             min-width: 120px;
             text-align: right;
         }
-        .boleto-total.pago { color: var(--success); }
+        .boleto-total.pago { color: #28a745; }
 
         /* ===== SEMANA INFO ===== */
-        .semana-info {
-            background: #fff3cd;
-            padding: 8px 20px;
-            border-bottom: 1px solid var(--border);
-            font-size: 13px;
-            color: #856404;
-            font-family: var(--font-main);
-        }
+        .semana-info { background: #fff3cd; padding: 8px 20px; border-bottom: 1px solid #e0e0e0; font-size: 13px; color: #856404; }
 
         /* ===== LOADING E ERROR ===== */
-        .loading { text-align: center; padding: 50px; color: #667; font-family: var(--font-main); }
-        .error {
-            background: #f8d7da;
-            color: #721c24;
-            padding: 20px;
-            margin: 20px;
-            border-radius: 8px;
-            text-align: center;
-            font-family: var(--font-main);
-        }
+        .loading { text-align: center; padding: 50px; color: #667; }
+        .error { background: #f8d7da; color: #721c24; padding: 20px; margin: 20px; border-radius: 8px; text-align: center; }
 
         /* ===== RESPONSIVO ===== */
-        @media (max-width: 768px) {
+        @media (max-width: 768px) { 
             th, td { font-size: 11px; padding: 6px; }
             .mes-accordion-header .mes-info { gap: 8px; font-size: 12px; }
             .mes-accordion-header .mes-info strong { font-size: 13px; min-width: 100px; }
             .mes-total, .mes-pago, .mes-pendente { min-width: 80px; font-size: 12px; }
             .mes-label { font-size: 11px; }
         }
-        
-        /* ===== IMPRESSÃO ===== */
-        @media print {
-            .btn, .btn-actions, .filters, .btn-ver-pedido, 
-            .submenu-container, .btn-salvar-local, .btn-exportar {
-                display: none !important;
-            }
-            body { background: white; }
-            .container { box-shadow: none; border: 1px solid #ddd; }
-        }
 
-        /* ===== BOTÃO DOWNLOAD ===== */
-        .btn-download {
-            background: var(--success);
-            color: white;
-            border: none;
-            padding: 6px 14px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 600;
-            font-family: var(--font-main);
-            transition: all 0.2s ease;
-        }
-        .btn-download:hover {
-            background: #059669;
-            transform: scale(1.02);
-        }
-
-        /* ===== NOTIFICAÇÕES ===== */
-        .fixed-bottom-right {
-            position: fixed;
-            bottom: 16px;
-            right: 16px;
-            z-index: 50;
-            max-width: 400px;
-            font-family: var(--font-main);
-        }
-        @media (max-width: 640px) {
-            .fixed-bottom-right > div {
-                padding: 0.5rem !important;
-                gap: 0.5rem !important;
-                max-width: 80vw;
-            }
-        }
+	* { font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
     </style>
 </head>
 <body>
