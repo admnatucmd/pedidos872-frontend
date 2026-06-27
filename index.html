@@ -2235,10 +2235,6 @@ function formatarNumeroCSV(valor) {
     return valor.toFixed(2).replace('.', ',');
 }
 
-// Inicializar
-// (A função carregarDados será chamada após o login)
-</script>
-
 function mostrarBoletosProximoMes() {
     // ===== 1. REMOVE ACTIVE DE TODOS OS BOTÕES =====
     document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
@@ -2303,6 +2299,13 @@ function mostrarBoletosProximoMes() {
     document.getElementById('mesContainer').innerHTML = renderizarBoletos(boletosProximoMes, titulo);
     document.getElementById('mesContainer').style.display = 'block';
 }
+
+
+// Inicializar
+// (A função carregarDados será chamada após o login)
+</script>
+
+
 
 
 </body>
