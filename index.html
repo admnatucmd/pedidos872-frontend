@@ -1545,7 +1545,8 @@ function mostrarBoletosSemana() {
     pedidosData.forEach(p => {
         const processarParcelas = (parcelas, tipo) => {
             parcelas.forEach(parc => {
-                if (parc.status !== 'Pagos' && !isPago(p.pedido, parc.num, tipo)) {
+                // ⭐ SÓ FILTRA PELO STATUS DA PLANILHA (não pelo checkbox)
+                if (parc.status !== 'Pagos') {
                     const dataVenc = dataParaComparacao(parc.vencimento);
                     if (dataVenc >= sabado && dataVenc <= sexta) {
                         boletosSemana.push({ pedido: p, parcela: parc, tipo: tipo });
@@ -1565,6 +1566,7 @@ function mostrarBoletosSemana() {
     document.getElementById('mesContainer').style.display = 'block';
 }
 
+
 function mostrarBoletosMes() {
     document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.btn-submenu')[1]?.classList.add('active');
@@ -1583,7 +1585,8 @@ function mostrarBoletosMes() {
     pedidosData.forEach(p => {
         const processarParcelas = (parcelas, tipo) => {
             parcelas.forEach(parc => {
-                if (parc.status !== 'Pagos' && !isPago(p.pedido, parc.num, tipo)) {
+                // ⭐ SÓ FILTRA PELO STATUS DA PLANILHA (não pelo checkbox)
+                if (parc.status !== 'Pagos') {
                     const dataVenc = dataParaComparacao(parc.vencimento);
                     if (dataVenc >= primeiroDia && dataVenc <= ultimoDia) {
                         boletosMes.push({ pedido: p, parcela: parc, tipo: tipo });
@@ -1621,7 +1624,8 @@ function mostrarBoletosAtrasados() {
     pedidosData.forEach(p => {
         const processarParcelas = (parcelas, tipo) => {
             parcelas.forEach(parc => {
-                if (parc.status !== 'Pagos' && !isPago(p.pedido, parc.num, tipo)) {
+                // ⭐ SÓ FILTRA PELO STATUS DA PLANILHA (não pelo checkbox)
+                if (parc.status !== 'Pagos') {
                     const dataVenc = dataParaComparacao(parc.vencimento);
                     if (dataVenc < hoje) {
                         boletosAtrasados.push({ pedido: p, parcela: parc, tipo: tipo });
@@ -2236,24 +2240,18 @@ function formatarNumeroCSV(valor) {
 }
 
 function mostrarBoletosProximoMes() {
-    // ===== 1. REMOVE ACTIVE DE TODOS OS BOTÕES =====
     document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
-    
-    // ===== 2. ADICIONA ACTIVE NO BOTÃO "PRÓXIMO MÊS" =====
-    // Pega todos os botões do submenu e adiciona active no 4º (índice 3)
     const botoes = document.querySelectorAll('.btn-submenu');
     if (botoes.length >= 4) {
         botoes[3].classList.add('active');
     }
     
-    // ===== 3. MOSTRA O SUBMENU E ESCONDE OUTROS ELEMENTOS =====
     document.getElementById('submenuBoletos').style.display = 'flex';
     document.getElementById('dataTable').style.display = 'none';
     document.getElementById('mesContainer').style.display = 'none';
     document.getElementById('semanaInfo').style.display = 'block';
     document.getElementById('statsContainer').classList.add('stats-hidden');
     
-    // ===== 4. CALCULAR O PRÓXIMO MÊS =====
     const hoje = new Date();
     let mesProximo = hoje.getMonth() + 2;
     let anoProximo = hoje.getFullYear();
@@ -2272,13 +2270,13 @@ function mostrarBoletosProximoMes() {
     document.getElementById('semanaInfo').innerHTML = 
         `📅 Próximo mês: ${meses[mesProximo - 1]} ${anoProximo} (${primeiroDia.toLocaleDateString('pt-BR')} a ${ultimoDia.toLocaleDateString('pt-BR')})`;
     
-    // ===== 5. COLETAR BOLETOS DO PRÓXIMO MÊS =====
     let boletosProximoMes = [];
     
     pedidosData.forEach(p => {
         const processarParcelas = (parcelas, tipo) => {
             parcelas.forEach(parc => {
-                if (parc.status !== 'Pagos' && !isPago(p.pedido, parc.num, tipo)) {
+                // ⭐ SÓ FILTRA PELO STATUS DA PLANILHA (não pelo checkbox)
+                if (parc.status !== 'Pagos') {
                     const dataVenc = dataParaComparacao(parc.vencimento);
                     if (dataVenc.getMonth() + 1 === mesProximo && dataVenc.getFullYear() === anoProximo) {
                         boletosProximoMes.push({ pedido: p, parcela: parc, tipo: tipo });
@@ -2291,15 +2289,12 @@ function mostrarBoletosProximoMes() {
         processarParcelas(p.parcelasPropaganda, 'propaganda');
     });
     
-    // ===== 6. ORDENAR POR DATA =====
     boletosProximoMes.sort((a, b) => dataParaComparacao(a.parcela.vencimento) - dataParaComparacao(b.parcela.vencimento));
     
-    // ===== 7. RENDERIZAR =====
-    const titulo = `📅 ${boletosProximoMes.length} boletos a pagar no próximo mês`;
+    const titulo = `📅 ${boletosProximoMes.length} boletos no próximo mês`;
     document.getElementById('mesContainer').innerHTML = renderizarBoletos(boletosProximoMes, titulo);
     document.getElementById('mesContainer').style.display = 'block';
 }
-
 
 // Inicializar
 // (A função carregarDados será chamada após o login)
