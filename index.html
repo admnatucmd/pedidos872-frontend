@@ -351,6 +351,7 @@
         <button class="btn-submenu" onclick="mostrarBoletosSemana()">📅 Essa semana</button>
         <button class="btn-submenu" onclick="mostrarBoletosMes()">📅 Esse mês</button>
         <button class="btn-submenu" onclick="mostrarBoletosAtrasados()">⚠️ Atrasados</button>
+	<button class="btn-submenu" onclick="mostrarBoletosProximoMes()">📅 Próximo mês</button> 
     </div>
 
     <div id="mesContainer" style="display:none;"></div>
@@ -2238,6 +2239,70 @@ function formatarNumeroCSV(valor) {
 // (A função carregarDados será chamada após o login)
 </script>
 
+function mostrarBoletosProximoMes() {
+    // ===== 1. REMOVE ACTIVE DE TODOS OS BOTÕES =====
+    document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
+    
+    // ===== 2. ADICIONA ACTIVE NO BOTÃO "PRÓXIMO MÊS" =====
+    // Pega todos os botões do submenu e adiciona active no 4º (índice 3)
+    const botoes = document.querySelectorAll('.btn-submenu');
+    if (botoes.length >= 4) {
+        botoes[3].classList.add('active');
+    }
+    
+    // ===== 3. MOSTRA O SUBMENU E ESCONDE OUTROS ELEMENTOS =====
+    document.getElementById('submenuBoletos').style.display = 'flex';
+    document.getElementById('dataTable').style.display = 'none';
+    document.getElementById('mesContainer').style.display = 'none';
+    document.getElementById('semanaInfo').style.display = 'block';
+    document.getElementById('statsContainer').classList.add('stats-hidden');
+    
+    // ===== 4. CALCULAR O PRÓXIMO MÊS =====
+    const hoje = new Date();
+    let mesProximo = hoje.getMonth() + 2;
+    let anoProximo = hoje.getFullYear();
+    
+    if (mesProximo > 12) {
+        mesProximo = 1;
+        anoProximo++;
+    }
+    
+    const primeiroDia = new Date(anoProximo, mesProximo - 1, 1);
+    const ultimoDia = new Date(anoProximo, mesProximo, 0);
+    
+    const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    
+    document.getElementById('semanaInfo').innerHTML = 
+        `📅 Próximo mês: ${meses[mesProximo - 1]} ${anoProximo} (${primeiroDia.toLocaleDateString('pt-BR')} a ${ultimoDia.toLocaleDateString('pt-BR')})`;
+    
+    // ===== 5. COLETAR BOLETOS DO PRÓXIMO MÊS =====
+    let boletosProximoMes = [];
+    
+    pedidosData.forEach(p => {
+        const processarParcelas = (parcelas, tipo) => {
+            parcelas.forEach(parc => {
+                if (parc.status !== 'Pagos' && !isPago(p.pedido, parc.num, tipo)) {
+                    const dataVenc = dataParaComparacao(parc.vencimento);
+                    if (dataVenc.getMonth() + 1 === mesProximo && dataVenc.getFullYear() === anoProximo) {
+                        boletosProximoMes.push({ pedido: p, parcela: parc, tipo: tipo });
+                    }
+                }
+            });
+        };
+        processarParcelas(p.parcelasProduto, 'produto');
+        processarParcelas(p.parcelasRoyalties, 'royalties');
+        processarParcelas(p.parcelasPropaganda, 'propaganda');
+    });
+    
+    // ===== 6. ORDENAR POR DATA =====
+    boletosProximoMes.sort((a, b) => dataParaComparacao(a.parcela.vencimento) - dataParaComparacao(b.parcela.vencimento));
+    
+    // ===== 7. RENDERIZAR =====
+    const titulo = `📅 ${boletosProximoMes.length} boletos a pagar no próximo mês`;
+    document.getElementById('mesContainer').innerHTML = renderizarBoletos(boletosProximoMes, titulo);
+    document.getElementById('mesContainer').style.display = 'block';
+}
 
 
 </body>
