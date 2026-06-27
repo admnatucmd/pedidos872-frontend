@@ -1278,8 +1278,7 @@ function renderizarTabela() {
                                 ${formatarParcelasHTML(p.parcelasPropaganda, 'Propaganda', 'propaganda', p.pedido)}
                             </div>
                             <div style="margin-top:12px;">
-                                <button class="btn-exportar" onclick="exportarPagamentos()">📤 Exportar marcações</button>
-                                <button class="btn-salvar-local" onclick="limparPagamentos()" style="background:#dc3545;">🗑️ Limpar todas</button>
+                                <button class="btn-salvar-local" onclick="limparMarcacoesPedido('${p.pedido}')" style="background:#dc3545;">🗑️ Limpar deste pedido</button>
                             </div>
                             <small></small>
                         </div>
@@ -1947,8 +1946,7 @@ function mostrarPedidosPorMes() {
                             ${formatarParcelasHTML(p.parcelasPropaganda, 'Propaganda', 'propaganda', p.pedido)}
                         </div>
                         <div style="margin-top:12px;">
-                            <button class="btn-exportar" onclick="exportarPagamentos()">📤 Exportar marcações</button>
-                            <button class="btn-salvar-local" onclick="limparPagamentos()" style="background:#dc3545;">🗑️ Limpar todas</button>
+                            <button class="btn-salvar-local" onclick="limparMarcacoesPedido('${p.pedido}')" style="background:#dc3545;">🗑️ Limpar deste pedido</button>
                             <button class="btn-ver-pedido" onclick="irParaPedido('${p.pedido}')" style="padding:8px 16px;">🔍 Ver pedido completo na lista</button>
                         </div>
                         <small></small>
@@ -2326,7 +2324,39 @@ function mostrarBoletosProximoMes() {
 // (A função carregarDados será chamada após o login)
 </script>
 
-
+function limparMarcacoesPedido(pedidoId) {
+    if (!confirm(`⚠️ Tem certeza que deseja remover TODAS as marcações de pagamento do pedido ${pedidoId}?`)) {
+        return;
+    }
+    
+    // Carregar marcações atuais
+    const pagamentos = carregarPagamentosSalvos();
+    let removidos = 0;
+    
+    // Remover apenas as marcações deste pedido
+    for (const chave in pagamentos) {
+        if (chave.startsWith(pedidoId + '_')) {
+            delete pagamentos[chave];
+            removidos++;
+        }
+    }
+    
+    // Também remover do backend (se houver)
+    for (const chave in pagamentosBackend) {
+        if (chave.startsWith(pedidoId + '_')) {
+            delete pagamentosBackend[chave];
+        }
+    }
+    
+    // Salvar de volta
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(pagamentos));
+    localStorage.setItem('pagamentos_backend', JSON.stringify(pagamentosBackend));
+    
+    // Re-renderizar a tabela para atualizar a interface
+    renderizarTabela();
+    
+    alert(`✅ ${removidos} marcações removidas do pedido ${pedidoId}`);
+}
 
 
 </body>
