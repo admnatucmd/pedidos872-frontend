@@ -2593,11 +2593,11 @@ function renderizarTabelaProdutos() {
                         <th style="padding:12px 10px; text-align:left; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Data</th>
                         <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Produtos Únicos</th>
                         <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Quantidade Total</th>
-                        <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Indisponíveis</th>
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Preço de Compra</th>
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Preço de Venda</th>
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Lucro (R$)</th>
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Lucro (%)</th>
+                        <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Indisponíveis</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -2617,11 +2617,11 @@ function renderizarTabelaProdutos() {
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${p.data}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.produtosUnicos}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.totalProdutos}</td>
-                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center; color:#dc3545; font-weight:bold;">${p.produtosIndisponiveis}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(precoCompra)}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(precoVenda)}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(lucro)}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${lucroPercentual.toFixed(1)}%</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.produtosIndisponiveis}</td>
             </tr>
             <tr id="detalhe-produtos-${p.pedido}" class="parcelas-detail">
                 <td colspan="9">
@@ -2663,7 +2663,6 @@ function renderizarTabelaProdutos() {
     
     container.innerHTML = html;
 }
-
 
 
 function toggleDetalhesProdutos(pedidoId) {
