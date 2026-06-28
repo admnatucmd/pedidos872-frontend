@@ -2377,35 +2377,39 @@ function toggleSubmenuProdutos() {
     const btnProdutos = document.getElementById('btnProdutos');
     
     if (submenu.style.display === 'flex') {
+        // Fechar submenu
         submenu.style.display = 'none';
         btnProdutos.classList.remove('active');
         document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
+        
+        // Voltar para a tabela original
+        voltarTabelaOriginal();
     } else {
-        // Fecha outros submenus
+        // Fechar outros submenus
         document.getElementById('submenuBoletos').style.display = 'none';
         document.getElementById('btnBoletosPagar').classList.remove('active');
         
-        // Mostra submenu de produtos
-        document.querySelectorAll('.btn-actions .btn').forEach(b => {
-            b.classList.remove('active');
-        });
+        // Mostrar submenu de produtos
+        document.querySelectorAll('.btn-actions .btn').forEach(b => b.classList.remove('active'));
         btnProdutos.classList.add('active');
         submenu.style.display = 'flex';
         
-        // Esconde outros elementos
+        // Esconder elementos da tabela original
         document.getElementById('dataTable').style.display = 'none';
         document.getElementById('mesContainer').style.display = 'none';
         document.getElementById('semanaInfo').style.display = 'none';
         document.getElementById('statsContainer').classList.add('stats-hidden');
         
-        // ===== ATIVA O PRIMEIRO BOTÃO DO SUBMENU =====
-        const botoesSubmenu = document.querySelectorAll('.btn-submenu');
-        botoesSubmenu.forEach(b => b.classList.remove('active'));
-        if (botoesSubmenu.length > 0) {
-            botoesSubmenu[0].classList.add('active');
+        // Limpar wrapper
+        document.getElementById('tableWrapper').innerHTML = '';
+        
+        // Ativar o primeiro botão e mostrar produtos por pedido
+        document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
+        const botoes = document.querySelectorAll('.btn-submenu');
+        if (botoes.length > 0) {
+            botoes[0].classList.add('active');
         }
         
-        // Abre "Produtos por pedido" por padrão
         mostrarProdutosPorPedido();
     }
 }
@@ -2606,7 +2610,6 @@ function renderizarTabelaProdutos() {
         return;
     }
     
-    // Ordenar por data (mais recente primeiro)
     produtosData.sort((a, b) => {
         const dataA = new Date(a.data.split('/').reverse().join('/'));
         const dataB = new Date(b.data.split('/').reverse().join('/'));
@@ -2678,7 +2681,7 @@ function renderizarTabelaProdutos() {
                                     </tr>
                                 </thead>
                                 <tbody id="produtos-detalhe-${p.pedido}">
-                                    <tr><td colspan="14" style="text-align:center; padding:20px; color:#999;">Carregando produtos...</td></tr>
+                                    <tr><td colspan="13" style="text-align:center; padding:20px; color:#999;">Carregando produtos...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -2843,24 +2846,17 @@ function limparValorProduto(valor) {
 }
 
 function mostrarProdutosPorPedido() {
-    // ===== ATUALIZA O BOTÃO ATIVO =====
+    // Atualiza botão ativo
     document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
     const botoes = document.querySelectorAll('.btn-submenu');
     if (botoes.length > 0) {
         botoes[0].classList.add('active');
     }
     
-    // ===== MOSTRA O SUBMENU =====
-    document.getElementById('submenuProdutos').style.display = 'flex';
-    document.getElementById('dataTable').style.display = 'none';
-    document.getElementById('mesContainer').style.display = 'none';
+    // Mostra a tabela de produtos
     document.getElementById('semanaInfo').style.display = 'none';
-    document.getElementById('statsContainer').classList.add('stats-hidden');
+    document.getElementById('mesContainer').style.display = 'none';
     
-    // ===== LIMPA O CONTEÚDO ANTERIOR =====
-    document.getElementById('tableWrapper').innerHTML = '';
-    
-    // ===== CARREGA OS DADOS =====
     if (produtosData.length === 0) {
         showNotification('🔄 Carregando dados de produtos...', 'loading');
         carregarProdutos().then(() => {
@@ -2872,76 +2868,72 @@ function mostrarProdutosPorPedido() {
 }
 
 function mostrarProdutosMaisPedidos() {
-    // ===== ATUALIZA O BOTÃO ATIVO =====
+    // Atualiza botão ativo
     document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
     const botoes = document.querySelectorAll('.btn-submenu');
     if (botoes.length > 1) {
         botoes[1].classList.add('active');
     }
     
-    // ===== LIMPA A TABELA DE PRODUTOS =====
+    // Limpa a tabela de produtos
     document.getElementById('tableWrapper').innerHTML = '';
     document.getElementById('dataTable').style.display = 'none';
     
+    // Mostra mensagem de desenvolvimento
     document.getElementById('semanaInfo').style.display = 'block';
     document.getElementById('semanaInfo').innerHTML = '📈 Em breve: Produtos mais pedidos';
-    document.getElementById('mesContainer').innerHTML = '<div style="text-align:center; padding:40px; color:#999;">📈 Funcionalidade em desenvolvimento...</div>';
     document.getElementById('mesContainer').style.display = 'block';
+    document.getElementById('mesContainer').innerHTML = '<div style="text-align:center; padding:40px; color:#999;">📈 Funcionalidade em desenvolvimento...</div>';
 }
 
 function mostrarProdutosMaiorLucro() {
-    // ===== ATUALIZA O BOTÃO ATIVO =====
     document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
     const botoes = document.querySelectorAll('.btn-submenu');
     if (botoes.length > 2) {
         botoes[2].classList.add('active');
     }
     
-    // ===== LIMPA A TABELA DE PRODUTOS =====
     document.getElementById('tableWrapper').innerHTML = '';
     document.getElementById('dataTable').style.display = 'none';
     
     document.getElementById('semanaInfo').style.display = 'block';
     document.getElementById('semanaInfo').innerHTML = '💰 Em breve: Produtos com maior lucro';
-    document.getElementById('mesContainer').innerHTML = '<div style="text-align:center; padding:40px; color:#999;">💰 Funcionalidade em desenvolvimento...</div>';
     document.getElementById('mesContainer').style.display = 'block';
+    document.getElementById('mesContainer').innerHTML = '<div style="text-align:center; padding:40px; color:#999;">💰 Funcionalidade em desenvolvimento...</div>';
 }
 
 function mostrarProdutosMenosPedidos() {
-    // ===== ATUALIZA O BOTÃO ATIVO =====
     document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
     const botoes = document.querySelectorAll('.btn-submenu');
     if (botoes.length > 3) {
         botoes[3].classList.add('active');
     }
     
-    // ===== LIMPA A TABELA DE PRODUTOS =====
     document.getElementById('tableWrapper').innerHTML = '';
     document.getElementById('dataTable').style.display = 'none';
     
     document.getElementById('semanaInfo').style.display = 'block';
     document.getElementById('semanaInfo').innerHTML = '📉 Em breve: Produtos menos pedidos';
-    document.getElementById('mesContainer').innerHTML = '<div style="text-align:center; padding:40px; color:#999;">📉 Funcionalidade em desenvolvimento...</div>';
     document.getElementById('mesContainer').style.display = 'block';
+    document.getElementById('mesContainer').innerHTML = '<div style="text-align:center; padding:40px; color:#999;">📉 Funcionalidade em desenvolvimento...</div>';
 }
 
 function mostrarProdutosMaiorDiferenca() {
-    // ===== ATUALIZA O BOTÃO ATIVO =====
     document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
     const botoes = document.querySelectorAll('.btn-submenu');
     if (botoes.length > 4) {
         botoes[4].classList.add('active');
     }
     
-    // ===== LIMPA A TABELA DE PRODUTOS =====
     document.getElementById('tableWrapper').innerHTML = '';
     document.getElementById('dataTable').style.display = 'none';
     
     document.getElementById('semanaInfo').style.display = 'block';
     document.getElementById('semanaInfo').innerHTML = '📊 Em breve: Maior diferença de preço';
-    document.getElementById('mesContainer').innerHTML = '<div style="text-align:center; padding:40px; color:#999;">📊 Funcionalidade em desenvolvimento...</div>';
     document.getElementById('mesContainer').style.display = 'block';
+    document.getElementById('mesContainer').innerHTML = '<div style="text-align:center; padding:40px; color:#999;">📊 Funcionalidade em desenvolvimento...</div>';
 }
+
 
 // Inicializar
 // (A função carregarDados será chamada após o login)
