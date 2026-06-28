@@ -2377,43 +2377,43 @@ function toggleSubmenuProdutos() {
     const btnProdutos = document.getElementById('btnProdutos');
     
     if (submenu.style.display === 'flex') {
-        // Fechar submenu
         submenu.style.display = 'none';
         btnProdutos.classList.remove('active');
         document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
         voltarTabelaOriginal();
-    } else {
-        // Fechar outros submenus
-        document.getElementById('submenuBoletos').style.display = 'none';
-        document.getElementById('btnBoletosPagar').classList.remove('active');
-        
-        // Mostrar submenu de produtos
-        document.querySelectorAll('.btn-actions .btn').forEach(b => {
-            b.classList.remove('active');
-        });
-        btnProdutos.classList.add('active');
-        submenu.style.display = 'flex';
-        
-        // Esconder elementos da tabela original
-        document.getElementById('dataTable').style.display = 'none';
-        document.getElementById('mesContainer').style.display = 'none';
-        document.getElementById('semanaInfo').style.display = 'none';
-        document.getElementById('statsContainer').classList.add('stats-hidden');
-        
-        // Limpar wrapper
-        document.getElementById('tableWrapper').innerHTML = '';
-        
-        // ===== CHAMAR DIRETAMENTE A FUNÇÃO =====
-        mostrarProdutosPorPedido();
+        return;
     }
+    
+    // Fechar outros submenus
+    document.getElementById('submenuBoletos').style.display = 'none';
+    document.getElementById('btnBoletosPagar').classList.remove('active');
+    
+    // Mostrar submenu de produtos
+    document.querySelectorAll('.btn-actions .btn').forEach(b => b.classList.remove('active'));
+    btnProdutos.classList.add('active');
+    submenu.style.display = 'flex';
+    
+    // Esconder elementos da tabela original
+    document.getElementById('dataTable').style.display = 'none';
+    document.getElementById('mesContainer').style.display = 'none';
+    document.getElementById('semanaInfo').style.display = 'none';
+    document.getElementById('statsContainer').classList.add('stats-hidden');
+    
+    // Limpar wrapper
+    document.getElementById('tableWrapper').innerHTML = '';
+    
+    // Chamar diretamente
+    mostrarProdutosPorPedido();
 }
+
 
 let produtosData = [];
 let produtosPorPedido = {};
 
 async function carregarProdutos() {
     try {
-        // ===== USA A ROTA /api/sheet-data COM PARÂMETRO sheet=Produtos =====
+        console.log('📊 Buscando produtos da planilha...');
+        
         const response = await fetch(`${API_BASE_URL}/api/sheet-data?sheet=Produtos`, {
             method: 'GET',
             credentials: 'include',
@@ -2428,29 +2428,48 @@ async function carregarProdutos() {
         }
         
         const result = await response.json();
+        console.log('📊 Resultado da API:', result);
         
         if (!result.success) {
             throw new Error(result.error || 'Erro ao buscar produtos');
         }
         
-        // ===== PROCESSAR DADOS =====
-        processarDadosProdutos(result.data);
+        if (!result.data || result.data.length < 2) {
+            console.log('📊 Nenhum dado de produtos encontrado');
+            produtosData = [];
+            produtosPorPedido = {};
+            window.produtosData = [];
+            return false;
+        }
         
+        // Processar dados
+        processarDadosProdutos(result.data);
+        console.log(`📊 ${produtosData.length} pedidos carregados`);
         return true;
+        
     } catch (error) {
         console.error('❌ Erro ao carregar produtos:', error);
         showNotification('❌ Erro ao carregar produtos: ' + error.message, 'error');
-        return false;
+        throw error;
     }
 }
 
+
 function processarDadosProdutos(data) {
+
+
+
+    console.log('📊 Processando dados de produtos...');
+    
     if (!data || data.length < 2) {
+        console.log('⚠️ Dados insuficientes');
         produtosData = [];
         produtosPorPedido = {};
         window.produtosData = [];
         return;
     }
+
+
     
     const idxPedido = 0;
     const idxData = 1;
@@ -2558,10 +2577,12 @@ function processarDadosProdutos(data) {
         };
     });
     
+        produtosData = Object.values(produtosPorPedido);
     window.produtosData = produtosData;
     window.produtosPorPedido = produtosPorPedido;
     
     console.log(`📊 ${produtosData.length} pedidos carregados da aba Produtos`);
+    console.log('📋 Primeiro pedido:', produtosData[0]);
 }
 
 
@@ -2575,31 +2596,52 @@ function mostrarProdutosPorPedido() {
         botoes[0].classList.add('active');
     }
     
-    // Mostra o submenu e esconde outros elementos
+    // Mostra o submenu
     document.getElementById('submenuProdutos').style.display = 'flex';
     document.getElementById('dataTable').style.display = 'none';
     document.getElementById('mesContainer').style.display = 'none';
     document.getElementById('semanaInfo').style.display = 'none';
     document.getElementById('statsContainer').classList.add('stats-hidden');
     
-    // Limpa o wrapper para evitar conteúdo antigo
+    // Limpa o wrapper
     document.getElementById('tableWrapper').innerHTML = '';
     
-    // Verifica se já tem dados carregados
-    if (produtosData.length === 0) {
-        console.log('📦 Carregando dados de produtos...');
-        showNotification('🔄 Carregando dados de produtos...', 'loading');
-        carregarProdutos().then(() => {
-            renderizarTabelaProdutos();
-        }).catch(err => {
-            console.error('❌ Erro ao carregar produtos:', err);
-            showNotification('❌ Erro ao carregar produtos', 'error');
-        });
-    } else {
-        console.log('📦 Renderizando tabela de produtos...');
+    // Se já tem dados, renderiza direto
+    if (produtosData && produtosData.length > 0) {
+        console.log('📦 Dados já carregados, renderizando...');
         renderizarTabelaProdutos();
+        return;
     }
+    
+    // Senão, carrega
+    console.log('📦 Carregando dados de produtos...');
+    showNotification('🔄 Carregando dados de produtos...', 'loading');
+    
+    carregarProdutos().then(() => {
+        if (produtosData && produtosData.length > 0) {
+            renderizarTabelaProdutos();
+        } else {
+            document.getElementById('tableWrapper').innerHTML = `
+                <div style="text-align:center; padding:40px; color:#667;">
+                    📦 Nenhum dado de produto encontrado na planilha.
+                    <br><br>
+                    <button onclick="carregarProdutos()" class="btn" style="background:#28a745;">🔄 Tentar novamente</button>
+                </div>
+            `;
+        }
+    }).catch(err => {
+        console.error('❌ Erro:', err);
+        document.getElementById('tableWrapper').innerHTML = `
+            <div style="text-align:center; padding:40px; color:#dc3545;">
+                ❌ Erro ao carregar produtos: ${err.message}
+                <br><br>
+                <button onclick="carregarProdutos()" class="btn" style="background:#28a745;">🔄 Tentar novamente</button>
+            </div>
+        `;
+    });
 }
+
+
 function renderizarTabelaProdutos() {
     const container = document.getElementById('tableWrapper');
     
