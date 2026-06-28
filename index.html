@@ -2419,110 +2419,88 @@ function processarDadosProdutos(data) {
         return;
     }
     
-    // ===== ÍNDICES CORRETOS PARA A ABA "PRODUTOS" =====
-    const idxPedido = 0;           // A
-    const idxData = 1;             // B
-    const idxNotaFiscal = 2;       // C
-    const idxPrecoCompra = 3;      // D - Valor Total do pedido
-    const idxProdutosUnicos = 8;   // I
-    const idxTotalProdutos = 9;    // J
-    const idxValorVendaTotal = 17; // R - VALOR DE VENDA TOTAL (R$)
-    const idxLucro = 18;           // S - LUCRO (R$)
+    const idxPedido = 0;
+    const idxData = 1;
+    const idxNotaFiscal = 2;
+    const idxPrecoCompra = 3;
+    const idxValorVendaTotal = 17;
+    const idxLucro = 18;
     
-    console.log('📊 Índice da coluna R (VALOR DE VENDA TOTAL):', idxValorVendaTotal);
-    
-    // ===== VARIÁVEL PARA ARMAZENAR O PEDIDO ATUAL =====
     let pedidoAtual = null;
-    
-    // Organizar por pedido
     produtosPorPedido = {};
     
     for (let i = 1; i < data.length; i++) {
         const row = data[i];
         if (row.length < 10) continue;
         
-        // ===== TENTA PEGAR O NÚMERO DO PEDIDO NA COLUNA A =====
         let pedido = String(row[idxPedido] || '').trim();
-        
-        // ===== SE A COLUNA A ESTIVER VAZIA, USA O PEDIDO ATUAL =====
         if (pedido === '' || pedido === 'Pedido') {
             pedido = pedidoAtual;
         } else {
-            // ===== SE TEM NÚMERO, ATUALIZA O PEDIDO ATUAL =====
             pedidoAtual = pedido;
         }
         
-        // ===== SE AINDA NÃO TEM PEDIDO, PULA A LINHA =====
-        if (!pedido || pedido === 'Pedido') {
-            continue;
-        }
+        if (!pedido || pedido === 'Pedido') continue;
         
-        // ===== INICIALIZA O PEDIDO SE NÃO EXISTIR =====
         if (!produtosPorPedido[pedido]) {
             produtosPorPedido[pedido] = {
                 pedido: pedido,
                 data: String(row[idxData] || '').trim(),
                 notaFiscal: String(row[idxNotaFiscal] || '').trim(),
                 precoCompra: limparValorProduto(String(row[idxPrecoCompra] || '0')),
-                produtosUnicos: 0,
-                totalProdutos: 0,
                 valorVendaTotal: 0,
                 lucroTotal: 0,
                 linhas: []
             };
         }
         
-        // ===== ADICIONA A LINHA AO PEDIDO =====
         const valorVenda = limparValorProduto(String(row[idxValorVendaTotal] || '0'));
         const lucro = limparValorProduto(String(row[idxLucro] || '0'));
+        const quantidade = row.length > 12 ? String(row[12] || '0').trim() : '0';
+        const codigo = row.length > 10 ? String(row[10] || '').trim() : '';
+        const produto = row.length > 11 ? String(row[11] || '').trim() : '';
         
         produtosPorPedido[pedido].linhas.push({
             linha: i,
-            codigo: row.length > 10 ? String(row[10] || '').trim() : '',
-            produto: row.length > 11 ? String(row[11] || '').trim() : '',
-            quantidade: row.length > 12 ? String(row[12] || '').trim() : '0',
+            codigo: codigo,
+            produto: produto,
+            quantidade: quantidade,
             valorVenda: valorVenda,
             lucro: lucro
         });
     }
     
-    // ===== PROCESSAR CADA PEDIDO =====
     produtosData = Object.values(produtosPorPedido).map(p => {
         let valorVendaTotal = 0;
         let lucroTotal = 0;
+        let produtosUnicos = 0;
+        let totalProdutos = 0;
         
         console.log(`📊 Pedido ${p.pedido} - ${p.linhas.length} linhas`);
         
-        // ===== PERCORRE TODAS AS LINHAS DO PEDIDO =====
         for (const item of p.linhas) {
-            console.log(`   Linha ${item.linha}: R=${item.valorVenda}, S=${item.lucro}, Produto="${item.produto}"`);
+            console.log(`   Linha ${item.linha}: R=${item.valorVenda}, Qtd=${item.quantidade}, Produto="${item.produto}"`);
             
-            // Se o valor de venda for 0, é produto indisponível → PARA de somar
+            // ===== SE VALOR DE VENDA É 0, PARA DE SOMAR E CONTAR =====
             if (item.valorVenda === 0) {
-                console.log(`   ⛔ PAROU! Valor 0 encontrado na linha ${item.linha}`);
+                console.log(`   ⛔ PAROU! Valor 0 encontrado - ignorando produtos indisponíveis`);
                 break;
             }
             
-            valorVendaTotal += item.valorVenda;
-            lucroTotal += item.lucro;
+            const qtd = parseInt(item.quantidade) || 0;
+            
+            // ===== SÓ CONTA SE TIVER QUANTIDADE > 0 =====
+            if (qtd > 0) {
+                produtosUnicos++;
+                totalProdutos += qtd;
+                valorVendaTotal += item.valorVenda;
+                lucroTotal += item.lucro;
+            }
         }
         
+        console.log(`   ✅ Produtos únicos: ${produtosUnicos}`);
+        console.log(`   ✅ Total de produtos: ${totalProdutos}`);
         console.log(`   ✅ Soma da coluna R: ${valorVendaTotal}`);
-        console.log(`   ✅ Soma da coluna S: ${lucroTotal}`);
-        
-        // ===== PEGA OS VALORES DA PRIMEIRA LINHA DO PEDIDO =====
-        // Produtos Únicos e Total de Produtos estão na primeira linha (linha com pedido)
-        const primeiraLinha = p.linhas[0];
-        if (primeiraLinha) {
-            // Busca os valores na planilha original
-            // Como não temos acesso direto, vamos usar os valores já salvos
-            // Mas precisamos pegar da linha que tem o pedido
-            // Vamos recalcular baseado nas linhas
-        }
-        
-        // ===== RECALCULAR PRODUTOS ÚNICOS E TOTAL =====
-        const produtosUnicos = p.linhas.filter(item => item.valorVenda > 0).length;
-        const totalProdutos = p.linhas.reduce((sum, item) => sum + (parseInt(item.quantidade) || 0), 0);
         
         const precoVenda = valorVendaTotal;
         const lucroFinal = precoVenda - p.precoCompra;
@@ -2542,7 +2520,6 @@ function processarDadosProdutos(data) {
     window.produtosPorPedido = produtosPorPedido;
     
     console.log(`📊 ${produtosData.length} pedidos carregados da aba Produtos`);
-    console.log('📋 Exemplo do primeiro pedido:', produtosData[0]);
 }
 
 function mostrarProdutosPorPedido() {
