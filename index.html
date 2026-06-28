@@ -619,7 +619,8 @@ async function carregarDados() {
         statusDiv.textContent = '✅ Backend conectado';
         statusDiv.style.color = '#28a745';
         
-        const response = await fetch(`${API_BASE_URL}/api/sheet-data`, {
+        // ===== ENVIA sheet=Pagina1 EXPLICITAMENTE =====
+        const response = await fetch(`${API_BASE_URL}/api/sheet-data?sheet=Pagina1`, {
             method: 'GET',
             credentials: 'include',
             headers: {
@@ -638,33 +639,11 @@ async function carregarDados() {
             throw new Error(result.error || 'Erro ao buscar dados da planilha');
         }
         
-        // ===== PROCESSAR DADOS =====
+        // ===== PROCESSAR DADOS (função existente) =====
         pedidosData = processarDadosPlanilha(result.data);
         
         if (pedidosData.length === 0) {
             throw new Error('Nenhum pedido encontrado na planilha');
-        }
-        
-        // ===== BUSCAR DATA DE PROCESSAMENTO DA COLUNA J2 =====
-        let dataProcessamento = new Date().toLocaleString('pt-BR');
-        
-        if (result.data && result.data.length > 1 && result.data[1] && result.data[1][9]) {
-            const dataRaw = String(result.data[1][9]).trim();
-            if (dataRaw && dataRaw !== '') {
-                let dataConvertida = dataRaw;
-                
-                // Se for formato ISO (2026-06-25 15:01:00)
-                if (dataRaw.includes('-')) {
-                    const partes = dataRaw.split(' ');
-                    const dataPartes = partes[0].split('-');
-                    if (dataPartes.length === 3) {
-                        const hora = partes.length > 1 ? partes[1] : '';
-                        dataConvertida = `${dataPartes[2]}/${dataPartes[1]}/${dataPartes[0]} ${hora}`;
-                    }
-                }
-                
-                dataProcessamento = dataConvertida;
-            }
         }
         
         // ===== RENDERIZAR =====
@@ -676,7 +655,7 @@ async function carregarDados() {
         renderizarTabela();
         table.style.display = 'table';
         document.getElementById('statsContainer').classList.remove('stats-hidden');
-        document.getElementById('lastUpdate').innerHTML = `📆 Dados atualizados em: ${dataProcessamento}`;
+        document.getElementById('lastUpdate').innerHTML = `📆 Dados atualizados em: ${new Date().toLocaleString('pt-BR')}`;
         
         statusDiv.textContent = '✅ Dados carregados com sucesso!';
         statusDiv.style.color = '#28a745';
@@ -696,7 +675,6 @@ async function carregarDados() {
     
     loadingDiv.style.display = 'none';
 }
-
 
 
 
