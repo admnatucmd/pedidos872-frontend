@@ -2675,7 +2675,6 @@ function renderizarTabelaProdutos() {
                                         <th style="padding:6px 8px; text-align:right;">Lucro c/ Desc</th>
                                         <th style="padding:6px 8px; text-align:right;">Lucro % c/ Desc</th>
                                         <th style="padding:6px 8px; text-align:left;">Referência</th>
-                                        <th style="padding:6px 8px; text-align:left;">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody id="produtos-detalhe-${p.pedido}">
@@ -2809,8 +2808,6 @@ async function carregarProdutosDetalhados(pedidoId) {
             
             // Verifica se é indisponível
             const isIndisponivel = referencia.includes('Produtos indisponível na realização do pedido');
-            const status = isIndisponivel ? '⚠️ Indisponível' : '✅ Disponível';
-            const statusColor = isIndisponivel ? '#dc3545' : '#28a745';
             
             html += `
                 <tr style="${isIndisponivel ? 'background: #fff8f8;' : ''}">
@@ -2827,7 +2824,6 @@ async function carregarProdutosDetalhados(pedidoId) {
                     <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(lucroReal)}</td>
                     <td style="padding:6px 8px; text-align:right;">${lucroRealPercentual.toFixed(1)}%</td>
                     <td style="padding:6px 8px; text-align:left; font-size:11px; color:#667;">${referencia}</td>
-                    <td style="padding:6px 8px; text-align:center; color:${statusColor}; font-weight:bold;">${status}</td>
                 </tr>
             `;
         }
@@ -2846,10 +2842,38 @@ function limparValorProduto(valor) {
     return parseFloat(str) || 0;
 }
 
-function mostrarProdutosMaisPedidos() {
-    // Remove active de todos os botões
+function mostrarProdutosPorPedido() {
+    // ===== ATUALIZA O BOTÃO ATIVO =====
     document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
-    // Adiciona active no botão "Mais pedidos" (índice 1)
+    const botoes = document.querySelectorAll('.btn-submenu');
+    if (botoes.length > 0) {
+        botoes[0].classList.add('active');
+    }
+    
+    // ===== MOSTRA O SUBMENU =====
+    document.getElementById('submenuProdutos').style.display = 'flex';
+    document.getElementById('dataTable').style.display = 'none';
+    document.getElementById('mesContainer').style.display = 'none';
+    document.getElementById('semanaInfo').style.display = 'none';
+    document.getElementById('statsContainer').classList.add('stats-hidden');
+    
+    // ===== LIMPA O CONTEÚDO ANTERIOR =====
+    document.getElementById('tableWrapper').innerHTML = '';
+    
+    // ===== CARREGA OS DADOS =====
+    if (produtosData.length === 0) {
+        showNotification('🔄 Carregando dados de produtos...', 'loading');
+        carregarProdutos().then(() => {
+            renderizarTabelaProdutos();
+        });
+    } else {
+        renderizarTabelaProdutos();
+    }
+}
+
+function mostrarProdutosMaisPedidos() {
+    // ===== ATUALIZA O BOTÃO ATIVO =====
+    document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
     const botoes = document.querySelectorAll('.btn-submenu');
     if (botoes.length > 1) {
         botoes[1].classList.add('active');
@@ -2857,6 +2881,7 @@ function mostrarProdutosMaisPedidos() {
     
     // ===== LIMPA A TABELA DE PRODUTOS =====
     document.getElementById('tableWrapper').innerHTML = '';
+    document.getElementById('dataTable').style.display = 'none';
     
     document.getElementById('semanaInfo').style.display = 'block';
     document.getElementById('semanaInfo').innerHTML = '📈 Em breve: Produtos mais pedidos';
@@ -2865,6 +2890,7 @@ function mostrarProdutosMaisPedidos() {
 }
 
 function mostrarProdutosMaiorLucro() {
+    // ===== ATUALIZA O BOTÃO ATIVO =====
     document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
     const botoes = document.querySelectorAll('.btn-submenu');
     if (botoes.length > 2) {
@@ -2873,6 +2899,7 @@ function mostrarProdutosMaiorLucro() {
     
     // ===== LIMPA A TABELA DE PRODUTOS =====
     document.getElementById('tableWrapper').innerHTML = '';
+    document.getElementById('dataTable').style.display = 'none';
     
     document.getElementById('semanaInfo').style.display = 'block';
     document.getElementById('semanaInfo').innerHTML = '💰 Em breve: Produtos com maior lucro';
@@ -2881,6 +2908,7 @@ function mostrarProdutosMaiorLucro() {
 }
 
 function mostrarProdutosMenosPedidos() {
+    // ===== ATUALIZA O BOTÃO ATIVO =====
     document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
     const botoes = document.querySelectorAll('.btn-submenu');
     if (botoes.length > 3) {
@@ -2889,6 +2917,7 @@ function mostrarProdutosMenosPedidos() {
     
     // ===== LIMPA A TABELA DE PRODUTOS =====
     document.getElementById('tableWrapper').innerHTML = '';
+    document.getElementById('dataTable').style.display = 'none';
     
     document.getElementById('semanaInfo').style.display = 'block';
     document.getElementById('semanaInfo').innerHTML = '📉 Em breve: Produtos menos pedidos';
@@ -2897,6 +2926,7 @@ function mostrarProdutosMenosPedidos() {
 }
 
 function mostrarProdutosMaiorDiferenca() {
+    // ===== ATUALIZA O BOTÃO ATIVO =====
     document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
     const botoes = document.querySelectorAll('.btn-submenu');
     if (botoes.length > 4) {
@@ -2905,6 +2935,7 @@ function mostrarProdutosMaiorDiferenca() {
     
     // ===== LIMPA A TABELA DE PRODUTOS =====
     document.getElementById('tableWrapper').innerHTML = '';
+    document.getElementById('dataTable').style.display = 'none';
     
     document.getElementById('semanaInfo').style.display = 'block';
     document.getElementById('semanaInfo').innerHTML = '📊 Em breve: Maior diferença de preço';
