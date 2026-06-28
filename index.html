@@ -2402,7 +2402,8 @@ let produtosPorPedido = {};
 
 async function carregarProdutos() {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/sheet-data-produtos`, {
+        // ===== USA A ROTA /api/sheet-data COM PARÂMETRO sheet=Produtos =====
+        const response = await fetch(`${API_BASE_URL}/api/sheet-data?sheet=Produtos`, {
             method: 'GET',
             credentials: 'include',
             headers: {
@@ -2411,7 +2412,8 @@ async function carregarProdutos() {
         });
         
         if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
         }
         
         const result = await response.json();
@@ -2420,13 +2422,13 @@ async function carregarProdutos() {
             throw new Error(result.error || 'Erro ao buscar produtos');
         }
         
-        // Processar dados
+        // ===== PROCESSAR DADOS =====
         processarDadosProdutos(result.data);
         
         return true;
     } catch (error) {
         console.error('❌ Erro ao carregar produtos:', error);
-        showNotification('❌ Erro ao carregar produtos', 'error');
+        showNotification('❌ Erro ao carregar produtos: ' + error.message, 'error');
         return false;
     }
 }
