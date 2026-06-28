@@ -2425,7 +2425,8 @@ function processarDadosProdutos(data) {
     const idxPrecoCompra = 3;
     const idxValorVendaTotal = 17;
     const idxLucro = 18;
-    const idxReferencia = 22; // ← COLUNA W (REFERÊNCIA)
+    const idxReferencia = 22;
+    const idxPontos = 13; // ← COLUNA N (PONTOS)
     
     let pedidoAtual = null;
     produtosPorPedido = {};
@@ -2451,19 +2452,20 @@ function processarDadosProdutos(data) {
                 precoCompra: limparValorProduto(String(row[idxPrecoCompra] || '0')),
                 valorVendaTotal: 0,
                 lucroTotal: 0,
-                produtosIndisponiveis: 0, // ← NOVO
+                totalPontos: 0, // ← NOVO
+                produtosIndisponiveis: 0,
                 linhas: []
             };
         }
         
         const valorVenda = limparValorProduto(String(row[idxValorVendaTotal] || '0'));
         const lucro = limparValorProduto(String(row[idxLucro] || '0'));
+        const pontos = parseInt(String(row[idxPontos] || '0').replace(/\./g, '').trim()) || 0;
         const referencia = row.length > idxReferencia ? String(row[idxReferencia] || '').trim() : '';
         const quantidade = row.length > 12 ? String(row[12] || '0').trim() : '0';
         const codigo = row.length > 10 ? String(row[10] || '').trim() : '';
         const produto = row.length > 11 ? String(row[11] || '').trim() : '';
         
-        // ===== VERIFICA SE É INDISPONÍVEL =====
         const isIndisponivel = referencia.includes('Produtos indisponível na realização do pedido');
         
         produtosPorPedido[pedido].linhas.push({
@@ -2473,8 +2475,9 @@ function processarDadosProdutos(data) {
             quantidade: quantidade,
             valorVenda: valorVenda,
             lucro: lucro,
+            pontos: pontos,
             referencia: referencia,
-            isIndisponivel: isIndisponivel // ← NOVO
+            isIndisponivel: isIndisponivel
         });
     }
     
@@ -2483,38 +2486,28 @@ function processarDadosProdutos(data) {
         let lucroTotal = 0;
         let produtosUnicos = 0;
         let totalProdutos = 0;
+        let totalPontos = 0;
         let produtosIndisponiveis = 0;
         
-        console.log(`📊 Pedido ${p.pedido} - ${p.linhas.length} linhas`);
-        
         for (const item of p.linhas) {
-            // ===== CONTA PRODUTOS INDISPONÍVEIS =====
             if (item.isIndisponivel) {
                 produtosIndisponiveis++;
-                console.log(`   ⛔ Indisponível: ${item.produto} - ${item.referencia}`);
-                continue; // Pula para o próximo item
+                continue;
             }
             
-            // ===== SE VALOR DE VENDA É 0, PARA DE SOMAR E CONTAR =====
             if (item.valorVenda === 0) {
-                console.log(`   ⛔ PAROU! Valor 0 encontrado - ignorando produtos indisponíveis`);
                 break;
             }
             
             const qtd = parseInt(item.quantidade) || 0;
-            
             if (qtd > 0) {
                 produtosUnicos++;
                 totalProdutos += qtd;
+                totalPontos += item.pontos; // ← SOMA DOS PONTOS
                 valorVendaTotal += item.valorVenda;
                 lucroTotal += item.lucro;
             }
         }
-        
-        console.log(`   ✅ Produtos únicos: ${produtosUnicos}`);
-        console.log(`   ✅ Total de produtos: ${totalProdutos}`);
-        console.log(`   ✅ Produtos indisponíveis: ${produtosIndisponiveis}`);
-        console.log(`   ✅ Soma da coluna R: ${valorVendaTotal}`);
         
         const precoVenda = valorVendaTotal;
         const lucroFinal = precoVenda - p.precoCompra;
@@ -2524,7 +2517,8 @@ function processarDadosProdutos(data) {
             ...p,
             produtosUnicos: produtosUnicos,
             totalProdutos: totalProdutos,
-            produtosIndisponiveis: produtosIndisponiveis, // ← NOVO
+            totalPontos: totalPontos, // ← NOVO
+            produtosIndisponiveis: produtosIndisponiveis,
             precoVenda: precoVenda,
             lucroTotal: lucroFinal,
             lucroPercentual: lucroPercentual
@@ -2588,23 +2582,19 @@ function renderizarTabelaProdutos() {
         <div style="overflow-x:auto; padding:20px 0;">
             <table style="width:100%; border-collapse:collapse; font-size:13px;">
                 <thead>
-    <tr style="background:#f1f3f5;">
-        <th style="padding:6px 8px; text-align:left;">Código</th>
-        <th style="padding:6px 8px; text-align:left;">Produto</th>
-        <th style="padding:6px 8px; text-align:center;">Qtd</th>
-        <th style="padding:6px 8px; text-align:center;">Pontos</th>
-        <th style="padding:6px 8px; text-align:right;">Valor Unit</th>
-        <th style="padding:6px 8px; text-align:right;">Valor Total</th>
-        <th style="padding:6px 8px; text-align:right;">Venda Unit</th>
-        <th style="padding:6px 8px; text-align:right;">Venda Total</th>
-        <th style="padding:6px 8px; text-align:right;">Lucro</th>
-        <th style="padding:6px 8px; text-align:right;">Lucro %</th>
-        <th style="padding:6px 8px; text-align:right;">Lucro c/ Desc</th>
-        <th style="padding:6px 8px; text-align:right;">Lucro % c/ Desc</th>
-        <th style="padding:6px 8px; text-align:left;">Referência</th>
-        <th style="padding:6px 8px; text-align:left;">Status</th>
-    </tr>
-</thead>
+                    <tr style="background:#f8f9fa;">
+                        <th style="padding:12px 10px; text-align:left; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Pedido</th>
+                        <th style="padding:12px 10px; text-align:left; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Data</th>
+                        <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Produtos Únicos</th>
+                        <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Quantidade Total</th>
+                        <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Pontos</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Preço de Compra</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Preço de Venda</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Lucro (R$)</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Lucro (%)</th>
+                        <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Indisponíveis</th>
+                    </tr>
+                </thead>
                 <tbody>
     `;
     
@@ -2622,6 +2612,7 @@ function renderizarTabelaProdutos() {
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${p.data}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.produtosUnicos}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.totalProdutos}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.totalPontos}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(precoCompra)}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(precoVenda)}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(lucro)}</td>
@@ -2629,7 +2620,7 @@ function renderizarTabelaProdutos() {
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.produtosIndisponiveis}</td>
             </tr>
             <tr id="detalhe-produtos-${p.pedido}" class="parcelas-detail">
-                <td colspan="9">
+                <td colspan="10">
                     <div class="detail-card">
                         <strong>📋 Produtos do Pedido ${p.pedido}</strong>
                         <div style="margin-top:10px; overflow-x:auto;">
@@ -2639,17 +2630,21 @@ function renderizarTabelaProdutos() {
                                         <th style="padding:6px 8px; text-align:left;">Código</th>
                                         <th style="padding:6px 8px; text-align:left;">Produto</th>
                                         <th style="padding:6px 8px; text-align:center;">Qtd</th>
+                                        <th style="padding:6px 8px; text-align:center;">Pontos</th>
                                         <th style="padding:6px 8px; text-align:right;">Valor Unit</th>
                                         <th style="padding:6px 8px; text-align:right;">Valor Total</th>
                                         <th style="padding:6px 8px; text-align:right;">Venda Unit</th>
                                         <th style="padding:6px 8px; text-align:right;">Venda Total</th>
                                         <th style="padding:6px 8px; text-align:right;">Lucro</th>
                                         <th style="padding:6px 8px; text-align:right;">Lucro %</th>
+                                        <th style="padding:6px 8px; text-align:right;">Lucro c/ Desc</th>
+                                        <th style="padding:6px 8px; text-align:right;">Lucro % c/ Desc</th>
+                                        <th style="padding:6px 8px; text-align:left;">Referência</th>
                                         <th style="padding:6px 8px; text-align:left;">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody id="produtos-detalhe-${p.pedido}">
-                                    <tr><td colspan="10" style="text-align:center; padding:20px; color:#999;">Carregando produtos...</td></tr>
+                                    <tr><td colspan="14" style="text-align:center; padding:20px; color:#999;">Carregando produtos...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -2668,7 +2663,6 @@ function renderizarTabelaProdutos() {
     
     container.innerHTML = html;
 }
-
 
 function toggleDetalhesProdutos(pedidoId) {
     const row = document.getElementById(`detalhe-produtos-${pedidoId}`);
