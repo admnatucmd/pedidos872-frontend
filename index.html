@@ -347,6 +347,7 @@
         <button class="btn" id="btnPedidosMes" onclick="mostrarPedidosPorMes()">📋 Pedidos realizados por mês</button>
         <button class="btn" id="btnPagosMes" onclick="mostrarPagosPorMes()">Valor pago por mês</button>
         <button class="btn" id="btnBoletosPagar" onclick="toggleSubmenuBoletos()">📅 Boletos a pagar</button>
+	 <button class="btn" id="btnProdutos" onclick="toggleSubmenuProdutos()">Produtos</button>
         <button class="btn voltar" onclick="voltarTabelaOriginal()">⬅️ Voltar</button>
     </div>
 
@@ -356,6 +357,14 @@
         <button class="btn-submenu" onclick="mostrarBoletosAtrasados()">⚠️ Atrasados</button>
 	<button class="btn-submenu" onclick="mostrarBoletosProximoMes()">📅 Próximo mês</button> 
     </div>
+
+	<div id="submenuProdutos" class="submenu-container" style="display:none;">
+    <button class="btn-submenu active" onclick="mostrarProdutosPorPedido()">📦 Produtos por pedido</button>
+    <button class="btn-submenu" onclick="mostrarProdutosMaisPedidos()">📈 Mais pedidos</button>
+    <button class="btn-submenu" onclick="mostrarProdutosMaiorLucro()">💰 Maior lucro</button>
+    <button class="btn-submenu" onclick="mostrarProdutosMenosPedidos()">📉 Menos pedidos</button>
+    <button class="btn-submenu" onclick="mostrarProdutosMaiorDiferenca()">📊 Maior diferença de preço</button>
+</div>
 
     <div id="mesContainer" style="display:none;"></div>
     <div id="semanaInfo" class="semana-info" style="display:none;"></div>
@@ -1405,6 +1414,7 @@ function voltarTabelaOriginal() {
     document.getElementById('mesContainer').style.display = 'none';
     document.getElementById('semanaInfo').style.display = 'none';
     document.getElementById('submenuBoletos').style.display = 'none';
+    document.getElementById('submenuProdutos').style.display = 'none';
     document.querySelectorAll('.btn-actions .btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
     
@@ -2355,9 +2365,391 @@ function limparMarcacoesPedido(pedidoId) {
 }
 
 
+function toggleSubmenuProdutos() {
+    const submenu = document.getElementById('submenuProdutos');
+    const btnProdutos = document.getElementById('btnProdutos');
+    
+    if (submenu.style.display === 'flex') {
+        submenu.style.display = 'none';
+        btnProdutos.classList.remove('active');
+        document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
+    } else {
+        // Fecha outros submenus
+        document.getElementById('submenuBoletos').style.display = 'none';
+        document.getElementById('btnBoletosPagar').classList.remove('active');
+        
+        // Mostra submenu de produtos
+        document.querySelectorAll('.btn-actions .btn').forEach(b => {
+            b.classList.remove('active');
+        });
+        btnProdutos.classList.add('active');
+        submenu.style.display = 'flex';
+        
+        // Esconde outros elementos
+        document.getElementById('dataTable').style.display = 'none';
+        document.getElementById('mesContainer').style.display = 'none';
+        document.getElementById('semanaInfo').style.display = 'none';
+        document.getElementById('statsContainer').classList.add('stats-hidden');
+        
+        // Abre "Produtos por pedido" por padrão
+        mostrarProdutosPorPedido();
+    }
+}
 
 
+let produtosData = [];
+let produtosPorPedido = {};
 
+async function carregarProdutos() {
+    try {
+        const response = await fetch(`${API_BASE_URL}/api/sheet-data-produtos`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Erro ao buscar produtos');
+        }
+        
+        // Processar dados
+        processarDadosProdutos(result.data);
+        
+        return true;
+    } catch (error) {
+        console.error('❌ Erro ao carregar produtos:', error);
+        showNotification('❌ Erro ao carregar produtos', 'error');
+        return false;
+    }
+}
+
+function processarDadosProdutos(data) {
+    if (!data || data.length < 2) {
+        produtosData = [];
+        produtosPorPedido = {};
+        return;
+    }
+    
+    // O cabeçalho está na linha 0
+    const cabecalho = data[0];
+    
+    // Mapear índices das colunas
+    const idxPedido = 0;       // A
+    const idxData = 1;         // B
+    const idxNotaFiscal = 2;   // C
+    const idxValorTotal = 3;   // D
+    const idxProdutosUnicos = 8;  // I
+    const idxTotalProdutos = 9;   // J
+    const idxValorVendaTotal = 17; // R
+    const idxLucro = 18;       // S
+    
+    // Organizar por pedido
+    produtosPorPedido = {};
+    
+    for (let i = 1; i < data.length; i++) {
+        const row = data[i];
+        if (row.length < 10) continue;
+        
+        const pedido = String(row[idxPedido] || '').trim();
+        if (!pedido || pedido === 'Pedido') continue;
+        
+        if (!produtosPorPedido[pedido]) {
+            produtosPorPedido[pedido] = {
+                pedido: pedido,
+                data: String(row[idxData] || '').trim(),
+                notaFiscal: String(row[idxNotaFiscal] || '').trim(),
+                valorTotal: String(row[idxValorTotal] || '').trim(),
+                produtosUnicos: parseInt(row[idxProdutosUnicos]) || 0,
+                totalProdutos: parseInt(row[idxTotalProdutos]) || 0,
+                // Vamos calcular a soma dos valores de venda e lucro
+                valorVendaTotal: 0,
+                lucroTotal: 0,
+                // Armazenar todas as linhas para cálculos
+                linhas: []
+            };
+        }
+        
+        // Só adiciona linhas com produtos válidos
+        if (row.length > 10) {
+            const valorVenda = limparValorProduto(String(row[idxValorVendaTotal] || '0'));
+            const lucro = limparValorProduto(String(row[idxLucro] || '0'));
+            
+            produtosPorPedido[pedido].valorVendaTotal += valorVenda;
+            produtosPorPedido[pedido].lucroTotal += lucro;
+        }
+    }
+    
+    // Converter para array
+    produtosData = Object.values(produtosPorPedido);
+    
+    console.log(`📊 ${produtosData.length} pedidos carregados da aba Produtos`);
+}
+
+
+function mostrarProdutosPorPedido() {
+    // Atualiza o botão ativo
+    document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
+    document.querySelector('.btn-submenu:first-child')?.classList.add('active');
+    
+    // Mostra o submenu
+    document.getElementById('submenuProdutos').style.display = 'flex';
+    document.getElementById('dataTable').style.display = 'none';
+    document.getElementById('mesContainer').style.display = 'none';
+    document.getElementById('semanaInfo').style.display = 'none';
+    document.getElementById('statsContainer').classList.add('stats-hidden');
+    
+    // Se não tem dados, carrega
+    if (produtosData.length === 0) {
+        showNotification('🔄 Carregando dados de produtos...', 'loading');
+        carregarProdutos().then(() => {
+            renderizarTabelaProdutos();
+        });
+    } else {
+        renderizarTabelaProdutos();
+    }
+}
+
+function renderizarTabelaProdutos() {
+    const container = document.getElementById('tableWrapper');
+    
+    if (produtosData.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:40px; color:#667;">
+                📦 Nenhum dado de produto encontrado na planilha.
+                <br><br>
+                <button onclick="carregarProdutos()" class="btn" style="background:#28a745;">🔄 Carregar produtos</button>
+            </div>
+        `;
+        return;
+    }
+    
+    // Ordenar por data (mais recente primeiro)
+    produtosData.sort((a, b) => {
+        const dataA = new Date(a.data.split('/').reverse().join('/'));
+        const dataB = new Date(b.data.split('/').reverse().join('/'));
+        return dataB - dataA;
+    });
+    
+    let html = `
+        <div style="overflow-x:auto; padding:20px 0;">
+            <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <thead>
+                    <tr style="background:#f8f9fa;">
+                        <th style="padding:12px 10px; text-align:left; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Pedido</th>
+                        <th style="padding:12px 10px; text-align:left; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Data</th>
+                        <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Produtos Únicos</th>
+                        <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Quantidade Total</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Preço de Compra</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Preço de Venda</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Lucro (R$)</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Lucro (%)</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Valor Pendente</th>
+                        <th style="padding:12px 10px; text-align:left; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Situação</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    produtosData.forEach(p => {
+        const valorTotal = limparValorProduto(p.valorTotal);
+        const valorVenda = p.valorVendaTotal || 0;
+        const lucro = p.lucroTotal || 0;
+        const lucroPercentual = valorTotal > 0 ? (lucro / valorTotal) * 100 : 0;
+        
+        // Calcular valor pendente (simplificado - pode ser ajustado)
+        const valorPendente = valorTotal; // Placeholder
+        
+        const statusClass = valorPendente === 0 ? 'status-pagos' : 'status-a-vencer';
+        const statusText = valorPendente === 0 ? '✅ Totalmente Pago' : `⚠️ Pendente: ${formatarMoedaBR(valorPendente)}`;
+        
+        html += `
+            <tr class="pedido-row" onclick="toggleDetalhesProdutos('${p.pedido}')" style="cursor:pointer; transition:background 0.2s;">
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle;">
+                    <span class="expand-icon">▶</span> ${p.pedido}
+                </td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${p.data}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.produtosUnicos}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.totalProdutos}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(valorTotal)}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(valorVenda)}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(lucro)}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${lucroPercentual.toFixed(1)}%</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(valorPendente)}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle;" class="${statusClass}">${statusText}</td>
+            </tr>
+            <tr id="detalhe-produtos-${p.pedido}" class="parcelas-detail">
+                <td colspan="10">
+                    <div class="detail-card">
+                        <strong>📋 Produtos do Pedido ${p.pedido}</strong>
+                        <div style="margin-top:10px; overflow-x:auto;">
+                            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                                <thead>
+                                    <tr style="background:#f1f3f5;">
+                                        <th style="padding:6px 8px; text-align:left;">Código</th>
+                                        <th style="padding:6px 8px; text-align:left;">Produto</th>
+                                        <th style="padding:6px 8px; text-align:center;">Qtd</th>
+                                        <th style="padding:6px 8px; text-align:right;">Valor Unit</th>
+                                        <th style="padding:6px 8px; text-align:right;">Valor Total</th>
+                                        <th style="padding:6px 8px; text-align:right;">Venda Unit</th>
+                                        <th style="padding:6px 8px; text-align:right;">Venda Total</th>
+                                        <th style="padding:6px 8px; text-align:right;">Lucro</th>
+                                        <th style="padding:6px 8px; text-align:right;">Lucro %</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="produtos-detalhe-${p.pedido}">
+                                    <tr><td colspan="9" style="text-align:center; padding:20px; color:#999;">Carregando produtos...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <small>Dados da aba Produtos | ${new Date().toLocaleString('pt-BR')}</small>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+function toggleDetalhesProdutos(pedidoId) {
+    const row = document.getElementById(`detalhe-produtos-${pedidoId}`);
+    if (!row) return;
+    
+    row.classList.toggle('show');
+    const icon = row.previousElementSibling.querySelector('.expand-icon');
+    if (icon) icon.innerHTML = row.classList.contains('show') ? '▼' : '▶';
+    
+    // Se abriu, carregar os produtos detalhados
+    if (row.classList.contains('show')) {
+        carregarProdutosDetalhados(pedidoId);
+    }
+}
+
+async function carregarProdutosDetalhados(pedidoId) {
+    const tbody = document.getElementById(`produtos-detalhe-${pedidoId}`);
+    if (!tbody) return;
+    
+    // Verifica se já tem dados
+    if (tbody.querySelector('tr')?.textContent !== 'Carregando produtos...') {
+        return;
+    }
+    
+    try {
+        // Buscar os produtos específicos do pedido
+        const response = await fetch(`${API_BASE_URL}/api/produtos/pedido/${pedidoId}`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success || !data.data || data.data.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:20px; color:#999;">Nenhum produto encontrado para este pedido.</td></tr>`;
+            return;
+        }
+        
+        let html = '';
+        // Pular cabeçalho (linha 1) e processar produtos
+        for (let i = 1; i < data.data.length; i++) {
+            const row = data.data[i];
+            if (row.length < 10) continue;
+            
+            const codigo = row[10] || '';
+            const produto = row[11] || '';
+            const qtd = row[12] || '0';
+            const valorUnit = limparValorProduto(row[14] || '0');
+            const valorTotal = limparValorProduto(row[15] || '0');
+            const vendaUnit = limparValorProduto(row[16] || '0');
+            const vendaTotal = limparValorProduto(row[17] || '0');
+            const lucro = limparValorProduto(row[18] || '0');
+            const lucroPercentual = valorUnit > 0 ? (lucro / valorUnit) * 100 : 0;
+            
+            html += `
+                <tr>
+                    <td style="padding:6px 8px;">${codigo}</td>
+                    <td style="padding:6px 8px;">${produto}</td>
+                    <td style="padding:6px 8px; text-align:center;">${qtd}</td>
+                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(valorUnit)}</td>
+                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(valorTotal)}</td>
+                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(vendaUnit)}</td>
+                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(vendaTotal)}</td>
+                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(lucro)}</td>
+                    <td style="padding:6px 8px; text-align:right;">${lucroPercentual.toFixed(1)}%</td>
+                </tr>
+            `;
+        }
+        
+        tbody.innerHTML = html || `<tr><td colspan="9" style="text-align:center; padding:20px; color:#999;">Nenhum produto encontrado.</td></tr>`;
+        
+    } catch (error) {
+        console.error('❌ Erro ao carregar produtos detalhados:', error);
+        tbody.innerHTML = `<tr><td colspan="9" style="text-align:center; padding:20px; color:red;">❌ Erro ao carregar produtos: ${error.message}</td></tr>`;
+    }
+}
+
+
+function limparValorProduto(valor) {
+    if (!valor || valor === '') return 0;
+    const str = String(valor).replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+    return parseFloat(str) || 0;
+}
+
+function mostrarProdutosMaisPedidos() {
+    document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.btn-submenu')[1]?.classList.add('active');
+    document.getElementById('semanaInfo').style.display = 'block';
+    document.getElementById('semanaInfo').innerHTML = '📈 Em breve: Produtos mais pedidos';
+    document.getElementById('mesContainer').innerHTML = '<div style="text-align:center; padding:40px; color:#999;">📈 Funcionalidade em desenvolvimento...</div>';
+    document.getElementById('mesContainer').style.display = 'block';
+}
+
+function mostrarProdutosMaiorLucro() {
+    document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.btn-submenu')[2]?.classList.add('active');
+    document.getElementById('semanaInfo').style.display = 'block';
+    document.getElementById('semanaInfo').innerHTML = '💰 Em breve: Produtos com maior lucro';
+    document.getElementById('mesContainer').innerHTML = '<div style="text-align:center; padding:40px; color:#999;">💰 Funcionalidade em desenvolvimento...</div>';
+    document.getElementById('mesContainer').style.display = 'block';
+}
+
+function mostrarProdutosMenosPedidos() {
+    document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.btn-submenu')[3]?.classList.add('active');
+    document.getElementById('semanaInfo').style.display = 'block';
+    document.getElementById('semanaInfo').innerHTML = '📉 Em breve: Produtos menos pedidos';
+    document.getElementById('mesContainer').innerHTML = '<div style="text-align:center; padding:40px; color:#999;">📉 Funcionalidade em desenvolvimento...</div>';
+    document.getElementById('mesContainer').style.display = 'block';
+}
+
+function mostrarProdutosMaiorDiferenca() {
+    document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.btn-submenu')[4]?.classList.add('active');
+    document.getElementById('semanaInfo').style.display = 'block';
+    document.getElementById('semanaInfo').innerHTML = '📊 Em breve: Maior diferença de preço';
+    document.getElementById('mesContainer').innerHTML = '<div style="text-align:center; padding:40px; color:#999;">📊 Funcionalidade em desenvolvimento...</div>';
+    document.getElementById('mesContainer').style.display = 'block';
+}
 
 
 // Inicializar
