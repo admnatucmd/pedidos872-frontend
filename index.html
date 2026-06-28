@@ -2425,6 +2425,7 @@ function processarDadosProdutos(data) {
     const idxPrecoCompra = 3;
     const idxValorVendaTotal = 17;
     const idxLucro = 18;
+    const idxReferencia = 22; // ← COLUNA W (REFERÊNCIA)
     
     let pedidoAtual = null;
     produtosPorPedido = {};
@@ -2450,15 +2451,20 @@ function processarDadosProdutos(data) {
                 precoCompra: limparValorProduto(String(row[idxPrecoCompra] || '0')),
                 valorVendaTotal: 0,
                 lucroTotal: 0,
+                produtosIndisponiveis: 0, // ← NOVO
                 linhas: []
             };
         }
         
         const valorVenda = limparValorProduto(String(row[idxValorVendaTotal] || '0'));
         const lucro = limparValorProduto(String(row[idxLucro] || '0'));
+        const referencia = row.length > idxReferencia ? String(row[idxReferencia] || '').trim() : '';
         const quantidade = row.length > 12 ? String(row[12] || '0').trim() : '0';
         const codigo = row.length > 10 ? String(row[10] || '').trim() : '';
         const produto = row.length > 11 ? String(row[11] || '').trim() : '';
+        
+        // ===== VERIFICA SE É INDISPONÍVEL =====
+        const isIndisponivel = referencia.includes('Produtos indisponível na realização do pedido');
         
         produtosPorPedido[pedido].linhas.push({
             linha: i,
@@ -2466,7 +2472,9 @@ function processarDadosProdutos(data) {
             produto: produto,
             quantidade: quantidade,
             valorVenda: valorVenda,
-            lucro: lucro
+            lucro: lucro,
+            referencia: referencia,
+            isIndisponivel: isIndisponivel // ← NOVO
         });
     }
     
@@ -2475,11 +2483,17 @@ function processarDadosProdutos(data) {
         let lucroTotal = 0;
         let produtosUnicos = 0;
         let totalProdutos = 0;
+        let produtosIndisponiveis = 0;
         
         console.log(`📊 Pedido ${p.pedido} - ${p.linhas.length} linhas`);
         
         for (const item of p.linhas) {
-            console.log(`   Linha ${item.linha}: R=${item.valorVenda}, Qtd=${item.quantidade}, Produto="${item.produto}"`);
+            // ===== CONTA PRODUTOS INDISPONÍVEIS =====
+            if (item.isIndisponivel) {
+                produtosIndisponiveis++;
+                console.log(`   ⛔ Indisponível: ${item.produto} - ${item.referencia}`);
+                continue; // Pula para o próximo item
+            }
             
             // ===== SE VALOR DE VENDA É 0, PARA DE SOMAR E CONTAR =====
             if (item.valorVenda === 0) {
@@ -2489,7 +2503,6 @@ function processarDadosProdutos(data) {
             
             const qtd = parseInt(item.quantidade) || 0;
             
-            // ===== SÓ CONTA SE TIVER QUANTIDADE > 0 =====
             if (qtd > 0) {
                 produtosUnicos++;
                 totalProdutos += qtd;
@@ -2500,6 +2513,7 @@ function processarDadosProdutos(data) {
         
         console.log(`   ✅ Produtos únicos: ${produtosUnicos}`);
         console.log(`   ✅ Total de produtos: ${totalProdutos}`);
+        console.log(`   ✅ Produtos indisponíveis: ${produtosIndisponiveis}`);
         console.log(`   ✅ Soma da coluna R: ${valorVendaTotal}`);
         
         const precoVenda = valorVendaTotal;
@@ -2510,6 +2524,7 @@ function processarDadosProdutos(data) {
             ...p,
             produtosUnicos: produtosUnicos,
             totalProdutos: totalProdutos,
+            produtosIndisponiveis: produtosIndisponiveis, // ← NOVO
             precoVenda: precoVenda,
             lucroTotal: lucroFinal,
             lucroPercentual: lucroPercentual
@@ -2551,9 +2566,6 @@ function mostrarProdutosPorPedido() {
 function renderizarTabelaProdutos() {
     const container = document.getElementById('tableWrapper');
     
-    // ===== LIMPA O CONTEÚDO ANTES DE RENDERIZAR =====
-    container.innerHTML = '';
-    
     if (produtosData.length === 0) {
         container.innerHTML = `
             <div style="text-align:center; padding:40px; color:#667;">
@@ -2581,6 +2593,7 @@ function renderizarTabelaProdutos() {
                         <th style="padding:12px 10px; text-align:left; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Data</th>
                         <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Produtos Únicos</th>
                         <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Quantidade Total</th>
+                        <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Indisponíveis</th>
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Preço de Compra</th>
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Preço de Venda</th>
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Lucro (R$)</th>
@@ -2604,13 +2617,14 @@ function renderizarTabelaProdutos() {
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${p.data}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.produtosUnicos}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.totalProdutos}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center; color:#dc3545; font-weight:bold;">${p.produtosIndisponiveis}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(precoCompra)}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(precoVenda)}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(lucro)}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${lucroPercentual.toFixed(1)}%</td>
             </tr>
             <tr id="detalhe-produtos-${p.pedido}" class="parcelas-detail">
-                <td colspan="8">
+                <td colspan="9">
                     <div class="detail-card">
                         <strong>📋 Produtos do Pedido ${p.pedido}</strong>
                         <div style="margin-top:10px; overflow-x:auto;">
@@ -2626,10 +2640,11 @@ function renderizarTabelaProdutos() {
                                         <th style="padding:6px 8px; text-align:right;">Venda Total</th>
                                         <th style="padding:6px 8px; text-align:right;">Lucro</th>
                                         <th style="padding:6px 8px; text-align:right;">Lucro %</th>
+                                        <th style="padding:6px 8px; text-align:left;">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody id="produtos-detalhe-${p.pedido}">
-                                    <tr><td colspan="9" style="text-align:center; padding:20px; color:#999;">Carregando produtos...</td></tr>
+                                    <tr><td colspan="10" style="text-align:center; padding:20px; color:#999;">Carregando produtos...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -2648,6 +2663,7 @@ function renderizarTabelaProdutos() {
     
     container.innerHTML = html;
 }
+
 
 
 function toggleDetalhesProdutos(pedidoId) {
