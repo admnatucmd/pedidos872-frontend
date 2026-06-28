@@ -2570,31 +2570,6 @@ function processarDadosProdutos(data) {
     console.log(`📊 ${produtosData.length} pedidos carregados da aba Produtos`);
 }
 
-function mostrarProdutosPorPedido() {
-    // Atualiza o botão ativo
-    document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
-    const botoes = document.querySelectorAll('.btn-submenu');
-    if (botoes.length > 0) {
-        botoes[0].classList.add('active');
-    }
-    
-    // Mostra o submenu
-    document.getElementById('submenuProdutos').style.display = 'flex';
-    document.getElementById('dataTable').style.display = 'none';
-    document.getElementById('mesContainer').style.display = 'none';
-    document.getElementById('semanaInfo').style.display = 'none';
-    document.getElementById('statsContainer').classList.add('stats-hidden');
-    
-    // Se não tem dados, carrega
-    if (produtosData.length === 0) {
-        showNotification('🔄 Carregando dados de produtos...', 'loading');
-        carregarProdutos().then(() => {
-            renderizarTabelaProdutos();
-        });
-    } else {
-        renderizarTabelaProdutos();
-    }
-}
 
 function renderizarTabelaProdutos() {
     const container = document.getElementById('tableWrapper');
@@ -2843,6 +2818,32 @@ function limparValorProduto(valor) {
     if (!valor || valor === '') return 0;
     const str = String(valor).replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
     return parseFloat(str) || 0;
+}
+
+function mostrarProdutosPorPedido() {
+    // Atualiza o botão ativo
+    document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
+    const botoes = document.querySelectorAll('.btn-submenu');
+    if (botoes.length > 0) {
+        botoes[0].classList.add('active');
+    }
+    
+    // Mostra o submenu
+    document.getElementById('submenuProdutos').style.display = 'flex';
+    document.getElementById('dataTable').style.display = 'none';
+    document.getElementById('mesContainer').style.display = 'none';
+    document.getElementById('semanaInfo').style.display = 'none';
+    document.getElementById('statsContainer').classList.add('stats-hidden');
+    
+    // Se não tem dados, carrega
+    if (produtosData.length === 0) {
+        showNotification('🔄 Carregando dados de produtos...', 'loading');
+        carregarProdutos().then(() => {
+            renderizarTabelaProdutos();
+        });
+    } else {
+        renderizarTabelaProdutos();
+    }
 }
 
 function mostrarProdutosMaisPedidos() {
