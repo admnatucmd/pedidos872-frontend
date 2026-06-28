@@ -2845,28 +2845,6 @@ function limparValorProduto(valor) {
     return parseFloat(str) || 0;
 }
 
-function mostrarProdutosPorPedido() {
-    // Atualiza botão ativo
-    document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
-    const botoes = document.querySelectorAll('.btn-submenu');
-    if (botoes.length > 0) {
-        botoes[0].classList.add('active');
-    }
-    
-    // Mostra a tabela de produtos
-    document.getElementById('semanaInfo').style.display = 'none';
-    document.getElementById('mesContainer').style.display = 'none';
-    
-    if (produtosData.length === 0) {
-        showNotification('🔄 Carregando dados de produtos...', 'loading');
-        carregarProdutos().then(() => {
-            renderizarTabelaProdutos();
-        });
-    } else {
-        renderizarTabelaProdutos();
-    }
-}
-
 function mostrarProdutosMaisPedidos() {
     // Atualiza botão ativo
     document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
