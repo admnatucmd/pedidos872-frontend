@@ -2699,50 +2699,39 @@ async function carregarProdutosDetalhados(pedidoId) {
     const tbody = document.getElementById(`produtos-detalhe-${pedidoId}`);
     if (!tbody) return;
     
-    // Verifica se já tem dados
     if (tbody.querySelector('tr')?.textContent !== 'Carregando produtos...') {
         return;
     }
     
     try {
-        // Buscar os dados da aba "Produtos"
         const response = await fetch(`${API_BASE_URL}/api/sheet-data?sheet=Produtos`, {
             method: 'GET',
             credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            headers: { 'Content-Type': 'application/json' }
         });
         
-        if (!response.ok) {
-            throw new Error(`HTTP ${response.status}`);
-        }
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
         
         const result = await response.json();
-        
-        if (!result.success || !result.data) {
-            throw new Error('Erro ao buscar produtos');
-        }
+        if (!result.success || !result.data) throw new Error('Erro ao buscar produtos');
         
         const data = result.data;
         
-        // ===== ÍNDICES DA ABA PRODUTOS =====
-        const idxPedido = 0;       // A
-        const idxCodigo = 10;      // K
-        const idxProduto = 11;     // L
-        const idxQuantidade = 12;  // M
-        const idxPontos = 13;      // N
-        const idxValorUnit = 14;   // O
-        const idxValorTotal = 15;  // P
-        const idxVendaUnit = 16;   // Q
-        const idxVendaTotal = 17;  // R
-        const idxLucro = 18;       // S
-        const idxLucroPercentual = 19; // T
-        const idxLucroReal = 20;   // U
-        const idxLucroRealPercentual = 21; // V
-        const idxReferencia = 22;  // W
+        const idxPedido = 0;
+        const idxCodigo = 10;
+        const idxProduto = 11;
+        const idxQuantidade = 12;
+        const idxPontos = 13;
+        const idxValorUnit = 14;
+        const idxValorTotal = 15;
+        const idxVendaUnit = 16;
+        const idxVendaTotal = 17;
+        const idxLucro = 18;
+        const idxLucroPercentual = 19;
+        const idxLucroReal = 20;
+        const idxLucroRealPercentual = 21;
+        const idxReferencia = 22;
         
-        // ===== EXTRAIR LINHAS DO PEDIDO =====
         let linhasPedido = [];
         let pedidoAtual = null;
         
@@ -2758,7 +2747,6 @@ async function carregarProdutosDetalhados(pedidoId) {
             }
             
             if (pedido === pedidoId) {
-                // Verifica se é uma linha válida (tem código)
                 const codigo = String(row[idxCodigo] || '').trim();
                 if (codigo !== '' && codigo !== 'CÓDIGO') {
                     linhasPedido.push(row);
@@ -2767,14 +2755,30 @@ async function carregarProdutosDetalhados(pedidoId) {
         }
         
         if (linhasPedido.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:20px; color:#999;">Nenhum produto encontrado para este pedido.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:20px; color:#999;">Nenhum produto encontrado para este pedido.</td></tr>`;
             return;
+        }
+        
+        // ===== SEPARAR DISPONÍVEIS E INDISPONÍVEIS =====
+        let disponiveis = [];
+        let indisponiveis = [];
+        
+        for (const row of linhasPedido) {
+            const referencia = String(row[idxReferencia] || '').trim();
+            const isIndisponivel = referencia.includes('Produtos indisponível na realização do pedido');
+            
+            if (isIndisponivel) {
+                indisponiveis.push(row);
+            } else {
+                disponiveis.push(row);
+            }
         }
         
         // ===== MONTAR HTML =====
         let html = '';
         
-        for (const row of linhasPedido) {
+        // ===== PRODUTOS DISPONÍVEIS =====
+        for (const row of disponiveis) {
             const codigo = String(row[idxCodigo] || '').trim();
             const produto = String(row[idxProduto] || '').trim();
             const quantidade = String(row[idxQuantidade] || '0').trim();
@@ -2789,12 +2793,8 @@ async function carregarProdutosDetalhados(pedidoId) {
             const lucroRealPercentual = limparValorProduto(String(row[idxLucroRealPercentual] || '0'));
             const referencia = String(row[idxReferencia] || '').trim();
             
-            // Verifica se é indisponível
-            const isIndisponivel = referencia.includes('Produtos indisponível na realização do pedido');
-
-            
             html += `
-                <tr style="${isIndisponivel ? 'background: #fff8f8;' : ''}">
+                <tr>
                     <td style="padding:6px 8px;">${codigo}</td>
                     <td style="padding:6px 8px;">${produto}</td>
                     <td style="padding:6px 8px; text-align:center;">${quantidade}</td>
@@ -2812,6 +2812,85 @@ async function carregarProdutosDetalhados(pedidoId) {
             `;
         }
         
+        // ===== BOTÃO PARA MOSTRAR INDISPONÍVEIS =====
+        const indisponiveisCount = indisponiveis.length;
+        const toggleId = `toggle-indisponiveis-${pedidoId}`;
+        const bodyId = `indisponiveis-body-${pedidoId}`;
+        
+        if (indisponiveisCount > 0) {
+            html += `
+                <tr>
+                    <td colspan="14" style="padding:8px 8px; text-align:center; background:#f8f9fa; border-top:2px solid #e5e7eb;">
+                        <button onclick="toggleIndisponiveis('${pedidoId}')" 
+                                style="background:none; border:none; cursor:pointer; font-size:13px; color:#0b4f6c; font-weight:600; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:6px;">
+                            <span id="toggle-icon-${pedidoId}">▶</span> 
+                            Mostrar produtos indisponíveis desse pedido (${indisponiveisCount})
+                        </button>
+                        <div id="${bodyId}" style="display:none; margin-top:8px; width:100%;">
+                            <table style="width:100%; border-collapse:collapse; font-size:12px; background:#fff8f8;">
+                                <thead>
+                                    <tr style="background:#f1f3f5;">
+                                        <th style="padding:6px 8px; text-align:left;">Código</th>
+                                        <th style="padding:6px 8px; text-align:left;">Produto</th>
+                                        <th style="padding:6px 8px; text-align:center;">Qtd</th>
+                                        <th style="padding:6px 8px; text-align:center;">Pontos</th>
+                                        <th style="padding:6px 8px; text-align:right;">Valor Unit</th>
+                                        <th style="padding:6px 8px; text-align:right;">Valor Total</th>
+                                        <th style="padding:6px 8px; text-align:right;">Venda Unit</th>
+                                        <th style="padding:6px 8px; text-align:right;">Venda Total</th>
+                                        <th style="padding:6px 8px; text-align:right;">Lucro</th>
+                                        <th style="padding:6px 8px; text-align:right;">Lucro %</th>
+                                        <th style="padding:6px 8px; text-align:right;">Lucro c/ Desc</th>
+                                        <th style="padding:6px 8px; text-align:right;">Lucro % c/ Desc</th>
+                                        <th style="padding:6px 8px; text-align:left;">Referência</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            `;
+            
+            for (const row of indisponiveis) {
+                const codigo = String(row[idxCodigo] || '').trim();
+                const produto = String(row[idxProduto] || '').trim();
+                const quantidade = String(row[idxQuantidade] || '0').trim();
+                const pontos = String(row[idxPontos] || '').trim();
+                const valorUnit = limparValorProduto(String(row[idxValorUnit] || '0'));
+                const valorTotal = limparValorProduto(String(row[idxValorTotal] || '0'));
+                const vendaUnit = limparValorProduto(String(row[idxVendaUnit] || '0'));
+                const vendaTotal = limparValorProduto(String(row[idxVendaTotal] || '0'));
+                const lucro = limparValorProduto(String(row[idxLucro] || '0'));
+                const lucroPercentual = limparValorProduto(String(row[idxLucroPercentual] || '0'));
+                const lucroReal = limparValorProduto(String(row[idxLucroReal] || '0'));
+                const lucroRealPercentual = limparValorProduto(String(row[idxLucroRealPercentual] || '0'));
+                const referencia = String(row[idxReferencia] || '').trim();
+                
+                html += `
+                    <tr style="background:#fff8f8; opacity:0.8;">
+                        <td style="padding:6px 8px;">${codigo}</td>
+                        <td style="padding:6px 8px;">${produto}</td>
+                        <td style="padding:6px 8px; text-align:center;">${quantidade}</td>
+                        <td style="padding:6px 8px; text-align:center;">${pontos}</td>
+                        <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(valorUnit)}</td>
+                        <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(valorTotal)}</td>
+                        <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(vendaUnit)}</td>
+                        <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(vendaTotal)}</td>
+                        <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(lucro)}</td>
+                        <td style="padding:6px 8px; text-align:right;">${lucroPercentual.toFixed(1)}%</td>
+                        <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(lucroReal)}</td>
+                        <td style="padding:6px 8px; text-align:right;">${lucroRealPercentual.toFixed(1)}%</td>
+                        <td style="padding:6px 8px; text-align:left; font-size:11px; color:#667;">${referencia}</td>
+                    </tr>
+                `;
+            }
+            
+            html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+        
         tbody.innerHTML = html;
         
     } catch (error) {
@@ -2819,6 +2898,7 @@ async function carregarProdutosDetalhados(pedidoId) {
         tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:20px; color:red;">❌ Erro ao carregar produtos: ${error.message}</td></tr>`;
     }
 }
+
 
 function limparValorProduto(valor) {
     if (!valor || valor === '') return 0;
@@ -3007,6 +3087,35 @@ function mostrarProdutosMaiorDiferenca() {
         mesContainer.innerHTML = '<div style="text-align:center; padding:40px; color:#999;">📊 Funcionalidade em desenvolvimento...</div>';
     }
 }
+
+
+
+
+
+
+function toggleIndisponiveis(pedidoId) {
+    const body = document.getElementById(`indisponiveis-body-${pedidoId}`);
+    const icon = document.getElementById(`toggle-icon-${pedidoId}`);
+    
+    if (!body) return;
+    
+    if (body.style.display === 'none') {
+        body.style.display = 'block';
+        icon.textContent = '▼';
+    } else {
+        body.style.display = 'none';
+        icon.textContent = '▶';
+    }
+}
+
+
+
+
+
+
+
+
+
 // Inicializar
 // (A função carregarDados será chamada após o login)
 </script>
