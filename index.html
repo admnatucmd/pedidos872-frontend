@@ -2377,35 +2377,33 @@ function toggleSubmenuProdutos() {
     const btnProdutos = document.getElementById('btnProdutos');
     
     if (submenu.style.display === 'flex') {
+        // Fechar submenu
         submenu.style.display = 'none';
         btnProdutos.classList.remove('active');
         document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
+        voltarTabelaOriginal();
     } else {
-        // Fecha outros submenus
+        // Fechar outros submenus
         document.getElementById('submenuBoletos').style.display = 'none';
         document.getElementById('btnBoletosPagar').classList.remove('active');
         
-        // Mostra submenu de produtos
+        // Mostrar submenu de produtos
         document.querySelectorAll('.btn-actions .btn').forEach(b => {
             b.classList.remove('active');
         });
         btnProdutos.classList.add('active');
         submenu.style.display = 'flex';
         
-        // Esconde outros elementos
+        // Esconder elementos da tabela original
         document.getElementById('dataTable').style.display = 'none';
         document.getElementById('mesContainer').style.display = 'none';
         document.getElementById('semanaInfo').style.display = 'none';
         document.getElementById('statsContainer').classList.add('stats-hidden');
         
-        // ===== ATIVA O PRIMEIRO BOTÃO DO SUBMENU =====
-        const botoesSubmenu = document.querySelectorAll('.btn-submenu');
-        botoesSubmenu.forEach(b => b.classList.remove('active'));
-        if (botoesSubmenu.length > 0) {
-            botoesSubmenu[0].classList.add('active');
-        }
+        // Limpar wrapper
+        document.getElementById('tableWrapper').innerHTML = '';
         
-        // Abre "Produtos por pedido" por padrão
+        // ===== CHAMAR DIRETAMENTE A FUNÇÃO =====
         mostrarProdutosPorPedido();
     }
 }
@@ -2568,6 +2566,8 @@ function processarDadosProdutos(data) {
 
 
 function mostrarProdutosPorPedido() {
+    console.log('🔍 mostrarProdutosPorPedido chamada!');
+    
     // Atualiza o botão ativo
     document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
     const botoes = document.querySelectorAll('.btn-submenu');
@@ -2575,24 +2575,31 @@ function mostrarProdutosPorPedido() {
         botoes[0].classList.add('active');
     }
     
-    // Mostra o submenu
+    // Mostra o submenu e esconde outros elementos
     document.getElementById('submenuProdutos').style.display = 'flex';
     document.getElementById('dataTable').style.display = 'none';
     document.getElementById('mesContainer').style.display = 'none';
     document.getElementById('semanaInfo').style.display = 'none';
     document.getElementById('statsContainer').classList.add('stats-hidden');
     
-    // Se não tem dados, carrega
+    // Limpa o wrapper para evitar conteúdo antigo
+    document.getElementById('tableWrapper').innerHTML = '';
+    
+    // Verifica se já tem dados carregados
     if (produtosData.length === 0) {
+        console.log('📦 Carregando dados de produtos...');
         showNotification('🔄 Carregando dados de produtos...', 'loading');
         carregarProdutos().then(() => {
             renderizarTabelaProdutos();
+        }).catch(err => {
+            console.error('❌ Erro ao carregar produtos:', err);
+            showNotification('❌ Erro ao carregar produtos', 'error');
         });
     } else {
+        console.log('📦 Renderizando tabela de produtos...');
         renderizarTabelaProdutos();
     }
 }
-
 function renderizarTabelaProdutos() {
     const container = document.getElementById('tableWrapper');
     
@@ -2676,7 +2683,6 @@ function renderizarTabelaProdutos() {
                                         <th style="padding:6px 8px; text-align:right;">Lucro c/ Desc</th>
                                         <th style="padding:6px 8px; text-align:right;">Lucro % c/ Desc</th>
                                         <th style="padding:6px 8px; text-align:left;">Referência</th>
-                                        <th style="padding:6px 8px; text-align:left;">Status</th>
                                     </tr>
                                 </thead>
                                 <tbody id="produtos-detalhe-${p.pedido}">
@@ -2811,8 +2817,7 @@ async function carregarProdutosDetalhados(pedidoId) {
             
             // Verifica se é indisponível
             const isIndisponivel = referencia.includes('Produtos indisponível na realização do pedido');
-            const status = isIndisponivel ? '⚠️ Indisponível' : '✅ Disponível';
-            const statusColor = isIndisponivel ? '#dc3545' : '#28a745';
+
             
             html += `
                 <tr style="${isIndisponivel ? 'background: #fff8f8;' : ''}">
@@ -2829,7 +2834,6 @@ async function carregarProdutosDetalhados(pedidoId) {
                     <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(lucroReal)}</td>
                     <td style="padding:6px 8px; text-align:right;">${lucroRealPercentual.toFixed(1)}%</td>
                     <td style="padding:6px 8px; text-align:left; font-size:11px; color:#667;">${referencia}</td>
-                    <td style="padding:6px 8px; text-align:center; color:${statusColor}; font-weight:bold;">${status}</td>
                 </tr>
             `;
         }
