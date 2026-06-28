@@ -2440,18 +2440,15 @@ function processarDadosProdutos(data) {
         return;
     }
     
-    // O cabeçalho está na linha 0
-    const cabecalho = data[0];
-    
     // Mapear índices das colunas
-    const idxPedido = 0;       // A
-    const idxData = 1;         // B
-    const idxNotaFiscal = 2;   // C
-    const idxValorTotal = 3;   // D
-    const idxProdutosUnicos = 8;  // I
-    const idxTotalProdutos = 9;   // J
-    const idxValorVendaTotal = 17; // R
-    const idxLucro = 18;       // S
+    const idxPedido = 0;           // A
+    const idxData = 1;             // B
+    const idxNotaFiscal = 2;       // C
+    const idxPrecoCompra = 3;      // D - Valor Total do pedido
+    const idxProdutosUnicos = 8;   // I
+    const idxTotalProdutos = 9;    // J
+    const idxValorVendaTotal = 17; // R - Valor de Venda Total por produto
+    const idxLucro = 18;           // S - Lucro por produto
     
     // Organizar por pedido
     produtosPorPedido = {};
@@ -2463,37 +2460,72 @@ function processarDadosProdutos(data) {
         const pedido = String(row[idxPedido] || '').trim();
         if (!pedido || pedido === 'Pedido') continue;
         
+        // Inicializa o pedido se não existir
         if (!produtosPorPedido[pedido]) {
             produtosPorPedido[pedido] = {
                 pedido: pedido,
                 data: String(row[idxData] || '').trim(),
                 notaFiscal: String(row[idxNotaFiscal] || '').trim(),
-                valorTotal: String(row[idxValorTotal] || '').trim(),
+                precoCompra: limparValorProduto(String(row[idxPrecoCompra] || '0')),
                 produtosUnicos: parseInt(row[idxProdutosUnicos]) || 0,
                 totalProdutos: parseInt(row[idxTotalProdutos]) || 0,
-                // Vamos calcular a soma dos valores de venda e lucro
                 valorVendaTotal: 0,
                 lucroTotal: 0,
-                // Armazenar todas as linhas para cálculos
-                linhas: []
+                linhas: [],
+                linhaInicio: i,
+                linhaFim: i // Será atualizado
             };
         }
         
-        // Só adiciona linhas com produtos válidos
-        if (row.length > 10) {
-            const valorVenda = limparValorProduto(String(row[idxValorVendaTotal] || '0'));
-            const lucro = limparValorProduto(String(row[idxLucro] || '0'));
-            
-            produtosPorPedido[pedido].valorVendaTotal += valorVenda;
-            produtosPorPedido[pedido].lucroTotal += lucro;
-        }
+        // Atualiza a última linha do pedido
+        produtosPorPedido[pedido].linhaFim = i;
+        
+        // Salva a linha para processamento posterior
+        produtosPorPedido[pedido].linhas.push({
+            linha: i,
+            dados: row,
+            valorVenda: limparValorProduto(String(row[idxValorVendaTotal] || '0')),
+            lucro: limparValorProduto(String(row[idxLucro] || '0'))
+        });
     }
     
-    // Converter para array
-    produtosData = Object.values(produtosPorPedido);
+    // ===== PROCESSAR CADA PEDIDO PARA CALCULAR SOMA DA COLUNA R =====
+    produtosData = Object.values(produtosPorPedido).map(p => {
+        let valorVendaTotal = 0;
+        let lucroTotal = 0;
+        
+        // ===== PERCORRE AS LINHAS DO PEDIDO E SOMA ATÉ ENCONTRAR 0 =====
+        for (const item of p.linhas) {
+            // Se o valor de venda for 0, PARA de somar (produto indisponível)
+            if (item.valorVenda === 0) {
+                break;
+            }
+            valorVendaTotal += item.valorVenda;
+            lucroTotal += item.lucro;
+        }
+        
+        // Preço de Venda = soma dos valores da coluna R (apenas produtos válidos)
+        const precoVenda = valorVendaTotal;
+        
+        // Lucro (R$) = Preço de Venda - Preço de Compra
+        const lucroFinal = precoVenda - p.precoCompra;
+        
+        // Lucro (%) = (Lucro / Preço de Compra) * 100
+        const lucroPercentual = p.precoCompra > 0 ? (lucroFinal / p.precoCompra) * 100 : 0;
+        
+        console.log(`📊 Pedido ${p.pedido}: Compra=${p.precoCompra}, Venda=${precoVenda}, Lucro=${lucroFinal}, %=${lucroPercentual.toFixed(1)}%`);
+        
+        return {
+            ...p,
+            precoVenda: precoVenda,
+            lucroTotal: lucroFinal,
+            lucroPercentual: lucroPercentual
+        };
+    });
     
     console.log(`📊 ${produtosData.length} pedidos carregados da aba Produtos`);
 }
+
 
 
 function mostrarProdutosPorPedido() {
