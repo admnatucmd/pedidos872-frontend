@@ -2415,18 +2415,24 @@ function processarDadosProdutos(data) {
     if (!data || data.length < 2) {
         produtosData = [];
         produtosPorPedido = {};
+        window.produtosData = [];
         return;
     }
     
-    // Mapear índices das colunas
+    // ===== ÍNDICES CORRETOS PARA A ABA "PRODUTOS" =====
     const idxPedido = 0;           // A
     const idxData = 1;             // B
     const idxNotaFiscal = 2;       // C
     const idxPrecoCompra = 3;      // D - Valor Total do pedido
     const idxProdutosUnicos = 8;   // I
     const idxTotalProdutos = 9;    // J
-    const idxValorVendaTotal = 17; // R - Valor de Venda Total por produto
-    const idxLucro = 18;           // S - Lucro por produto
+    const idxValorVendaTotal = 17; // R - VALOR DE VENDA TOTAL (R$)
+    const idxLucro = 18;           // S - LUCRO (R$)
+    
+    console.log('📊 Índice da coluna R (VALOR DE VENDA TOTAL):', idxValorVendaTotal);
+    
+    // ===== VARIÁVEL PARA ARMAZENAR O PEDIDO ATUAL =====
+    let pedidoAtual = null;
     
     // Organizar por pedido
     produtosPorPedido = {};
@@ -2435,75 +2441,109 @@ function processarDadosProdutos(data) {
         const row = data[i];
         if (row.length < 10) continue;
         
-        const pedido = String(row[idxPedido] || '').trim();
-        if (!pedido || pedido === 'Pedido') continue;
+        // ===== TENTA PEGAR O NÚMERO DO PEDIDO NA COLUNA A =====
+        let pedido = String(row[idxPedido] || '').trim();
         
-        // Inicializa o pedido se não existir
+        // ===== SE A COLUNA A ESTIVER VAZIA, USA O PEDIDO ATUAL =====
+        if (pedido === '' || pedido === 'Pedido') {
+            pedido = pedidoAtual;
+        } else {
+            // ===== SE TEM NÚMERO, ATUALIZA O PEDIDO ATUAL =====
+            pedidoAtual = pedido;
+        }
+        
+        // ===== SE AINDA NÃO TEM PEDIDO, PULA A LINHA =====
+        if (!pedido || pedido === 'Pedido') {
+            continue;
+        }
+        
+        // ===== INICIALIZA O PEDIDO SE NÃO EXISTIR =====
         if (!produtosPorPedido[pedido]) {
             produtosPorPedido[pedido] = {
                 pedido: pedido,
                 data: String(row[idxData] || '').trim(),
                 notaFiscal: String(row[idxNotaFiscal] || '').trim(),
                 precoCompra: limparValorProduto(String(row[idxPrecoCompra] || '0')),
-                produtosUnicos: parseInt(row[idxProdutosUnicos]) || 0,
-                totalProdutos: parseInt(row[idxTotalProdutos]) || 0,
+                produtosUnicos: 0,
+                totalProdutos: 0,
                 valorVendaTotal: 0,
                 lucroTotal: 0,
-                linhas: [],
-                linhaInicio: i,
-                linhaFim: i // Será atualizado
+                linhas: []
             };
         }
         
-        // Atualiza a última linha do pedido
-        produtosPorPedido[pedido].linhaFim = i;
+        // ===== ADICIONA A LINHA AO PEDIDO =====
+        const valorVenda = limparValorProduto(String(row[idxValorVendaTotal] || '0'));
+        const lucro = limparValorProduto(String(row[idxLucro] || '0'));
         
-        // Salva a linha para processamento posterior
         produtosPorPedido[pedido].linhas.push({
             linha: i,
-            dados: row,
-            valorVenda: limparValorProduto(String(row[idxValorVendaTotal] || '0')),
-            lucro: limparValorProduto(String(row[idxLucro] || '0'))
+            codigo: row.length > 10 ? String(row[10] || '').trim() : '',
+            produto: row.length > 11 ? String(row[11] || '').trim() : '',
+            quantidade: row.length > 12 ? String(row[12] || '').trim() : '0',
+            valorVenda: valorVenda,
+            lucro: lucro
         });
     }
     
-    // ===== PROCESSAR CADA PEDIDO PARA CALCULAR SOMA DA COLUNA R =====
+    // ===== PROCESSAR CADA PEDIDO =====
     produtosData = Object.values(produtosPorPedido).map(p => {
         let valorVendaTotal = 0;
         let lucroTotal = 0;
         
-        // ===== PERCORRE AS LINHAS DO PEDIDO E SOMA ATÉ ENCONTRAR 0 =====
+        console.log(`📊 Pedido ${p.pedido} - ${p.linhas.length} linhas`);
+        
+        // ===== PERCORRE TODAS AS LINHAS DO PEDIDO =====
         for (const item of p.linhas) {
-            // Se o valor de venda for 0, PARA de somar (produto indisponível)
+            console.log(`   Linha ${item.linha}: R=${item.valorVenda}, S=${item.lucro}, Produto="${item.produto}"`);
+            
+            // Se o valor de venda for 0, é produto indisponível → PARA de somar
             if (item.valorVenda === 0) {
+                console.log(`   ⛔ PAROU! Valor 0 encontrado na linha ${item.linha}`);
                 break;
             }
+            
             valorVendaTotal += item.valorVenda;
             lucroTotal += item.lucro;
         }
         
-        // Preço de Venda = soma dos valores da coluna R (apenas produtos válidos)
+        console.log(`   ✅ Soma da coluna R: ${valorVendaTotal}`);
+        console.log(`   ✅ Soma da coluna S: ${lucroTotal}`);
+        
+        // ===== PEGA OS VALORES DA PRIMEIRA LINHA DO PEDIDO =====
+        // Produtos Únicos e Total de Produtos estão na primeira linha (linha com pedido)
+        const primeiraLinha = p.linhas[0];
+        if (primeiraLinha) {
+            // Busca os valores na planilha original
+            // Como não temos acesso direto, vamos usar os valores já salvos
+            // Mas precisamos pegar da linha que tem o pedido
+            // Vamos recalcular baseado nas linhas
+        }
+        
+        // ===== RECALCULAR PRODUTOS ÚNICOS E TOTAL =====
+        const produtosUnicos = p.linhas.filter(item => item.valorVenda > 0).length;
+        const totalProdutos = p.linhas.reduce((sum, item) => sum + (parseInt(item.quantidade) || 0), 0);
+        
         const precoVenda = valorVendaTotal;
-        
-        // Lucro (R$) = Preço de Venda - Preço de Compra
         const lucroFinal = precoVenda - p.precoCompra;
-        
-        // Lucro (%) = (Lucro / Preço de Compra) * 100
         const lucroPercentual = p.precoCompra > 0 ? (lucroFinal / p.precoCompra) * 100 : 0;
-        
-        console.log(`📊 Pedido ${p.pedido}: Compra=${p.precoCompra}, Venda=${precoVenda}, Lucro=${lucroFinal}, %=${lucroPercentual.toFixed(1)}%`);
         
         return {
             ...p,
+            produtosUnicos: produtosUnicos,
+            totalProdutos: totalProdutos,
             precoVenda: precoVenda,
             lucroTotal: lucroFinal,
             lucroPercentual: lucroPercentual
         };
     });
     
+    window.produtosData = produtosData;
+    window.produtosPorPedido = produtosPorPedido;
+    
     console.log(`📊 ${produtosData.length} pedidos carregados da aba Produtos`);
+    console.log('📋 Exemplo do primeiro pedido:', produtosData[0]);
 }
-
 
 function mostrarProdutosPorPedido() {
     // Atualiza o botão ativo
