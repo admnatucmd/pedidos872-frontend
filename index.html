@@ -4693,7 +4693,8 @@ function filtrarMenosPedidos(periodo) {
 
 
 // ===== FUNÇÃO PARA CALCULAR MAIOR DIFERENÇA DE PREÇO =====
-console.log('📊 Calculando maior diferença de preço - Período:', periodo);
+function calcularProdutosMaiorDiferenca(periodo) {
+    console.log('📊 Calculando maior diferença de preço - Período:', periodo);
     
     let dataLimite = null;
     const agora = new Date();
@@ -4851,7 +4852,8 @@ console.log('📊 Calculando maior diferença de preço - Período:', periodo);
 
 
 // ===== FUNÇÃO PARA RENDERIZAR MAIOR DIFERENÇA =====
-const container = document.getElementById('tableWrapper');
+function renderizarMaiorDiferenca(produtos, titulo) {
+    const container = document.getElementById('tableWrapper');
     if (!container) return;
     
     if (!produtos || produtos.length === 0) {
@@ -4885,7 +4887,6 @@ const container = document.getElementById('tableWrapper');
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Lucro (%)</th>
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Diferença %</th>
                         <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Pedido x vezes</th>
-                        <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Quantidade Total</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -4935,10 +4936,9 @@ const container = document.getElementById('tableWrapper');
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${lucroPercStr}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right; ${highlightPerc}">${difLucroPerc.toFixed(1)}%</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.vezes}x</td>
-                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.quantidadeTotal}</td>
             </tr>
             <tr id="detalhe-produto-diferenca-${p.codigo}" class="parcelas-detail">
-                <td colspan="12">
+                <td colspan="11">
                     <div class="detail-card">
                         <strong>📋 Pedidos do produto ${p.codigo} - ${p.produto}</strong>
                         <div style="margin-top:10px; overflow-x:auto;">
