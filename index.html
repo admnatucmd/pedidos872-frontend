@@ -4693,8 +4693,7 @@ function filtrarMenosPedidos(periodo) {
 
 
 // ===== FUNÇÃO PARA CALCULAR MAIOR DIFERENÇA DE PREÇO =====
-function calcularProdutosMaiorDiferenca(periodo) {
-    console.log('📊 Calculando maior diferença de preço - Período:', periodo);
+console.log('📊 Calculando maior diferença de preço - Período:', periodo);
     
     let dataLimite = null;
     const agora = new Date();
@@ -4811,7 +4810,6 @@ function calcularProdutosMaiorDiferenca(periodo) {
         let valorA, valorB;
         
         if (organizacao === 'compra') {
-            // Diferença entre maior e menor valor de compra
             const minA = a.valoresCompra.length > 0 ? Math.min(...a.valoresCompra) : 0;
             const maxA = a.valoresCompra.length > 0 ? Math.max(...a.valoresCompra) : 0;
             const minB = b.valoresCompra.length > 0 ? Math.min(...b.valoresCompra) : 0;
@@ -4819,7 +4817,6 @@ function calcularProdutosMaiorDiferenca(periodo) {
             valorA = maxA - minA;
             valorB = maxB - minB;
         } else if (organizacao === 'venda') {
-            // Diferença entre maior e menor valor de venda
             const minA = a.valoresVenda.length > 0 ? Math.min(...a.valoresVenda) : 0;
             const maxA = a.valoresVenda.length > 0 ? Math.max(...a.valoresVenda) : 0;
             const minB = b.valoresVenda.length > 0 ? Math.min(...b.valoresVenda) : 0;
@@ -4827,15 +4824,13 @@ function calcularProdutosMaiorDiferenca(periodo) {
             valorA = maxA - minA;
             valorB = maxB - minB;
         } else if (organizacao === 'lucro') {
-            // Diferença entre maior e menor lucro unitário
             const minA = a.lucros.length > 0 ? Math.min(...a.lucros) : 0;
             const maxA = a.lucros.length > 0 ? Math.max(...a.lucros) : 0;
             const minB = b.lucros.length > 0 ? Math.min(...b.lucros) : 0;
             const maxB = b.lucros.length > 0 ? Math.max(...b.lucros) : 0;
             valorA = maxA - minA;
             valorB = maxB - minB;
-        } else { // percentual
-            // Diferença entre maior e menor lucro percentual
+        } else {
             const minA = a.lucrosPercentuais.length > 0 ? Math.min(...a.lucrosPercentuais) : 0;
             const maxA = a.lucrosPercentuais.length > 0 ? Math.max(...a.lucrosPercentuais) : 0;
             const minB = b.lucrosPercentuais.length > 0 ? Math.min(...b.lucrosPercentuais) : 0;
@@ -4844,7 +4839,7 @@ function calcularProdutosMaiorDiferenca(periodo) {
             valorB = maxB - minB;
         }
         
-        return valorB - valorA; // Maior diferença primeiro
+        return valorB - valorA;
     });
     
     console.log(`📊 ${resultados.length} produtos encontrados em ${totalPedidos} pedidos`);
@@ -4856,8 +4851,7 @@ function calcularProdutosMaiorDiferenca(periodo) {
 
 
 // ===== FUNÇÃO PARA RENDERIZAR MAIOR DIFERENÇA =====
-function renderizarMaiorDiferenca(produtos, titulo) {
-    const container = document.getElementById('tableWrapper');
+const container = document.getElementById('tableWrapper');
     if (!container) return;
     
     if (!produtos || produtos.length === 0) {
@@ -4883,9 +4877,13 @@ function renderizarMaiorDiferenca(produtos, titulo) {
                         <th style="padding:12px 10px; text-align:left; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Código</th>
                         <th style="padding:12px 10px; text-align:left; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Produto</th>
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Valor Compra</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Diferença Compra</th>
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Valor Venda</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Diferença Venda</th>
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Lucro Uni</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Diferença Lucro</th>
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Lucro (%)</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Diferença %</th>
                         <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Pedido x vezes</th>
                         <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Quantidade Total</th>
                     </tr>
@@ -4896,18 +4894,31 @@ function renderizarMaiorDiferenca(produtos, titulo) {
     for (const p of topProdutos) {
         const minCompra = p.valoresCompra.length > 0 ? Math.min(...p.valoresCompra) : 0;
         const maxCompra = p.valoresCompra.length > 0 ? Math.max(...p.valoresCompra) : 0;
+        const difCompra = maxCompra - minCompra;
+        
         const minVenda = p.valoresVenda.length > 0 ? Math.min(...p.valoresVenda) : 0;
         const maxVenda = p.valoresVenda.length > 0 ? Math.max(...p.valoresVenda) : 0;
+        const difVenda = maxVenda - minVenda;
         
         const minLucroUni = p.lucros.length > 0 ? Math.min(...p.lucros) : 0;
         const maxLucroUni = p.lucros.length > 0 ? Math.max(...p.lucros) : 0;
+        const difLucroUni = maxLucroUni - minLucroUni;
+        
         const minLucroPerc = p.lucrosPercentuais.length > 0 ? Math.min(...p.lucrosPercentuais) : 0;
         const maxLucroPerc = p.lucrosPercentuais.length > 0 ? Math.max(...p.lucrosPercentuais) : 0;
+        const difLucroPerc = maxLucroPerc - minLucroPerc;
         
         const compraStr = minCompra === maxCompra ? formatarMoedaBR(minCompra) : `${formatarMoedaBR(minCompra)} até ${formatarMoedaBR(maxCompra)}`;
         const vendaStr = minVenda === maxVenda ? formatarMoedaBR(minVenda) : `${formatarMoedaBR(minVenda)} até ${formatarMoedaBR(maxVenda)}`;
         const lucroUniStr = minLucroUni === maxLucroUni ? formatarMoedaBR(minLucroUni) : `${formatarMoedaBR(minLucroUni)} até ${formatarMoedaBR(maxLucroUni)}`;
         const lucroPercStr = minLucroPerc === maxLucroPerc ? `${minLucroPerc.toFixed(1)}%` : `${minLucroPerc.toFixed(1)}% até ${maxLucroPerc.toFixed(1)}%`;
+        
+        // ===== DESTAQUE NA COLUNA QUE ESTÁ SENDO ORDENADA =====
+        const organizacao = window.organizacaoAtualDiferenca || 'compra';
+        let highlightCompra = organizacao === 'compra' ? 'font-weight:bold; color:#0b4f6c;' : '';
+        let highlightVenda = organizacao === 'venda' ? 'font-weight:bold; color:#0b4f6c;' : '';
+        let highlightLucro = organizacao === 'lucro' ? 'font-weight:bold; color:#0b4f6c;' : '';
+        let highlightPerc = organizacao === 'percentual' ? 'font-weight:bold; color:#0b4f6c;' : '';
         
         html += `
             <tr class="pedido-row" onclick="toggleDetalhesProdutosMaiorDiferenca('${p.codigo}')" style="cursor:pointer; transition:background 0.2s;">
@@ -4916,14 +4927,18 @@ function renderizarMaiorDiferenca(produtos, titulo) {
                 </td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${p.produto}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${compraStr}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right; ${highlightCompra}">${formatarMoedaBR(difCompra)}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${vendaStr}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right; ${highlightVenda}">${formatarMoedaBR(difVenda)}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${lucroUniStr}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right; ${highlightLucro}">${formatarMoedaBR(difLucroUni)}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${lucroPercStr}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right; ${highlightPerc}">${difLucroPerc.toFixed(1)}%</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.vezes}x</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.quantidadeTotal}</td>
             </tr>
             <tr id="detalhe-produto-diferenca-${p.codigo}" class="parcelas-detail">
-                <td colspan="8">
+                <td colspan="12">
                     <div class="detail-card">
                         <strong>📋 Pedidos do produto ${p.codigo} - ${p.produto}</strong>
                         <div style="margin-top:10px; overflow-x:auto;">
@@ -5166,27 +5181,6 @@ function filtrarMaiorDiferenca(periodo) {
     const titulo = `📊 Maior diferença de preço - ${periodos[periodo]}`;
     renderizarMaiorDiferenca(produtos, titulo);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
