@@ -2461,14 +2461,26 @@ function processarDadosProdutos(data) {
         return;
     }
     
+    // ===== ÍNDICES CORRETOS DA ABA PRODUTOS =====
     const idxPedido = 0;
     const idxData = 1;
     const idxNotaFiscal = 2;
     const idxPrecoCompra = 3;
-    const idxValorVendaTotal = 17;
-    const idxLucro = 18;
+    const idxProdutosUnicos = 8;
+    const idxTotalProdutos = 9;
+    const idxCodigo = 10;
+    const idxProduto = 11;
+    const idxQuantidade = 12;
+    const idxPontos = 13;
+    const idxValorUnit = 14;        // VALOR UNITÁRIO (R$)
+    const idxValorTotal = 15;       // VALOR TOTAL (R$)
+    const idxVendaUnit = 16;        // VALOR DE VENDA UNITÁRIO (R$)
+    const idxVendaTotal = 17;       // VALOR DE VENDA TOTAL (R$)
+    const idxLucro = 18;            // LUCRO (R$)
+    const idxLucroPercentual = 19;  // LUCRO (%)
+    const idxLucroReal = 20;        // LUCRO REAL (R$) COM DESCONTO REFERENCIA
+    const idxLucroRealPercentual = 21; // LUCRO REAL (%) COM DESCONTO REFERENCIA
     const idxReferencia = 22;
-    const idxPontos = 13; // ← COLUNA N (PONTOS)
     
     let pedidoAtual = null;
     produtosPorPedido = {};
@@ -2494,38 +2506,60 @@ function processarDadosProdutos(data) {
                 precoCompra: limparValorProduto(String(row[idxPrecoCompra] || '0')),
                 valorVendaTotal: 0,
                 lucroTotal: 0,
-                totalPontos: 0, // ← NOVO
+                totalPontos: 0,
                 produtosIndisponiveis: 0,
                 linhas: []
             };
         }
         
-        const valorVenda = limparValorProduto(String(row[idxValorVendaTotal] || '0'));
-        const lucro = limparValorProduto(String(row[idxLucro] || '0'));
-        const pontos = parseInt(String(row[idxPontos] || '0').replace(/\./g, '').trim()) || 0;
+        // ===== EXTRAIR TODOS OS VALORES =====
+        const codigo = row.length > idxCodigo ? String(row[idxCodigo] || '').trim() : '';
+        const produto = row.length > idxProduto ? String(row[idxProduto] || '').trim() : '';
+        const quantidade = row.length > idxQuantidade ? String(row[idxQuantidade] || '0').trim() : '0';
+        const pontos = row.length > idxPontos ? parseInt(String(row[idxPontos] || '0').replace(/\./g, '').trim()) || 0 : 0;
+        
+        // ===== VALORES QUE ESTAVAM FALTANDO =====
+        const valorUnit = row.length > idxValorUnit ? limparValorProduto(String(row[idxValorUnit] || '0')) : 0;
+        const valorTotal = row.length > idxValorTotal ? limparValorProduto(String(row[idxValorTotal] || '0')) : 0;
+        const vendaUnit = row.length > idxVendaUnit ? limparValorProduto(String(row[idxVendaUnit] || '0')) : 0;
+        const vendaTotal = row.length > idxVendaTotal ? limparValorProduto(String(row[idxVendaTotal] || '0')) : 0;
+        const lucro = row.length > idxLucro ? limparValorProduto(String(row[idxLucro] || '0')) : 0;
+        const lucroPercentual = row.length > idxLucroPercentual ? limparValorProduto(String(row[idxLucroPercentual] || '0')) : 0;
         const referencia = row.length > idxReferencia ? String(row[idxReferencia] || '').trim() : '';
-        const quantidade = row.length > 12 ? String(row[12] || '0').trim() : '0';
-        const codigo = row.length > 10 ? String(row[10] || '').trim() : '';
-        const produto = row.length > 11 ? String(row[11] || '').trim() : '';
         
         const isIndisponivel = referencia.includes('Produtos indisponível na realização do pedido');
         
+        // ===== ADICIONA A LINHA COM TODOS OS VALORES =====
         produtosPorPedido[pedido].linhas.push({
             linha: i,
             codigo: codigo,
             produto: produto,
             quantidade: quantidade,
-            valorVenda: valorVenda,
-            lucro: lucro,
             pontos: pontos,
+            valorUnit: valorUnit,        // ← COLUNA 14
+            valorTotal: valorTotal,      // ← COLUNA 15
+            vendaUnit: vendaUnit,        // ← COLUNA 16
+            vendaTotal: vendaTotal,      // ← COLUNA 17
+            lucro: lucro,                // ← COLUNA 18
+            lucroPercentual: lucroPercentual, // ← COLUNA 19
             referencia: referencia,
             isIndisponivel: isIndisponivel
         });
+        
+        // ===== ACUMULA VALORES PARA O PEDIDO =====
+        if (!isIndisponivel && vendaTotal > 0) {
+            produtosPorPedido[pedido].valorVendaTotal += vendaTotal;
+            produtosPorPedido[pedido].lucroTotal += lucro;
+            const qtd = parseInt(quantidade) || 0;
+            produtosPorPedido[pedido].totalPontos += pontos;
+        }
+        if (isIndisponivel) {
+            produtosPorPedido[pedido].produtosIndisponiveis++;
+        }
     }
     
+    // ===== PROCESSAR CADA PEDIDO =====
     produtosData = Object.values(produtosPorPedido).map(p => {
-        let valorVendaTotal = 0;
-        let lucroTotal = 0;
         let produtosUnicos = 0;
         let totalProdutos = 0;
         let totalPontos = 0;
@@ -2537,32 +2571,24 @@ function processarDadosProdutos(data) {
                 continue;
             }
             
-            if (item.valorVenda === 0) {
-                break;
-            }
+            if (item.vendaTotal === 0) break;
             
             const qtd = parseInt(item.quantidade) || 0;
             if (qtd > 0) {
                 produtosUnicos++;
                 totalProdutos += qtd;
-                totalPontos += item.pontos; // ← SOMA DOS PONTOS
-                valorVendaTotal += item.valorVenda;
-                lucroTotal += item.lucro;
+                totalPontos += item.pontos;
             }
         }
         
-        const precoVenda = valorVendaTotal;
-        const lucroFinal = precoVenda - p.precoCompra;
-        const lucroPercentual = p.precoCompra > 0 ? (lucroFinal / p.precoCompra) * 100 : 0;
+        const lucroPercentual = p.precoCompra > 0 ? (p.lucroTotal / p.precoCompra) * 100 : 0;
         
         return {
             ...p,
             produtosUnicos: produtosUnicos,
             totalProdutos: totalProdutos,
-            totalPontos: totalPontos, // ← NOVO
+            totalPontos: totalPontos,
             produtosIndisponiveis: produtosIndisponiveis,
-            precoVenda: precoVenda,
-            lucroTotal: lucroFinal,
             lucroPercentual: lucroPercentual
         };
     });
@@ -2571,6 +2597,7 @@ function processarDadosProdutos(data) {
     window.produtosPorPedido = produtosPorPedido;
     
     console.log(`📊 ${produtosData.length} pedidos carregados da aba Produtos`);
+    console.log('📋 Exemplo - primeira linha do primeiro pedido:', produtosData[0]?.linhas?.[0]);
 }
 
 
@@ -3019,36 +3046,6 @@ function mostrarProdutosMaisPedidos() {
     renderizarMaisPedidos(produtos, '📈 Produtos mais pedidos - Todo o período', 'vezes');
 }
 
-function mostrarProdutosMaiorLucro() {
-    const botoesProdutos = document.querySelectorAll('#submenuProdutos .btn-submenu');
-    botoesProdutos.forEach(b => b.classList.remove('active'));
-    if (botoesProdutos.length > 2) {
-        botoesProdutos[2].classList.add('active');
-    }
-    
-    const submenu = document.getElementById('submenuProdutos');
-    if (submenu) submenu.style.display = 'flex';
-    
-    const dataTable = document.getElementById('dataTable');
-    const statsContainer = document.getElementById('statsContainer');
-    const tableWrapper = document.getElementById('tableWrapper');
-    const semanaInfo = document.getElementById('semanaInfo');
-    const mesContainer = document.getElementById('mesContainer');
-    
-    if (dataTable) dataTable.style.display = 'none';
-    if (statsContainer) statsContainer.classList.add('stats-hidden');
-    if (tableWrapper) tableWrapper.innerHTML = '';
-    
-    if (semanaInfo) {
-        semanaInfo.style.display = 'block';
-        semanaInfo.innerHTML = '💰 Em breve: Produtos com maior lucro';
-    }
-    if (mesContainer) {
-        mesContainer.style.display = 'block';
-        mesContainer.innerHTML = '<div style="text-align:center; padding:40px; color:#999;">💰 Funcionalidade em desenvolvimento...</div>';
-    }
-}
-
 function mostrarProdutosMenosPedidos() {
     const botoesProdutos = document.querySelectorAll('#submenuProdutos .btn-submenu');
     botoesProdutos.forEach(b => b.classList.remove('active'));
@@ -3133,7 +3130,7 @@ function toggleIndisponiveis(pedidoId) {
 
 
 function calcularProdutosMaisPedidos(periodo) {
-    console.log('📊 Calculando produtos mais pedidos - Período:', periodo);
+     console.log('📊 Calculando produtos mais pedidos - Período:', periodo);
     
     let dataLimite = null;
     const agora = new Date();
@@ -3167,6 +3164,7 @@ function calcularProdutosMaisPedidos(periodo) {
         
         if (!pedido.linhas || pedido.linhas.length === 0) continue;
         
+        // ===== AGRUPAR PRODUTOS DO MESMO PEDIDO =====
         const produtosDoPedido = {};
         
         for (const linha of pedido.linhas) {
@@ -3200,11 +3198,15 @@ function calcularProdutosMaisPedidos(periodo) {
             });
         }
         
+        // ===== ADICIONAR AO ACUMULADOR GERAL =====
         for (const chave in produtosDoPedido) {
             const item = produtosDoPedido[chave];
             const codigo = item.codigo;
             
+            // Calcular valor médio de compra
             const valorCompraMedio = item.quantidadeTotal > 0 ? item.valorCompraTotal / item.quantidadeTotal : 0;
+            
+            // ===== CALCULAR LUCRO UNITÁRIO =====
             const lucroUni = item.vendaUnit - valorCompraMedio;
             const lucroPercentual = valorCompraMedio > 0 ? (lucroUni / valorCompraMedio) * 100 : 0;
             
@@ -3216,7 +3218,7 @@ function calcularProdutosMaisPedidos(periodo) {
                     quantidadeTotal: 0,
                     valoresCompra: [],
                     valoresVenda: [],
-                    lucros: [],
+                    lucros: [],        // ← AGORA ARMAZENA LUCRO UNITÁRIO
                     lucrosPercentuais: [],
                     pedidos: []
                 };
@@ -3227,6 +3229,8 @@ function calcularProdutosMaisPedidos(periodo) {
             
             if (valorCompraMedio > 0) produtos[codigo].valoresCompra.push(valorCompraMedio);
             if (item.vendaUnit > 0) produtos[codigo].valoresVenda.push(item.vendaUnit);
+            
+            // ===== ARMAZENAR LUCRO UNITÁRIO =====
             if (lucroUni > 0) produtos[codigo].lucros.push(lucroUni);
             if (lucroPercentual > 0) produtos[codigo].lucrosPercentuais.push(lucroPercentual);
             
@@ -3298,8 +3302,11 @@ function renderizarMaisPedidos(produtos, titulo, organizacao) {
         const maxCompra = p.valoresCompra.length > 0 ? Math.max(...p.valoresCompra) : 0;
         const minVenda = p.valoresVenda.length > 0 ? Math.min(...p.valoresVenda) : 0;
         const maxVenda = p.valoresVenda.length > 0 ? Math.max(...p.valoresVenda) : 0;
+        
+        // ===== CORREÇÃO: USAR VALORES DE LUCRO UNITÁRIO =====
         const minLucroUni = p.lucros.length > 0 ? Math.min(...p.lucros) : 0;
         const maxLucroUni = p.lucros.length > 0 ? Math.max(...p.lucros) : 0;
+        
         const minLucroPerc = p.lucrosPercentuais.length > 0 ? Math.min(...p.lucrosPercentuais) : 0;
         const maxLucroPerc = p.lucrosPercentuais.length > 0 ? Math.max(...p.lucrosPercentuais) : 0;
         
@@ -3348,6 +3355,8 @@ function renderizarMaisPedidos(produtos, titulo, organizacao) {
 
 
 function toggleDetalhesProdutosMaisPedidos(codigo) {
+    cconsole.log('🔍 toggleDetalhesProdutosMaisPedidos chamado para:', codigo);
+    
     const row = document.getElementById(`detalhe-produto-mais-pedido-${codigo}`);
     if (!row) return;
     
@@ -3363,6 +3372,7 @@ function toggleDetalhesProdutosMaisPedidos(codigo) {
             return;
         }
         
+        // ===== AGRUPAR PEDIDOS DO PRODUTO =====
         const pedidosAgrupados = {};
         
         for (const pedido of produtosData) {
@@ -3392,6 +3402,7 @@ function toggleDetalhesProdutosMaisPedidos(codigo) {
             }
         }
         
+        // ===== MONTAR HTML =====
         let html = `
             <table style="width:100%; border-collapse:collapse; font-size:12px;">
                 <thead>
