@@ -5322,35 +5322,6 @@ function ordenarProdutosPorPedido(coluna) {
 
 
 
-// ===== FUNÇÃO PARA ATUALIZAR SETAS DE ORDENAÇÃO =====
-function atualizarSetasOrdenacao(colunaAtiva) {
-    const headers = document.querySelectorAll('#dataTable thead th');
-    const colunas = ['pedido', 'data', 'produtosUnicos', 'quantidadeTotal', 'pontos', 'precoCompra', 'precoVenda', 'lucro', 'lucroPercentual', 'indisponiveis'];
-    
-    headers.forEach((th, index) => {
-        if (index >= colunas.length) return;
-        const coluna = colunas[index];
-        const textoOriginal = th.getAttribute('data-texto-original') || th.textContent.replace(/[▲▼]/g, '').trim();
-        
-        // Remover setas existentes
-        th.textContent = textoOriginal;
-        
-        // Adicionar seta se for a coluna ativa
-        if (coluna === colunaAtiva) {
-            const ordem = window.ordenacaoProdutosPorPedido.ordem || 'asc';
-            const seta = ordem === 'asc' ? ' ▲' : ' ▼';
-            th.textContent += seta;
-        }
-        
-        // Salvar texto original
-        th.setAttribute('data-texto-original', textoOriginal);
-    });
-}
-
-
-
-
-
 
 
 
@@ -5402,41 +5373,6 @@ function atualizarSetasCabecalho() {
         th.appendChild(setaSpan);
     });
 }
-
-
-
-
-
-
-
-function filtrarProdutosPorPedido(periodo) {
-    const botoes = document.querySelectorAll('#semanaInfo .btn-submenu');
-    botoes.forEach(b => b.classList.remove('active'));
-    
-    const periodos = {
-        'todo': 'Todo o período',
-        'mes': 'Esse mês',
-        '3meses': 'Últimos 3 meses',
-        '5meses': 'Últimos 5 meses',
-        '8meses': 'Últimos 8 meses',
-        '12meses': 'Últimos 12 meses'
-    };
-    
-    botoes.forEach(b => {
-        if (b.textContent.trim() === periodos[periodo]) {
-            b.classList.add('active');
-        }
-    });
-    
-    window.periodoAtualProdutosPorPedido = periodo;
-    
-    // Recarregar a tabela com o filtro
-    mostrarProdutosPorPedido();
-}
-
-
-
-
 
 
 
