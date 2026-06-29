@@ -3407,6 +3407,29 @@ function mostrarProdutosPorPedido() {
         `;
     }
     
+    // ===== VERIFICAR SE PRODUTOS JÁ ESTÃO CARREGADOS =====
+    if (!produtosData || produtosData.length === 0) {
+        console.log('⏳ produtosData vazio, carregando...');
+        carregarProdutos().then(() => {
+            console.log('✅ Produtos carregados:', produtosData.length);
+            window.produtosDataFiltrados = produtosData;
+            renderizarTabelaProdutosComFiltro(produtosData);
+        }).catch(err => {
+            console.error('❌ Erro ao carregar produtos:', err);
+            if (tableWrapper) {
+                tableWrapper.innerHTML = `
+                    <div style="text-align:center; padding:40px; color:#dc3545;">
+                        ❌ Erro ao carregar produtos: ${err.message}
+                        <br><br>
+                        <button onclick="mostrarProdutosPorPedido()" class="btn" style="background:#28a745;">Tentar novamente</button>
+                    </div>
+                `;
+            }
+        });
+        return;
+    }
+    
+    // ===== APLICAR FILTRO DE PERÍODO =====
     const periodo = window.periodoAtualProdutosPorPedido || 'todo';
     let dataLimite = null;
     const agora = new Date();
