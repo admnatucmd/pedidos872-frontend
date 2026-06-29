@@ -2461,7 +2461,6 @@ function processarDadosProdutos(data) {
         return;
     }
     
-    // ===== ÍNDICES CORRETOS DA ABA PRODUTOS =====
     const idxPedido = 0;
     const idxData = 1;
     const idxNotaFiscal = 2;
@@ -2472,14 +2471,14 @@ function processarDadosProdutos(data) {
     const idxProduto = 11;
     const idxQuantidade = 12;
     const idxPontos = 13;
-    const idxValorUnit = 14;        // VALOR UNITÁRIO (R$)
-    const idxValorTotal = 15;       // VALOR TOTAL (R$)
-    const idxVendaUnit = 16;        // VALOR DE VENDA UNITÁRIO (R$)
-    const idxVendaTotal = 17;       // VALOR DE VENDA TOTAL (R$)
-    const idxLucro = 18;            // LUCRO (R$)
-    const idxLucroPercentual = 19;  // LUCRO (%)
-    const idxLucroReal = 20;        // LUCRO REAL (R$) COM DESCONTO REFERENCIA
-    const idxLucroRealPercentual = 21; // LUCRO REAL (%) COM DESCONTO REFERENCIA
+    const idxValorUnit = 14;
+    const idxValorTotal = 15;
+    const idxVendaUnit = 16;
+    const idxVendaTotal = 17;
+    const idxLucro = 18;
+    const idxLucroPercentual = 19;
+    const idxLucroReal = 20;
+    const idxLucroRealPercentual = 21;
     const idxReferencia = 22;
     
     let pedidoAtual = null;
@@ -2512,13 +2511,10 @@ function processarDadosProdutos(data) {
             };
         }
         
-        // ===== EXTRAIR TODOS OS VALORES =====
         const codigo = row.length > idxCodigo ? String(row[idxCodigo] || '').trim() : '';
         const produto = row.length > idxProduto ? String(row[idxProduto] || '').trim() : '';
         const quantidade = row.length > idxQuantidade ? String(row[idxQuantidade] || '0').trim() : '0';
         const pontos = row.length > idxPontos ? parseInt(String(row[idxPontos] || '0').replace(/\./g, '').trim()) || 0 : 0;
-        
-        // ===== VALORES QUE ESTAVAM FALTANDO =====
         const valorUnit = row.length > idxValorUnit ? limparValorProduto(String(row[idxValorUnit] || '0')) : 0;
         const valorTotal = row.length > idxValorTotal ? limparValorProduto(String(row[idxValorTotal] || '0')) : 0;
         const vendaUnit = row.length > idxVendaUnit ? limparValorProduto(String(row[idxVendaUnit] || '0')) : 0;
@@ -2529,24 +2525,24 @@ function processarDadosProdutos(data) {
         
         const isIndisponivel = referencia.includes('Produtos indisponível na realização do pedido');
         
-        // ===== ADICIONA A LINHA COM TODOS OS VALORES =====
         produtosPorPedido[pedido].linhas.push({
             linha: i,
             codigo: codigo,
             produto: produto,
             quantidade: quantidade,
             pontos: pontos,
-            valorUnit: valorUnit,        // ← COLUNA 14
-            valorTotal: valorTotal,      // ← COLUNA 15
-            vendaUnit: vendaUnit,        // ← COLUNA 16
-            vendaTotal: vendaTotal,      // ← COLUNA 17
-            lucro: lucro,                // ← COLUNA 18
-            lucroPercentual: lucroPercentual, // ← COLUNA 19
+            valorUnit: valorUnit,
+            valorTotal: valorTotal,
+            vendaUnit: vendaUnit,
+            vendaTotal: vendaTotal,
+            lucro: lucro,
+            lucroPercentual: lucroPercentual,
             referencia: referencia,
-            isIndisponivel: isIndisponivel
+            isIndisponivel: isIndisponivel,
+            valorCompra: valorUnit,
+            valorVenda: vendaUnit
         });
         
-        // ===== ACUMULA VALORES PARA O PEDIDO =====
         if (!isIndisponivel && vendaTotal > 0) {
             produtosPorPedido[pedido].valorVendaTotal += vendaTotal;
             produtosPorPedido[pedido].lucroTotal += lucro;
@@ -2558,37 +2554,42 @@ function processarDadosProdutos(data) {
         }
     }
     
-    // ===== PROCESSAR CADA PEDIDO =====
     produtosData = Object.values(produtosPorPedido).map(p => {
         let produtosUnicos = 0;
         let totalProdutos = 0;
         let totalPontos = 0;
         let produtosIndisponiveis = 0;
-        
+        let precoVenda = 0;
+
         for (const item of p.linhas) {
             if (item.isIndisponivel) {
                 produtosIndisponiveis++;
                 continue;
             }
-            
+
             if (item.vendaTotal === 0) break;
-            
+
             const qtd = parseInt(item.quantidade) || 0;
             if (qtd > 0) {
                 produtosUnicos++;
                 totalProdutos += qtd;
                 totalPontos += item.pontos;
+                precoVenda += (item.vendaUnit || 0) * qtd;
             }
         }
-        
-        const lucroPercentual = p.precoCompra > 0 ? (p.lucroTotal / p.precoCompra) * 100 : 0;
-        
+
+        // ===== CALCULAR LUCRO = VENDA - COMPRA =====
+        const lucroTotal = precoVenda - p.precoCompra;
+        const lucroPercentual = p.precoCompra > 0 ? (lucroTotal / p.precoCompra) * 100 : 0;
+
         return {
             ...p,
             produtosUnicos: produtosUnicos,
             totalProdutos: totalProdutos,
             totalPontos: totalPontos,
             produtosIndisponiveis: produtosIndisponiveis,
+            precoVenda: precoVenda,
+            lucroTotal: lucroTotal,
             lucroPercentual: lucroPercentual
         };
     });
@@ -2597,7 +2598,9 @@ function processarDadosProdutos(data) {
     window.produtosPorPedido = produtosPorPedido;
     
     console.log(`📊 ${produtosData.length} pedidos carregados da aba Produtos`);
-    console.log('📋 Exemplo - primeira linha do primeiro pedido:', produtosData[0]?.linhas?.[0]);
+    console.log('📋 Exemplo - primeiro pedido:', produtosData[0]?.pedido);
+    console.log('📋 precoVenda:', produtosData[0]?.precoVenda);
+    console.log('📋 lucroTotal:', produtosData[0]?.lucroTotal);
 }
 
 
@@ -2615,7 +2618,6 @@ function renderizarTabelaProdutos() {
         return;
     }
     
-    // Ordenar por data (mais recente primeiro)
     produtosData.sort((a, b) => {
         const dataA = new Date(a.data.split('/').reverse().join('/'));
         const dataB = new Date(b.data.split('/').reverse().join('/'));
@@ -2642,26 +2644,83 @@ function renderizarTabelaProdutos() {
                 <tbody>
     `;
     
-    produtosData.forEach(p => {
+    for (const p of produtosData) {
         const precoCompra = p.precoCompra || 0;
-        const precoVenda = p.precoVenda || 0;
-        const lucro = p.lucroTotal || 0;
-        const lucroPercentual = p.lucroPercentual || 0;
         
+        // ===== AGRUPAR PRODUTOS DO PEDIDO =====
+        const produtosAgrupados = {};
+        let totalQuantidade = 0;
+        let produtosUnicos = 0;
+        
+        if (p.linhas) {
+            for (const item of p.linhas) {
+                if (item.isIndisponivel) continue;
+                if (item.vendaTotal === 0) continue;
+                
+                const codigo = item.codigo;
+                const vendaUnit = item.vendaUnit || 0;
+                const qtd = parseInt(item.quantidade) || 0;
+                const valorUnit = item.valorUnit || 0;
+                const pontos = item.pontos || 0;
+                
+                // Chave: codigo + vendaUnit (se for diferente, mantém separado)
+                const chave = vendaUnit > 0 ? `${codigo}_${vendaUnit}` : codigo;
+                
+                if (!produtosAgrupados[chave]) {
+                    produtosAgrupados[chave] = {
+                        codigo: codigo,
+                        produto: item.produto,
+                        vendaUnit: vendaUnit,
+                        quantidadeTotal: 0,
+                        valorCompraTotal: 0,
+                        pontosTotal: 0,
+                        items: []
+                    };
+                }
+                
+                produtosAgrupados[chave].quantidadeTotal += qtd;
+                produtosAgrupados[chave].valorCompraTotal += valorUnit * qtd;
+                produtosAgrupados[chave].pontosTotal += pontos * qtd;
+                produtosAgrupados[chave].items.push({ qtd, valorUnit, pontos });
+            }
+            
+            // Contar produtos únicos (quantas chaves diferentes)
+            produtosUnicos = Object.keys(produtosAgrupados).length;
+            
+            // Calcular quantidade total
+            for (const chave in produtosAgrupados) {
+                totalQuantidade += produtosAgrupados[chave].quantidadeTotal;
+            }
+        }
+        
+        // ===== CALCULAR PRECO_VENDA E LUCRO =====
+        let precoVenda = 0;
+        let lucroTotal = 0;
+        
+        for (const chave in produtosAgrupados) {
+            const item = produtosAgrupados[chave];
+            const valorCompraMedio = item.quantidadeTotal > 0 ? item.valorCompraTotal / item.quantidadeTotal : 0;
+            precoVenda += item.vendaUnit * item.quantidadeTotal;
+            lucroTotal += (item.vendaUnit - valorCompraMedio) * item.quantidadeTotal;
+        }
+        
+        const lucroPercentual = precoCompra > 0 ? (lucroTotal / precoCompra) * 100 : 0;
+        
+        // ===== MONTAR LINHA DO PEDIDO =====
         html += `
             <tr class="pedido-row" onclick="toggleDetalhesProdutos('${p.pedido}')" style="cursor:pointer; transition:background 0.2s;">
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle;">
                     <span class="expand-icon">▶</span> ${p.pedido}
                 </td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${p.data}</td>
-                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.produtosUnicos}</td>
-                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.totalProdutos}</td>
-                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.totalPontos}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${produtosUnicos}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${totalQuantidade}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.totalPontos || 0}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(precoCompra)}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(precoVenda)}</td>
-                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(lucro)}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(lucroTotal)}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${lucroPercentual.toFixed(1)}%</td>
-                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.produtosIndisponiveis}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.produtosIndisponiveis || 0}</td>
             </tr>
             <tr id="detalhe-produtos-${p.pedido}" class="parcelas-detail">
                 <td colspan="10">
@@ -2687,7 +2746,7 @@ function renderizarTabelaProdutos() {
                                     </tr>
                                 </thead>
                                 <tbody id="produtos-detalhe-${p.pedido}">
-                                    <tr><td colspan="14" style="text-align:center; padding:20px; color:#999;">Carregando produtos...</td></tr>
+                                    <tr><td colspan="13" style="text-align:center; padding:20px; color:#999;">Carregando produtos...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -2696,7 +2755,7 @@ function renderizarTabelaProdutos() {
                 </td>
             </tr>
         `;
-    });
+    }
     
     html += `
                 </tbody>
@@ -2782,7 +2841,7 @@ async function carregarProdutosDetalhados(pedidoId) {
         }
         
         if (linhasPedido.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:20px; color:#999;">Nenhum produto encontrado para este pedido.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:20px; color:#999;">Nenhum produto encontrado para este pedido.</td></tr>`;
             return;
         }
         
@@ -2801,75 +2860,218 @@ async function carregarProdutosDetalhados(pedidoId) {
             }
         }
         
-        // ===== MONTAR HTML =====
-        let html = '';
+        // ===== AGRUPAR PRODUTOS DISPONÍVEIS =====
+        const produtosAgrupados = {};
+        const produtosOriginal = [];
         
-        // ===== PRODUTOS DISPONÍVEIS =====
         for (const row of disponiveis) {
             const codigo = String(row[idxCodigo] || '').trim();
-            const produto = String(row[idxProduto] || '').trim();
-            const quantidade = String(row[idxQuantidade] || '0').trim();
-            const pontos = String(row[idxPontos] || '').trim();
-            const valorUnit = limparValorProduto(String(row[idxValorUnit] || '0'));
-            const valorTotal = limparValorProduto(String(row[idxValorTotal] || '0'));
             const vendaUnit = limparValorProduto(String(row[idxVendaUnit] || '0'));
-            const vendaTotal = limparValorProduto(String(row[idxVendaTotal] || '0'));
+            const chave = vendaUnit > 0 ? `${codigo}_${vendaUnit}` : codigo;
+            
+            if (!produtosAgrupados[chave]) {
+                produtosAgrupados[chave] = {
+                    codigo: codigo,
+                    produto: String(row[idxProduto] || '').trim(),
+                    vendaUnit: vendaUnit,
+                    quantidadeTotal: 0,
+                    valorCompraTotal: 0,
+                    pontosTotal: 0,
+                    lucroTotal: 0,
+                    lucroPercentualTotal: 0,
+                    referencia: String(row[idxReferencia] || '').trim(),
+                    lucroReal: 0,
+                    lucroRealPercentual: 0,
+                    maiorValorUnit: 0,
+                    referenciaMaiorValor: '',
+                    lucroPercentualDescMaior: 0,
+                    lucroRealDescMaior: 0,
+                    itens: []
+                };
+            }
+            
+            const qtd = parseInt(String(row[idxQuantidade] || '0').trim()) || 0;
+            const valorUnit = limparValorProduto(String(row[idxValorUnit] || '0'));
+            const pontos = parseInt(String(row[idxPontos] || '0').replace(/\./g, '').trim()) || 0;
             const lucro = limparValorProduto(String(row[idxLucro] || '0'));
             const lucroPercentual = limparValorProduto(String(row[idxLucroPercentual] || '0'));
             const lucroReal = limparValorProduto(String(row[idxLucroReal] || '0'));
             const lucroRealPercentual = limparValorProduto(String(row[idxLucroRealPercentual] || '0'));
             const referencia = String(row[idxReferencia] || '').trim();
             
+            produtosAgrupados[chave].quantidadeTotal += qtd;
+            produtosAgrupados[chave].valorCompraTotal += valorUnit * qtd;
+            produtosAgrupados[chave].pontosTotal += pontos;
+            produtosAgrupados[chave].lucroTotal += lucro;
+            produtosAgrupados[chave].lucroPercentualTotal += lucroPercentual;
+            produtosAgrupados[chave].itens.push({ qtd, valorUnit, pontos, lucro, lucroPercentual });
+            
+            // ===== PEGAR A LINHA COM MAIOR VALOR UNITÁRIO DE COMPRA =====
+            if (valorUnit > produtosAgrupados[chave].maiorValorUnit) {
+                produtosAgrupados[chave].maiorValorUnit = valorUnit;
+                produtosAgrupados[chave].referenciaMaiorValor = referencia;
+                produtosAgrupados[chave].lucroPercentualDescMaior = lucroRealPercentual;
+                produtosAgrupados[chave].lucroRealDescMaior = lucroReal;
+            }
+            
+            // Guardar original também
+            produtosOriginal.push({
+                codigo: codigo,
+                produto: String(row[idxProduto] || '').trim(),
+                quantidade: qtd,
+                pontos: pontos,
+                valorUnit: valorUnit,
+                valorTotal: limparValorProduto(String(row[idxValorTotal] || '0')),
+                vendaUnit: vendaUnit,
+                vendaTotal: limparValorProduto(String(row[idxVendaTotal] || '0')),
+                lucro: lucro,
+                lucroPercentual: lucroPercentual,
+                lucroReal: lucroReal,
+                lucroRealPercentual: lucroRealPercentual,
+                referencia: referencia
+            });
+        }
+        
+        // ===== MONTAR HTML COM TOGGLE =====
+        let html = '';
+        
+        // ===== BOTÃO TOGGLE =====
+        const bodyCondensado = `body-condensado-${pedidoId}`;
+        const bodyOriginal = `body-original-${pedidoId}`;
+        
+        html += `
+            <tr>
+                <td colspan="13" style="padding:8px 8px; text-align:center; background:#f0f4f8; border-bottom:2px solid #e5e7eb;">
+                    <button onclick="toggleVisualizacaoProdutos('${pedidoId}')" 
+                            style="background:#0b4f6c; color:white; border:none; padding:6px 18px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; display:inline-flex; align-items:center; gap:8px;">
+                        <span id="toggle-icon-${pedidoId}">📊</span> 
+                        <span id="toggle-text-${pedidoId}">Mostrar original (igual do capta)</span>
+                    </button>
+                    <span style="font-size:11px; color:#667; margin-left:12px;">Padrão: Condensado (agrupado por produto)</span>
+                </td>
+            </tr>
+        `;
+        
+        // ===== CORPO CONDENSADO (PADRÃO) - TÍTULOS IGUAIS AO CAPTA =====
+        html += `<tr id="${bodyCondensado}"><td colspan="13"><div style="width:100%;">`;
+        html += `<table style="width:100%; border-collapse:collapse; font-size:12px;">`;
+        html += `<thead><tr style="background:#f1f3f5;">
+            <th style="padding:6px 8px; text-align:left; border-bottom:1px solid #ddd;">Código</th>
+            <th style="padding:6px 8px; text-align:left; border-bottom:1px solid #ddd;">Produto</th>
+            <th style="padding:6px 8px; text-align:center; border-bottom:1px solid #ddd;">Qtd</th>
+            <th style="padding:6px 8px; text-align:center; border-bottom:1px solid #ddd;">Pontos</th>
+            <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Valor Unit</th>
+            <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Valor Total</th>
+            <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Venda Unit</th>
+            <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Venda Total</th>
+            <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Lucro</th>
+            <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Lucro %</th>
+            <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Lucro c/ Desc</th>
+            <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Lucro % c/ Desc</th>
+            <th style="padding:6px 8px; text-align:left; border-bottom:1px solid #ddd;">Referência</th>
+        </tr></thead><tbody>`;
+        
+        for (const chave in produtosAgrupados) {
+            const item = produtosAgrupados[chave];
+            const valorCompraMedio = item.quantidadeTotal > 0 ? item.valorCompraTotal / item.quantidadeTotal : 0;
+            const valorVendaTotal = item.vendaUnit * item.quantidadeTotal;
+            
+            // ===== LUCRO REAL = VENDA - COMPRA MÉDIA =====
+            const lucroReal = item.vendaUnit - valorCompraMedio;
+            const lucroPercentual = valorCompraMedio > 0 ? (lucroReal / valorCompraMedio) * 100 : 0;
+            
             html += `
                 <tr>
-                    <td style="padding:6px 8px;">${codigo}</td>
-                    <td style="padding:6px 8px;">${produto}</td>
-                    <td style="padding:6px 8px; text-align:center;">${quantidade}</td>
-                    <td style="padding:6px 8px; text-align:center;">${pontos}</td>
-                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(valorUnit)}</td>
-                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(valorTotal)}</td>
-                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(vendaUnit)}</td>
-                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(vendaTotal)}</td>
-                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(lucro)}</td>
-                    <td style="padding:6px 8px; text-align:right;">${lucroPercentual.toFixed(1)}%</td>
-                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(lucroReal)}</td>
-                    <td style="padding:6px 8px; text-align:right;">${lucroRealPercentual.toFixed(1)}%</td>
-                    <td style="padding:6px 8px; text-align:left; font-size:11px; color:#667;">${referencia}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${item.codigo}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${item.produto}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${item.quantidadeTotal}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${item.pontosTotal}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(valorCompraMedio)}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(item.valorCompraTotal)}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(item.vendaUnit)}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(valorVendaTotal)}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(lucroReal)}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${lucroPercentual.toFixed(1)}%</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(item.lucroRealDescMaior)}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${item.lucroPercentualDescMaior.toFixed(1)}%</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:left; font-size:11px; color:#667;">${item.referenciaMaiorValor}</td>
                 </tr>
             `;
         }
         
-        // ===== BOTÃO PARA MOSTRAR INDISPONÍVEIS =====
-        const indisponiveisCount = indisponiveis.length;
-        const toggleId = `toggle-indisponiveis-${pedidoId}`;
-        const bodyId = `indisponiveis-body-${pedidoId}`;
+        html += `</tbody></table></div></td></tr>`;
         
-        if (indisponiveisCount > 0) {
+        // ===== CORPO ORIGINAL (OCULTO) =====
+        html += `<tr id="${bodyOriginal}" style="display:none;"><td colspan="13"><div style="width:100%;">`;
+        html += `<table style="width:100%; border-collapse:collapse; font-size:12px;">`;
+        html += `<thead><tr style="background:#f1f3f5;">
+            <th style="padding:6px 8px; text-align:left; border-bottom:1px solid #ddd;">Código</th>
+            <th style="padding:6px 8px; text-align:left; border-bottom:1px solid #ddd;">Produto</th>
+            <th style="padding:6px 8px; text-align:center; border-bottom:1px solid #ddd;">Qtd</th>
+            <th style="padding:6px 8px; text-align:center; border-bottom:1px solid #ddd;">Pontos</th>
+            <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Valor Unit</th>
+            <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Valor Total</th>
+            <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Venda Unit</th>
+            <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Venda Total</th>
+            <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Lucro</th>
+            <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Lucro %</th>
+            <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Lucro c/ Desc</th>
+            <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Lucro % c/ Desc</th>
+            <th style="padding:6px 8px; text-align:left; border-bottom:1px solid #ddd;">Referência</th>
+        </tr></thead><tbody>`;
+        
+        for (const row of produtosOriginal) {
+            const lucroReal = row.vendaUnit - row.valorUnit;
+            const lucroPercentual = row.valorUnit > 0 ? (lucroReal / row.valorUnit) * 100 : 0;
+            
             html += `
                 <tr>
-                    <td colspan="14" style="padding:8px 8px; text-align:center; background:#f8f9fa; border-top:2px solid #e5e7eb;">
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${row.codigo}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${row.produto}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${row.quantidade}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${row.pontos}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(row.valorUnit)}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(row.valorTotal)}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(row.vendaUnit)}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(row.vendaTotal)}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(lucroReal)}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${lucroPercentual.toFixed(1)}%</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(row.lucroReal)}</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${row.lucroRealPercentual.toFixed(1)}%</td>
+                    <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:left; font-size:11px; color:#667;">${row.referencia}</td>
+                </tr>
+            `;
+        }
+        
+        html += `</tbody></table></div></td></tr>`;
+        
+        // ===== INDISPONÍVEIS =====
+        if (indisponiveis.length > 0) {
+            html += `
+                <tr>
+                    <td colspan="13" style="padding:8px 8px; text-align:center; background:#f8f9fa; border-top:2px solid #e5e7eb;">
                         <button onclick="toggleIndisponiveis('${pedidoId}')" 
-                                style="background:none; border:none; cursor:pointer; font-size:13px; color:#0b4f6c; font-weight:600; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:6px;">
-                            <span id="toggle-icon-${pedidoId}">▶</span> 
-                            Mostrar produtos indisponíveis desse pedido (${indisponiveisCount})
+                                style="background:none; border:none; cursor:pointer; font-size:13px; color:#dc3545; font-weight:600; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:6px;">
+                            <span id="toggle-icon-indisponivel-${pedidoId}">▶</span> 
+                            Mostrar produtos indisponíveis desse pedido (${indisponiveis.length})
                         </button>
-                        <div id="${bodyId}" style="display:none; margin-top:8px; width:100%;">
+                        <div id="indisponiveis-body-${pedidoId}" style="display:none; margin-top:8px; width:100%;">
                             <table style="width:100%; border-collapse:collapse; font-size:12px; background:#fff8f8;">
                                 <thead>
                                     <tr style="background:#f1f3f5;">
-                                        <th style="padding:6px 8px; text-align:left;">Código</th>
-                                        <th style="padding:6px 8px; text-align:left;">Produto</th>
-                                        <th style="padding:6px 8px; text-align:center;">Qtd</th>
-                                        <th style="padding:6px 8px; text-align:center;">Pontos</th>
-                                        <th style="padding:6px 8px; text-align:right;">Valor Unit</th>
-                                        <th style="padding:6px 8px; text-align:right;">Valor Total</th>
-                                        <th style="padding:6px 8px; text-align:right;">Venda Unit</th>
-                                        <th style="padding:6px 8px; text-align:right;">Venda Total</th>
-                                        <th style="padding:6px 8px; text-align:right;">Lucro</th>
-                                        <th style="padding:6px 8px; text-align:right;">Lucro %</th>
-                                        <th style="padding:6px 8px; text-align:right;">Lucro c/ Desc</th>
-                                        <th style="padding:6px 8px; text-align:right;">Lucro % c/ Desc</th>
-                                        <th style="padding:6px 8px; text-align:left;">Referência</th>
+                                        <th style="padding:6px 8px; text-align:left; border-bottom:1px solid #ddd;">Código</th>
+                                        <th style="padding:6px 8px; text-align:left; border-bottom:1px solid #ddd;">Produto</th>
+                                        <th style="padding:6px 8px; text-align:center; border-bottom:1px solid #ddd;">Qtd</th>
+                                        <th style="padding:6px 8px; text-align:center; border-bottom:1px solid #ddd;">Pontos</th>
+                                        <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Valor Unit</th>
+                                        <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Valor Total</th>
+                                        <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Venda Unit</th>
+                                        <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Venda Total</th>
+                                        <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Lucro</th>
+                                        <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Lucro %</th>
+                                        <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Lucro c/ Desc</th>
+                                        <th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Lucro % c/ Desc</th>
+                                        <th style="padding:6px 8px; text-align:left; border-bottom:1px solid #ddd;">Referência</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -2892,19 +3094,19 @@ async function carregarProdutosDetalhados(pedidoId) {
                 
                 html += `
                     <tr style="background:#fff8f8; opacity:0.8;">
-                        <td style="padding:6px 8px;">${codigo}</td>
-                        <td style="padding:6px 8px;">${produto}</td>
-                        <td style="padding:6px 8px; text-align:center;">${quantidade}</td>
-                        <td style="padding:6px 8px; text-align:center;">${pontos}</td>
-                        <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(valorUnit)}</td>
-                        <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(valorTotal)}</td>
-                        <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(vendaUnit)}</td>
-                        <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(vendaTotal)}</td>
-                        <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(lucro)}</td>
-                        <td style="padding:6px 8px; text-align:right;">${lucroPercentual.toFixed(1)}%</td>
-                        <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(lucroReal)}</td>
-                        <td style="padding:6px 8px; text-align:right;">${lucroRealPercentual.toFixed(1)}%</td>
-                        <td style="padding:6px 8px; text-align:left; font-size:11px; color:#667;">${referencia}</td>
+                        <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${codigo}</td>
+                        <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${produto}</td>
+                        <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${quantidade}</td>
+                        <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${pontos}</td>
+                        <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(valorUnit)}</td>
+                        <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(valorTotal)}</td>
+                        <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(vendaUnit)}</td>
+                        <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(vendaTotal)}</td>
+                        <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(lucro)}</td>
+                        <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${lucroPercentual.toFixed(1)}%</td>
+                        <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(lucroReal)}</td>
+                        <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${lucroRealPercentual.toFixed(1)}%</td>
+                        <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:left; font-size:11px; color:#667;">${referencia}</td>
                     </tr>
                 `;
             }
@@ -2922,7 +3124,7 @@ async function carregarProdutosDetalhados(pedidoId) {
         
     } catch (error) {
         console.error('❌ Erro ao carregar produtos detalhados:', error);
-        tbody.innerHTML = `<tr><td colspan="14" style="text-align:center; padding:20px; color:red;">❌ Erro ao carregar produtos: ${error.message}</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="13" style="text-align:center; padding:20px; color:red;">❌ Erro ao carregar produtos: ${error.message}</td></tr>`;
     }
 }
 
@@ -3556,7 +3758,26 @@ function filtrarMaisPedidos(periodo) {
     renderizarMaisPedidos(produtos, titulo, window.organizacaoAtualMaisPedidos || 'vezes');
 }
 
-
+function toggleVisualizacaoProdutos(pedidoId) {
+    const bodyCondensado = document.getElementById(`body-condensado-${pedidoId}`);
+    const bodyOriginal = document.getElementById(`body-original-${pedidoId}`);
+    const toggleText = document.getElementById(`toggle-text-${pedidoId}`);
+    const toggleIcon = document.getElementById(`toggle-icon-${pedidoId}`);
+    
+    if (!bodyCondensado || !bodyOriginal) return;
+    
+    if (bodyCondensado.style.display === 'none') {
+        bodyCondensado.style.display = '';
+        bodyOriginal.style.display = 'none';
+        toggleText.textContent = 'Mostrar original (igual do capta)';
+        toggleIcon.textContent = '📊';
+    } else {
+        bodyCondensado.style.display = 'none';
+        bodyOriginal.style.display = '';
+        toggleText.textContent = 'Mostrar condensado (agrupado)';
+        toggleIcon.textContent = '📋';
+    }
+}
 
 
 
