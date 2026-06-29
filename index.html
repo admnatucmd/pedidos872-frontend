@@ -2461,14 +2461,26 @@ function processarDadosProdutos(data) {
         return;
     }
     
+    // ===== ÍNDICES CORRETOS DA ABA PRODUTOS =====
     const idxPedido = 0;
     const idxData = 1;
     const idxNotaFiscal = 2;
     const idxPrecoCompra = 3;
-    const idxValorVendaTotal = 17;
-    const idxLucro = 18;
+    const idxProdutosUnicos = 8;
+    const idxTotalProdutos = 9;
+    const idxCodigo = 10;
+    const idxProduto = 11;
+    const idxQuantidade = 12;
+    const idxPontos = 13;
+    const idxValorUnit = 14;        // VALOR UNITÁRIO (R$)
+    const idxValorTotal = 15;       // VALOR TOTAL (R$)
+    const idxVendaUnit = 16;        // VALOR DE VENDA UNITÁRIO (R$)
+    const idxVendaTotal = 17;       // VALOR DE VENDA TOTAL (R$)
+    const idxLucro = 18;            // LUCRO (R$)
+    const idxLucroPercentual = 19;  // LUCRO (%)
+    const idxLucroReal = 20;        // LUCRO REAL (R$) COM DESCONTO REFERENCIA
+    const idxLucroRealPercentual = 21; // LUCRO REAL (%) COM DESCONTO REFERENCIA
     const idxReferencia = 22;
-    const idxPontos = 13; // ← COLUNA N (PONTOS)
     
     let pedidoAtual = null;
     produtosPorPedido = {};
@@ -2494,38 +2506,60 @@ function processarDadosProdutos(data) {
                 precoCompra: limparValorProduto(String(row[idxPrecoCompra] || '0')),
                 valorVendaTotal: 0,
                 lucroTotal: 0,
-                totalPontos: 0, // ← NOVO
+                totalPontos: 0,
                 produtosIndisponiveis: 0,
                 linhas: []
             };
         }
         
-        const valorVenda = limparValorProduto(String(row[idxValorVendaTotal] || '0'));
-        const lucro = limparValorProduto(String(row[idxLucro] || '0'));
-        const pontos = parseInt(String(row[idxPontos] || '0').replace(/\./g, '').trim()) || 0;
+        // ===== EXTRAIR TODOS OS VALORES =====
+        const codigo = row.length > idxCodigo ? String(row[idxCodigo] || '').trim() : '';
+        const produto = row.length > idxProduto ? String(row[idxProduto] || '').trim() : '';
+        const quantidade = row.length > idxQuantidade ? String(row[idxQuantidade] || '0').trim() : '0';
+        const pontos = row.length > idxPontos ? parseInt(String(row[idxPontos] || '0').replace(/\./g, '').trim()) || 0 : 0;
+        
+        // ===== VALORES QUE ESTAVAM FALTANDO =====
+        const valorUnit = row.length > idxValorUnit ? limparValorProduto(String(row[idxValorUnit] || '0')) : 0;
+        const valorTotal = row.length > idxValorTotal ? limparValorProduto(String(row[idxValorTotal] || '0')) : 0;
+        const vendaUnit = row.length > idxVendaUnit ? limparValorProduto(String(row[idxVendaUnit] || '0')) : 0;
+        const vendaTotal = row.length > idxVendaTotal ? limparValorProduto(String(row[idxVendaTotal] || '0')) : 0;
+        const lucro = row.length > idxLucro ? limparValorProduto(String(row[idxLucro] || '0')) : 0;
+        const lucroPercentual = row.length > idxLucroPercentual ? limparValorProduto(String(row[idxLucroPercentual] || '0')) : 0;
         const referencia = row.length > idxReferencia ? String(row[idxReferencia] || '').trim() : '';
-        const quantidade = row.length > 12 ? String(row[12] || '0').trim() : '0';
-        const codigo = row.length > 10 ? String(row[10] || '').trim() : '';
-        const produto = row.length > 11 ? String(row[11] || '').trim() : '';
         
         const isIndisponivel = referencia.includes('Produtos indisponível na realização do pedido');
         
+        // ===== ADICIONA A LINHA COM TODOS OS VALORES =====
         produtosPorPedido[pedido].linhas.push({
             linha: i,
             codigo: codigo,
             produto: produto,
             quantidade: quantidade,
-            valorVenda: valorVenda,
-            lucro: lucro,
             pontos: pontos,
+            valorUnit: valorUnit,        // ← COLUNA 14
+            valorTotal: valorTotal,      // ← COLUNA 15
+            vendaUnit: vendaUnit,        // ← COLUNA 16
+            vendaTotal: vendaTotal,      // ← COLUNA 17
+            lucro: lucro,                // ← COLUNA 18
+            lucroPercentual: lucroPercentual, // ← COLUNA 19
             referencia: referencia,
             isIndisponivel: isIndisponivel
         });
+        
+        // ===== ACUMULA VALORES PARA O PEDIDO =====
+        if (!isIndisponivel && vendaTotal > 0) {
+            produtosPorPedido[pedido].valorVendaTotal += vendaTotal;
+            produtosPorPedido[pedido].lucroTotal += lucro;
+            const qtd = parseInt(quantidade) || 0;
+            produtosPorPedido[pedido].totalPontos += pontos;
+        }
+        if (isIndisponivel) {
+            produtosPorPedido[pedido].produtosIndisponiveis++;
+        }
     }
     
+    // ===== PROCESSAR CADA PEDIDO =====
     produtosData = Object.values(produtosPorPedido).map(p => {
-        let valorVendaTotal = 0;
-        let lucroTotal = 0;
         let produtosUnicos = 0;
         let totalProdutos = 0;
         let totalPontos = 0;
@@ -2537,32 +2571,24 @@ function processarDadosProdutos(data) {
                 continue;
             }
             
-            if (item.valorVenda === 0) {
-                break;
-            }
+            if (item.vendaTotal === 0) break;
             
             const qtd = parseInt(item.quantidade) || 0;
             if (qtd > 0) {
                 produtosUnicos++;
                 totalProdutos += qtd;
-                totalPontos += item.pontos; // ← SOMA DOS PONTOS
-                valorVendaTotal += item.valorVenda;
-                lucroTotal += item.lucro;
+                totalPontos += item.pontos;
             }
         }
         
-        const precoVenda = valorVendaTotal;
-        const lucroFinal = precoVenda - p.precoCompra;
-        const lucroPercentual = p.precoCompra > 0 ? (lucroFinal / p.precoCompra) * 100 : 0;
+        const lucroPercentual = p.precoCompra > 0 ? (p.lucroTotal / p.precoCompra) * 100 : 0;
         
         return {
             ...p,
             produtosUnicos: produtosUnicos,
             totalProdutos: totalProdutos,
-            totalPontos: totalPontos, // ← NOVO
+            totalPontos: totalPontos,
             produtosIndisponiveis: produtosIndisponiveis,
-            precoVenda: precoVenda,
-            lucroTotal: lucroFinal,
             lucroPercentual: lucroPercentual
         };
     });
@@ -2571,6 +2597,7 @@ function processarDadosProdutos(data) {
     window.produtosPorPedido = produtosPorPedido;
     
     console.log(`📊 ${produtosData.length} pedidos carregados da aba Produtos`);
+    console.log('📋 Exemplo - primeira linha do primeiro pedido:', produtosData[0]?.linhas?.[0]);
 }
 
 
@@ -2990,12 +3017,33 @@ function mostrarProdutosMaisPedidos() {
     
     if (semanaInfo) {
         semanaInfo.style.display = 'block';
-        semanaInfo.innerHTML = '📈 Em breve: Produtos mais pedidos';
+        semanaInfo.innerHTML = `
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0; border-bottom:1px solid #e5e7eb; padding-bottom:8px; margin-bottom:8px;">
+                <span style="font-weight:600; color:#0b4f6c; font-size:13px;">📊 Organizar por:</span>
+                <button class="btn-submenu active" onclick="organizarMaisPedidos('vezes')" id="btn-organizar-vezes">Mais pedido</button>
+                <button class="btn-submenu" onclick="organizarMaisPedidos('quantidade')" id="btn-organizar-quantidade">Quantidade total pedida</button>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0;">
+                <span style="font-weight:600; color:#0b4f6c; font-size:13px;">📈 Período:</span>
+                <button class="btn-submenu active" onclick="filtrarMaisPedidos('todo')">Todo o período</button>
+                <button class="btn-submenu" onclick="filtrarMaisPedidos('mes')">Esse mês</button>
+                <button class="btn-submenu" onclick="filtrarMaisPedidos('3meses')">Últimos 3 meses</button>
+                <button class="btn-submenu" onclick="filtrarMaisPedidos('5meses')">Últimos 5 meses</button>
+                <button class="btn-submenu" onclick="filtrarMaisPedidos('8meses')">Últimos 8 meses</button>
+                <button class="btn-submenu" onclick="filtrarMaisPedidos('12meses')">Últimos 12 meses</button>
+            </div>
+        `;
     }
+    
     if (mesContainer) {
-        mesContainer.style.display = 'block';
-        mesContainer.innerHTML = '<div style="text-align:center; padding:40px; color:#999;">📈 Funcionalidade em desenvolvimento...</div>';
+        mesContainer.style.display = 'none';
     }
+    
+    window.periodoAtualMaisPedidos = 'todo';
+    window.organizacaoAtualMaisPedidos = 'vezes';
+    
+    const produtos = calcularProdutosMaisPedidos('todo');
+    renderizarMaisPedidos(produtos, '📈 Produtos mais pedidos - Todo o período', 'vezes');
 }
 
 function mostrarProdutosMaiorLucro() {
@@ -3114,7 +3162,6 @@ function toggleIndisponiveis(pedidoId) {
 function calcularProdutosMaisPedidos(periodo) {
     console.log('📊 Calculando produtos mais pedidos - Período:', periodo);
     
-    // ===== FILTRAR POR PERÍODO =====
     let dataLimite = null;
     const agora = new Date();
     
@@ -3134,12 +3181,10 @@ function calcularProdutosMaisPedidos(periodo) {
         dataLimite.setMonth(agora.getMonth() - 12);
     }
     
-    // ===== AGRUPAR PRODUTOS =====
     const produtos = {};
     let totalPedidos = 0;
     
     for (const pedido of produtosData) {
-        // Filtrar por período
         if (dataLimite) {
             const dataPedido = new Date(pedido.data.split('/').reverse().join('/'));
             if (dataPedido < dataLimite) continue;
@@ -3147,64 +3192,373 @@ function calcularProdutosMaisPedidos(periodo) {
         
         totalPedidos++;
         
-        // Verificar se o pedido tem linhas
         if (!pedido.linhas || pedido.linhas.length === 0) continue;
         
+        // ===== AGRUPAR PRODUTOS DO MESMO PEDIDO =====
+        const produtosDoPedido = {};
+        
         for (const linha of pedido.linhas) {
-            // Ignorar indisponíveis
             if (linha.isIndisponivel) continue;
             
             const codigo = linha.codigo;
             if (!codigo) continue;
             
+            const vendaUnit = linha.vendaUnit || 0;
+            const chave = vendaUnit > 0 ? `${codigo}_${vendaUnit}` : codigo;
+            
+            if (!produtosDoPedido[chave]) {
+                produtosDoPedido[chave] = {
+                    codigo: codigo,
+                    produto: linha.produto,
+                    vendaUnit: vendaUnit,
+                    quantidadeTotal: 0,
+                    valorCompraTotal: 0,
+                    items: []
+                };
+            }
+            
+            const qtd = parseInt(linha.quantidade) || 0;
+            const valorUnit = linha.valorUnit || 0;
+            
+            produtosDoPedido[chave].quantidadeTotal += qtd;
+            produtosDoPedido[chave].valorCompraTotal += valorUnit * qtd;
+            produtosDoPedido[chave].items.push({
+                quantidade: qtd,
+                valorUnit: valorUnit
+            });
+        }
+        
+        // ===== ADICIONAR AO ACUMULADOR GERAL =====
+        for (const chave in produtosDoPedido) {
+            const item = produtosDoPedido[chave];
+            const codigo = item.codigo;
+            
+            // Calcular valor médio de compra
+            const valorCompraMedio = item.quantidadeTotal > 0 ? item.valorCompraTotal / item.quantidadeTotal : 0;
+            
+            // ===== CALCULAR LUCRO UNITÁRIO =====
+            const lucroUni = item.vendaUnit - valorCompraMedio;
+            const lucroPercentual = valorCompraMedio > 0 ? (lucroUni / valorCompraMedio) * 100 : 0;
+            
             if (!produtos[codigo]) {
                 produtos[codigo] = {
                     codigo: codigo,
-                    produto: linha.produto,
+                    produto: item.produto,
                     vezes: 0,
                     quantidadeTotal: 0,
                     valoresCompra: [],
                     valoresVenda: [],
-                    lucros: [],
+                    lucros: [],        // ← AGORA ARMAZENA LUCRO UNITÁRIO
                     lucrosPercentuais: [],
                     pedidos: []
                 };
             }
             
             produtos[codigo].vezes++;
-            const qtd = parseInt(linha.quantidade) || 0;
-            produtos[codigo].quantidadeTotal += qtd;
+            produtos[codigo].quantidadeTotal += item.quantidadeTotal;
             
-            const valorCompra = limparValorProduto(linha.valorCompra || '0');
-            const valorVenda = limparValorProduto(linha.valorVenda || '0');
-            const lucro = limparValorProduto(linha.lucro || '0');
-            const lucroPercentual = limparValorProduto(linha.lucroPercentual || '0');
+            if (valorCompraMedio > 0) produtos[codigo].valoresCompra.push(valorCompraMedio);
+            if (item.vendaUnit > 0) produtos[codigo].valoresVenda.push(item.vendaUnit);
             
-            if (valorCompra > 0) produtos[codigo].valoresCompra.push(valorCompra);
-            if (valorVenda > 0) produtos[codigo].valoresVenda.push(valorVenda);
-            if (lucro > 0) produtos[codigo].lucros.push(lucro);
+            // ===== ARMAZENAR LUCRO UNITÁRIO =====
+            if (lucroUni > 0) produtos[codigo].lucros.push(lucroUni);
             if (lucroPercentual > 0) produtos[codigo].lucrosPercentuais.push(lucroPercentual);
             
             produtos[codigo].pedidos.push({
                 pedido: pedido.pedido,
                 data: pedido.data,
-                quantidade: qtd,
-                valorCompra: valorCompra,
-                valorVenda: valorVenda,
-                lucro: lucro,
+                quantidade: item.quantidadeTotal,
+                valorCompra: valorCompraMedio,
+                valorVenda: item.vendaUnit,
+                lucroUni: lucroUni,
                 lucroPercentual: lucroPercentual
             });
         }
     }
     
-    // ===== ORDENAR POR QUANTIDADE TOTAL (MAIS PEDIDO) =====
     const resultados = Object.values(produtos);
     resultados.sort((a, b) => b.quantidadeTotal - a.quantidadeTotal);
     
     console.log(`📊 ${resultados.length} produtos encontrados em ${totalPedidos} pedidos`);
-    
     return resultados;
 }
+
+
+
+
+
+
+function renderizarMaisPedidos(produtos, titulo, organizacao) {
+const container = document.getElementById('tableWrapper');
+    if (!container) return;
+    
+    if (!produtos || produtos.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:40px; color:#667;">
+                📦 Nenhum produto encontrado no período selecionado.
+            </div>
+        `;
+        return;
+    }
+    
+    let topProdutos = [...produtos];
+    if (organizacao === 'vezes') {
+        topProdutos.sort((a, b) => b.vezes - a.vezes);
+    } else if (organizacao === 'quantidade') {
+        topProdutos.sort((a, b) => b.quantidadeTotal - a.quantidadeTotal);
+    }
+    
+    topProdutos = topProdutos.slice(0, 50);
+    
+    let html = `
+        <div style="overflow-x:auto; padding:20px 0;">
+            <div style="font-size:14px; font-weight:600; color:#0b4f6c; margin-bottom:15px; padding:0 10px;">
+                ${titulo} - ${topProdutos.length} produtos mais pedidos
+            </div>
+            <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <thead>
+                    <tr style="background:#f8f9fa;">
+                        <th style="padding:12px 10px; text-align:left; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Código</th>
+                        <th style="padding:12px 10px; text-align:left; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Produto</th>
+                        <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Pedido x vezes</th>
+                        <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Quantidade Total</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Valor Compra</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Valor Venda</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Lucro Uni</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Lucro (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    for (const p of topProdutos) {
+        const minCompra = p.valoresCompra.length > 0 ? Math.min(...p.valoresCompra) : 0;
+        const maxCompra = p.valoresCompra.length > 0 ? Math.max(...p.valoresCompra) : 0;
+        const minVenda = p.valoresVenda.length > 0 ? Math.min(...p.valoresVenda) : 0;
+        const maxVenda = p.valoresVenda.length > 0 ? Math.max(...p.valoresVenda) : 0;
+        
+        // ===== CORREÇÃO: USAR VALORES DE LUCRO UNITÁRIO =====
+        const minLucroUni = p.lucros.length > 0 ? Math.min(...p.lucros) : 0;
+        const maxLucroUni = p.lucros.length > 0 ? Math.max(...p.lucros) : 0;
+        
+        const minLucroPerc = p.lucrosPercentuais.length > 0 ? Math.min(...p.lucrosPercentuais) : 0;
+        const maxLucroPerc = p.lucrosPercentuais.length > 0 ? Math.max(...p.lucrosPercentuais) : 0;
+        
+        const compraStr = minCompra === maxCompra ? formatarMoedaBR(minCompra) : `${formatarMoedaBR(minCompra)} até ${formatarMoedaBR(maxCompra)}`;
+        const vendaStr = minVenda === maxVenda ? formatarMoedaBR(minVenda) : `${formatarMoedaBR(minVenda)} até ${formatarMoedaBR(maxVenda)}`;
+        const lucroUniStr = minLucroUni === maxLucroUni ? formatarMoedaBR(minLucroUni) : `${formatarMoedaBR(minLucroUni)} até ${formatarMoedaBR(maxLucroUni)}`;
+        const lucroPercStr = minLucroPerc === maxLucroPerc ? `${minLucroPerc.toFixed(1)}%` : `${minLucroPerc.toFixed(1)}% até ${maxLucroPerc.toFixed(1)}%`;
+        
+        html += `
+            <tr class="pedido-row" onclick="toggleDetalhesProdutosMaisPedidos('${p.codigo}')" style="cursor:pointer; transition:background 0.2s;">
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle;">
+                    <span class="expand-icon">▶</span> ${p.codigo}
+                </td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${p.produto}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.vezes}x</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.quantidadeTotal}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${compraStr}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${vendaStr}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${lucroUniStr}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${lucroPercStr}</td>
+            </tr>
+            <tr id="detalhe-produto-mais-pedido-${p.codigo}" class="parcelas-detail">
+                <td colspan="8">
+                    <div class="detail-card">
+                        <strong>📋 Pedidos do produto ${p.codigo} - ${p.produto}</strong>
+                        <div style="margin-top:10px; overflow-x:auto;">
+                            <div id="detalhe-pedidos-produto-${p.codigo}">
+                                <div style="text-align:center; padding:20px; color:#999;">Clique para carregar os pedidos...</div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+    
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+
+function toggleDetalhesProdutosMaisPedidos(codigo) {
+console.log('🔍 toggleDetalhesProdutosMaisPedidos chamado para:', codigo);
+    
+    const row = document.getElementById(`detalhe-produto-mais-pedido-${codigo}`);
+    if (!row) return;
+    
+    row.classList.toggle('show');
+    const icon = row.previousElementSibling.querySelector('.expand-icon');
+    if (icon) icon.innerHTML = row.classList.contains('show') ? '▼' : '▶';
+    
+    if (row.classList.contains('show')) {
+        const container = document.getElementById(`detalhe-pedidos-produto-${codigo}`);
+        if (!container) return;
+        
+        if (container.innerHTML.includes('Clique para carregar') === false && container.innerHTML.trim() !== '') {
+            return;
+        }
+        
+        // ===== AGRUPAR PEDIDOS DO PRODUTO =====
+        const pedidosAgrupados = {};
+        
+        for (const pedido of produtosData) {
+            if (!pedido.linhas) continue;
+            
+            const pedidoKey = pedido.pedido;
+            if (!pedidosAgrupados[pedidoKey]) {
+                pedidosAgrupados[pedidoKey] = {
+                    pedido: pedido.pedido,
+                    data: pedido.data,
+                    quantidadeTotal: 0,
+                    valorCompraTotal: 0,
+                    valorVenda: 0
+                };
+            }
+            
+            for (const linha of pedido.linhas) {
+                if (linha.codigo === codigo && !linha.isIndisponivel) {
+                    const qtd = parseInt(linha.quantidade) || 0;
+                    const valorUnit = linha.valorUnit || 0;
+                    const vendaUnit = linha.vendaUnit || 0;
+                    
+                    pedidosAgrupados[pedidoKey].quantidadeTotal += qtd;
+                    pedidosAgrupados[pedidoKey].valorCompraTotal += valorUnit * qtd;
+                    pedidosAgrupados[pedidoKey].valorVenda = vendaUnit;
+                }
+            }
+        }
+        
+        // ===== MONTAR HTML =====
+        let html = `
+            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                <thead>
+                    <tr style="background:#f1f3f5;">
+                        <th style="padding:6px 8px; text-align:left;">Pedido</th>
+                        <th style="padding:6px 8px; text-align:left;">Data</th>
+                        <th style="padding:6px 8px; text-align:center;">Qtd</th>
+                        <th style="padding:6px 8px; text-align:right;">Valor Compra Uni</th>
+                        <th style="padding:6px 8px; text-align:right;">Valor Venda Uni</th>
+                        <th style="padding:6px 8px; text-align:right;">Valor Compra Total</th>
+                        <th style="padding:6px 8px; text-align:right;">Valor Venda Total</th>
+                        <th style="padding:6px 8px; text-align:right;">Lucro Uni</th>
+                        <th style="padding:6px 8px; text-align:right;">Lucro Total</th>
+                        <th style="padding:6px 8px; text-align:right;">Lucro %</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        let temPedidos = false;
+        
+        for (const pedidoKey in pedidosAgrupados) {
+            const item = pedidosAgrupados[pedidoKey];
+            if (item.quantidadeTotal === 0) continue;
+            temPedidos = true;
+            
+            const valorCompraMedio = item.valorCompraTotal / item.quantidadeTotal;
+            const valorCompraTotal = item.valorCompraTotal;
+            const valorVendaTotal = item.valorVenda * item.quantidadeTotal;
+            const lucroUni = item.valorVenda - valorCompraMedio;
+            const lucroTotal = lucroUni * item.quantidadeTotal;
+            const lucroPercentual = item.valorCompraTotal > 0 ? (lucroTotal / item.valorCompraTotal) * 100 : 0;
+            
+            html += `
+                <tr>
+                    <td style="padding:6px 8px;">${item.pedido}</td>
+                    <td style="padding:6px 8px;">${item.data}</td>
+                    <td style="padding:6px 8px; text-align:center;">${item.quantidadeTotal}</td>
+                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(valorCompraMedio)}</td>
+                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(item.valorVenda)}</td>
+                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(valorCompraTotal)}</td>
+                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(valorVendaTotal)}</td>
+                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(lucroUni)}</td>
+                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(lucroTotal)}</td>
+                    <td style="padding:6px 8px; text-align:right;">${lucroPercentual.toFixed(1)}%</td>
+                </tr>
+            `;
+        }
+        
+        html += `
+                </tbody>
+            </table>
+        `;
+        
+        if (!temPedidos) {
+            html = '<div style="text-align:center; padding:20px; color:#999;">Nenhum pedido encontrado para este produto.</div>';
+        }
+        
+        container.innerHTML = html;
+    }
+}
+
+
+function organizarMaisPedidos(tipo) {
+const btnVezes = document.getElementById('btn-organizar-vezes');
+    const btnQuantidade = document.getElementById('btn-organizar-quantidade');
+    
+    if (btnVezes) btnVezes.classList.remove('active');
+    if (btnQuantidade) btnQuantidade.classList.remove('active');
+    
+    if (tipo === 'vezes') {
+        if (btnVezes) btnVezes.classList.add('active');
+        window.organizacaoAtualMaisPedidos = 'vezes';
+    } else {
+        if (btnQuantidade) btnQuantidade.classList.add('active');
+        window.organizacaoAtualMaisPedidos = 'quantidade';
+    }
+    
+    const produtos = calcularProdutosMaisPedidos(window.periodoAtualMaisPedidos || 'todo');
+    const periodos = {
+        'todo': 'Todo o período',
+        'mes': 'Esse mês',
+        '3meses': 'Últimos 3 meses',
+        '5meses': 'Últimos 5 meses',
+        '8meses': 'Últimos 8 meses',
+        '12meses': 'Últimos 12 meses'
+    };
+    const titulo = `📈 Produtos mais pedidos - ${periodos[window.periodoAtualMaisPedidos || 'todo']}`;
+    renderizarMaisPedidos(produtos, titulo, tipo);
+}
+
+
+
+function filtrarMaisPedidos(periodo) {
+
+ const botoes = document.querySelectorAll('#semanaInfo .btn-submenu');
+    botoes.forEach(b => b.classList.remove('active'));
+    
+    const periodos = {
+        'todo': 'Todo o período',
+        'mes': 'Esse mês',
+        '3meses': 'Últimos 3 meses',
+        '5meses': 'Últimos 5 meses',
+        '8meses': 'Últimos 8 meses',
+        '12meses': 'Últimos 12 meses'
+    };
+    
+    botoes.forEach(b => {
+        if (b.textContent.trim() === periodos[periodo]) {
+            b.classList.add('active');
+        }
+    });
+    
+    window.periodoAtualMaisPedidos = periodo;
+    
+    const produtos = calcularProdutosMaisPedidos(periodo);
+    const titulo = `📈 Produtos mais pedidos - ${periodos[periodo]}`;
+    renderizarMaisPedidos(produtos, titulo, window.organizacaoAtualMaisPedidos || 'vezes');
+}
+
+
+
+
 
 
 
