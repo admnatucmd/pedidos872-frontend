@@ -2647,80 +2647,33 @@ function renderizarTabelaProdutos() {
     for (const p of produtosData) {
         const precoCompra = p.precoCompra || 0;
         
-        // ===== AGRUPAR PRODUTOS DO PEDIDO =====
-        const produtosAgrupados = {};
-        let totalQuantidade = 0;
-        let produtosUnicos = 0;
-        
+        let precoVenda = 0;
         if (p.linhas) {
             for (const item of p.linhas) {
                 if (item.isIndisponivel) continue;
                 if (item.vendaTotal === 0) continue;
-                
-                const codigo = item.codigo;
-                const vendaUnit = item.vendaUnit || 0;
                 const qtd = parseInt(item.quantidade) || 0;
-                const valorUnit = item.valorUnit || 0;
-                const pontos = item.pontos || 0;
-                
-                // Chave: codigo + vendaUnit (se for diferente, mantém separado)
-                const chave = vendaUnit > 0 ? `${codigo}_${vendaUnit}` : codigo;
-                
-                if (!produtosAgrupados[chave]) {
-                    produtosAgrupados[chave] = {
-                        codigo: codigo,
-                        produto: item.produto,
-                        vendaUnit: vendaUnit,
-                        quantidadeTotal: 0,
-                        valorCompraTotal: 0,
-                        pontosTotal: 0,
-                        items: []
-                    };
-                }
-                
-                produtosAgrupados[chave].quantidadeTotal += qtd;
-                produtosAgrupados[chave].valorCompraTotal += valorUnit * qtd;
-                produtosAgrupados[chave].pontosTotal += pontos * qtd;
-                produtosAgrupados[chave].items.push({ qtd, valorUnit, pontos });
-            }
-            
-            // Contar produtos únicos (quantas chaves diferentes)
-            produtosUnicos = Object.keys(produtosAgrupados).length;
-            
-            // Calcular quantidade total
-            for (const chave in produtosAgrupados) {
-                totalQuantidade += produtosAgrupados[chave].quantidadeTotal;
+                precoVenda += (item.vendaUnit || 0) * qtd;
             }
         }
         
-        // ===== CALCULAR PRECO_VENDA E LUCRO =====
-        let precoVenda = 0;
-        let lucroTotal = 0;
-        
-        for (const chave in produtosAgrupados) {
-            const item = produtosAgrupados[chave];
-            const valorCompraMedio = item.quantidadeTotal > 0 ? item.valorCompraTotal / item.quantidadeTotal : 0;
-            precoVenda += item.vendaUnit * item.quantidadeTotal;
-            lucroTotal += (item.vendaUnit - valorCompraMedio) * item.quantidadeTotal;
-        }
-        
+        const lucroTotal = precoVenda - precoCompra;
         const lucroPercentual = precoCompra > 0 ? (lucroTotal / precoCompra) * 100 : 0;
         
-        // ===== MONTAR LINHA DO PEDIDO =====
         html += `
             <tr class="pedido-row" onclick="toggleDetalhesProdutos('${p.pedido}')" style="cursor:pointer; transition:background 0.2s;">
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle;">
                     <span class="expand-icon">▶</span> ${p.pedido}
                 </td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${p.data}</td>
-                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${produtosUnicos}</td>
-                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${totalQuantidade}</td>
-                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.totalPontos || 0}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.produtosUnicos}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.totalProdutos}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.totalPontos}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(precoCompra)}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(precoVenda)}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${formatarMoedaBR(lucroTotal)}</td>
                 <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${lucroPercentual.toFixed(1)}%</td>
-                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.produtosIndisponiveis || 0}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.produtosIndisponiveis}</td>
             </tr>
             <tr id="detalhe-produtos-${p.pedido}" class="parcelas-detail">
                 <td colspan="10">
@@ -2728,23 +2681,6 @@ function renderizarTabelaProdutos() {
                         <strong>📋 Produtos do Pedido ${p.pedido}</strong>
                         <div style="margin-top:10px; overflow-x:auto;">
                             <table style="width:100%; border-collapse:collapse; font-size:12px;">
-                                <thead>
-                                    <tr style="background:#f1f3f5;">
-                                        <th style="padding:6px 8px; text-align:left;">Código</th>
-                                        <th style="padding:6px 8px; text-align:left;">Produto</th>
-                                        <th style="padding:6px 8px; text-align:center;">Qtd</th>
-                                        <th style="padding:6px 8px; text-align:center;">Pontos</th>
-                                        <th style="padding:6px 8px; text-align:right;">Valor Unit</th>
-                                        <th style="padding:6px 8px; text-align:right;">Valor Total</th>
-                                        <th style="padding:6px 8px; text-align:right;">Venda Unit</th>
-                                        <th style="padding:6px 8px; text-align:right;">Venda Total</th>
-                                        <th style="padding:6px 8px; text-align:right;">Lucro</th>
-                                        <th style="padding:6px 8px; text-align:right;">Lucro %</th>
-                                        <th style="padding:6px 8px; text-align:right;">Lucro c/ Desc</th>
-                                        <th style="padding:6px 8px; text-align:right;">Lucro % c/ Desc</th>
-                                        <th style="padding:6px 8px; text-align:left;">Referência</th>
-                                    </tr>
-                                </thead>
                                 <tbody id="produtos-detalhe-${p.pedido}">
                                     <tr><td colspan="13" style="text-align:center; padding:20px; color:#999;">Carregando produtos...</td></tr>
                                 </tbody>
@@ -2845,7 +2781,6 @@ async function carregarProdutosDetalhados(pedidoId) {
             return;
         }
         
-        // ===== SEPARAR DISPONÍVEIS E INDISPONÍVEIS =====
         let disponiveis = [];
         let indisponiveis = [];
         
@@ -2860,6 +2795,15 @@ async function carregarProdutosDetalhados(pedidoId) {
             }
         }
         
+        // ===== CONTAR OCORRÊNCIAS DE CADA PRODUTO =====
+        const contagemProdutos = {};
+        for (const row of disponiveis) {
+            const codigo = String(row[idxCodigo] || '').trim();
+            const vendaUnit = limparValorProduto(String(row[idxVendaUnit] || '0'));
+            const chave = vendaUnit > 0 ? `${codigo}_${vendaUnit}` : codigo;
+            contagemProdutos[chave] = (contagemProdutos[chave] || 0) + 1;
+        }
+        
         // ===== AGRUPAR PRODUTOS DISPONÍVEIS =====
         const produtosAgrupados = {};
         const produtosOriginal = [];
@@ -2868,6 +2812,7 @@ async function carregarProdutosDetalhados(pedidoId) {
             const codigo = String(row[idxCodigo] || '').trim();
             const vendaUnit = limparValorProduto(String(row[idxVendaUnit] || '0'));
             const chave = vendaUnit > 0 ? `${codigo}_${vendaUnit}` : codigo;
+            const temRepeticao = contagemProdutos[chave] > 1;
             
             if (!produtosAgrupados[chave]) {
                 produtosAgrupados[chave] = {
@@ -2886,7 +2831,8 @@ async function carregarProdutosDetalhados(pedidoId) {
                     referenciaMaiorValor: '',
                     lucroPercentualDescMaior: 0,
                     lucroRealDescMaior: 0,
-                    itens: []
+                    itens: [],
+                    temRepeticao: temRepeticao
                 };
             }
             
@@ -2906,7 +2852,6 @@ async function carregarProdutosDetalhados(pedidoId) {
             produtosAgrupados[chave].lucroPercentualTotal += lucroPercentual;
             produtosAgrupados[chave].itens.push({ qtd, valorUnit, pontos, lucro, lucroPercentual });
             
-            // ===== PEGAR A LINHA COM MAIOR VALOR UNITÁRIO DE COMPRA =====
             if (valorUnit > produtosAgrupados[chave].maiorValorUnit) {
                 produtosAgrupados[chave].maiorValorUnit = valorUnit;
                 produtosAgrupados[chave].referenciaMaiorValor = referencia;
@@ -2914,7 +2859,6 @@ async function carregarProdutosDetalhados(pedidoId) {
                 produtosAgrupados[chave].lucroRealDescMaior = lucroReal;
             }
             
-            // Guardar original também
             produtosOriginal.push({
                 codigo: codigo,
                 produto: String(row[idxProduto] || '').trim(),
@@ -2928,31 +2872,29 @@ async function carregarProdutosDetalhados(pedidoId) {
                 lucroPercentual: lucroPercentual,
                 lucroReal: lucroReal,
                 lucroRealPercentual: lucroRealPercentual,
-                referencia: referencia
+                referencia: referencia,
+                temRepeticao: temRepeticao
             });
         }
         
-        // ===== MONTAR HTML COM TOGGLE =====
         let html = '';
         
-        // ===== BOTÃO TOGGLE =====
         const bodyCondensado = `body-condensado-${pedidoId}`;
         const bodyOriginal = `body-original-${pedidoId}`;
         
+        // ===== BOTÃO TOGGLE - FUNDO CINZA CLARO E BOTÃO LARANJA BEM LEVE =====
         html += `
             <tr>
-                <td colspan="13" style="padding:8px 8px; text-align:center; background:#f0f4f8; border-bottom:2px solid #e5e7eb;">
+                <td colspan="13" style="padding:8px 8px; text-align:center; background:#f0f4f8; border-bottom:2px solid #e0e0e0;">
                     <button onclick="toggleVisualizacaoProdutos('${pedidoId}')" 
-                            style="background:#0b4f6c; color:white; border:none; padding:6px 18px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600; display:inline-flex; align-items:center; gap:8px;">
-                        <span id="toggle-icon-${pedidoId}">📊</span> 
-                        <span id="toggle-text-${pedidoId}">Mostrar original (igual do capta)</span>
+                            style="background:#ffcc80; color:#333; border:none; padding:6px 18px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600;">
+                        <span id="toggle-text-${pedidoId}">Mostrar igual do site natura</span>
                     </button>
-                    <span style="font-size:11px; color:#667; margin-left:12px;">Padrão: Condensado (agrupado por produto)</span>
                 </td>
             </tr>
         `;
         
-        // ===== CORPO CONDENSADO (PADRÃO) - TÍTULOS IGUAIS AO CAPTA =====
+        // ===== CORPO CONDENSADO (PADRÃO) =====
         html += `<tr id="${bodyCondensado}"><td colspan="13"><div style="width:100%;">`;
         html += `<table style="width:100%; border-collapse:collapse; font-size:12px;">`;
         html += `<thead><tr style="background:#f1f3f5;">
@@ -2976,12 +2918,13 @@ async function carregarProdutosDetalhados(pedidoId) {
             const valorCompraMedio = item.quantidadeTotal > 0 ? item.valorCompraTotal / item.quantidadeTotal : 0;
             const valorVendaTotal = item.vendaUnit * item.quantidadeTotal;
             
-            // ===== LUCRO REAL = VENDA - COMPRA MÉDIA =====
             const lucroReal = item.vendaUnit - valorCompraMedio;
             const lucroPercentual = valorCompraMedio > 0 ? (lucroReal / valorCompraMedio) * 100 : 0;
             
+            const bgColor = item.temRepeticao ? 'background:#e8f5e9;' : '';
+            
             html += `
-                <tr>
+                <tr style="${bgColor}">
                     <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${item.codigo}</td>
                     <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${item.produto}</td>
                     <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${item.quantidadeTotal}</td>
@@ -3024,8 +2967,10 @@ async function carregarProdutosDetalhados(pedidoId) {
             const lucroReal = row.vendaUnit - row.valorUnit;
             const lucroPercentual = row.valorUnit > 0 ? (lucroReal / row.valorUnit) * 100 : 0;
             
+            const bgColor = row.temRepeticao ? 'background:#e8f5e9;' : '';
+            
             html += `
-                <tr>
+                <tr style="${bgColor}">
                     <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${row.codigo}</td>
                     <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${row.produto}</td>
                     <td style="padding:6px 8px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${row.quantidade}</td>
@@ -3121,6 +3066,22 @@ async function carregarProdutosDetalhados(pedidoId) {
         }
         
         tbody.innerHTML = html;
+        
+        // ===== REMOVER FUNDO AZUL DE TODOS OS PEDIDOS =====
+        const allRows = document.querySelectorAll('.pedido-row');
+        for (const row of allRows) {
+            row.style.background = '';
+        }
+        
+        // ===== ADICIONAR FUNDO AZUL LEVE NO PEDIDO CLICADO =====
+        for (const row of allRows) {
+            const cell = row.querySelector('td');
+            if (cell && cell.textContent.includes(pedidoId)) {
+                row.style.transition = 'background 0.3s';
+                row.style.background = '#e3f2fd'; // Azul bem leve
+                break;
+            }
+        }
         
     } catch (error) {
         console.error('❌ Erro ao carregar produtos detalhados:', error);
@@ -3522,7 +3483,7 @@ const container = document.getElementById('tableWrapper');
                     <tr style="background:#f8f9fa;">
                         <th style="padding:12px 10px; text-align:left; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Código</th>
                         <th style="padding:12px 10px; text-align:left; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Produto</th>
-                        <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Pedido x vezes</th>
+                        <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Pedido quantas vezes</th>
                         <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Quantidade Total</th>
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Valor Compra</th>
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Valor Venda</th>
@@ -3759,23 +3720,20 @@ function filtrarMaisPedidos(periodo) {
 }
 
 function toggleVisualizacaoProdutos(pedidoId) {
-    const bodyCondensado = document.getElementById(`body-condensado-${pedidoId}`);
+     const bodyCondensado = document.getElementById(`body-condensado-${pedidoId}`);
     const bodyOriginal = document.getElementById(`body-original-${pedidoId}`);
     const toggleText = document.getElementById(`toggle-text-${pedidoId}`);
-    const toggleIcon = document.getElementById(`toggle-icon-${pedidoId}`);
     
     if (!bodyCondensado || !bodyOriginal) return;
     
     if (bodyCondensado.style.display === 'none') {
         bodyCondensado.style.display = '';
         bodyOriginal.style.display = 'none';
-        toggleText.textContent = 'Mostrar original (igual do capta)';
-        toggleIcon.textContent = '📊';
+        toggleText.textContent = 'Mostrar igual do site natura';
     } else {
         bodyCondensado.style.display = 'none';
         bodyOriginal.style.display = '';
-        toggleText.textContent = 'Mostrar condensado (agrupado)';
-        toggleIcon.textContent = '📋';
+        toggleText.textContent = 'Mostrar agrupado';
     }
 }
 
