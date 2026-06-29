@@ -2461,7 +2461,6 @@ function processarDadosProdutos(data) {
         return;
     }
     
-    // ===== ÍNDICES CORRETOS DA ABA PRODUTOS =====
     const idxPedido = 0;
     const idxData = 1;
     const idxNotaFiscal = 2;
@@ -2472,14 +2471,12 @@ function processarDadosProdutos(data) {
     const idxProduto = 11;
     const idxQuantidade = 12;
     const idxPontos = 13;
-    const idxValorUnit = 14;        // VALOR UNITÁRIO (R$)
-    const idxValorTotal = 15;       // VALOR TOTAL (R$)
-    const idxVendaUnit = 16;        // VALOR DE VENDA UNITÁRIO (R$)
-    const idxVendaTotal = 17;       // VALOR DE VENDA TOTAL (R$)
-    const idxLucro = 18;            // LUCRO (R$)
-    const idxLucroPercentual = 19;  // LUCRO (%)
-    const idxLucroReal = 20;        // LUCRO REAL (R$) COM DESCONTO REFERENCIA
-    const idxLucroRealPercentual = 21; // LUCRO REAL (%) COM DESCONTO REFERENCIA
+    const idxValorUnit = 14;
+    const idxValorTotal = 15;
+    const idxVendaUnit = 16;
+    const idxVendaTotal = 17;
+    const idxLucro = 18;
+    const idxLucroPercentual = 19;
     const idxReferencia = 22;
     
     let pedidoAtual = null;
@@ -2512,13 +2509,10 @@ function processarDadosProdutos(data) {
             };
         }
         
-        // ===== EXTRAIR TODOS OS VALORES =====
         const codigo = row.length > idxCodigo ? String(row[idxCodigo] || '').trim() : '';
         const produto = row.length > idxProduto ? String(row[idxProduto] || '').trim() : '';
         const quantidade = row.length > idxQuantidade ? String(row[idxQuantidade] || '0').trim() : '0';
         const pontos = row.length > idxPontos ? parseInt(String(row[idxPontos] || '0').replace(/\./g, '').trim()) || 0 : 0;
-        
-        // ===== VALORES QUE ESTAVAM FALTANDO =====
         const valorUnit = row.length > idxValorUnit ? limparValorProduto(String(row[idxValorUnit] || '0')) : 0;
         const valorTotal = row.length > idxValorTotal ? limparValorProduto(String(row[idxValorTotal] || '0')) : 0;
         const vendaUnit = row.length > idxVendaUnit ? limparValorProduto(String(row[idxVendaUnit] || '0')) : 0;
@@ -2529,24 +2523,23 @@ function processarDadosProdutos(data) {
         
         const isIndisponivel = referencia.includes('Produtos indisponível na realização do pedido');
         
-        // ===== ADICIONA A LINHA COM TODOS OS VALORES =====
+        // ===== SALVAR COM OS NOMES CORRETOS =====
         produtosPorPedido[pedido].linhas.push({
             linha: i,
             codigo: codigo,
             produto: produto,
             quantidade: quantidade,
             pontos: pontos,
-            valorUnit: valorUnit,        // ← COLUNA 14
-            valorTotal: valorTotal,      // ← COLUNA 15
-            vendaUnit: vendaUnit,        // ← COLUNA 16
-            vendaTotal: vendaTotal,      // ← COLUNA 17
-            lucro: lucro,                // ← COLUNA 18
-            lucroPercentual: lucroPercentual, // ← COLUNA 19
+            valorCompra: valorUnit,        // ← nome correto
+            valorVenda: vendaUnit,         // ← nome correto
+            valorTotal: valorTotal,
+            vendaTotal: vendaTotal,
+            lucro: lucro,
+            lucroPercentual: lucroPercentual,
             referencia: referencia,
             isIndisponivel: isIndisponivel
         });
         
-        // ===== ACUMULA VALORES PARA O PEDIDO =====
         if (!isIndisponivel && vendaTotal > 0) {
             produtosPorPedido[pedido].valorVendaTotal += vendaTotal;
             produtosPorPedido[pedido].lucroTotal += lucro;
@@ -2558,7 +2551,6 @@ function processarDadosProdutos(data) {
         }
     }
     
-    // ===== PROCESSAR CADA PEDIDO =====
     produtosData = Object.values(produtosPorPedido).map(p => {
         let produtosUnicos = 0;
         let totalProdutos = 0;
@@ -2597,7 +2589,6 @@ function processarDadosProdutos(data) {
     window.produtosPorPedido = produtosPorPedido;
     
     console.log(`📊 ${produtosData.length} pedidos carregados da aba Produtos`);
-    console.log('📋 Exemplo - primeira linha do primeiro pedido:', produtosData[0]?.linhas?.[0]);
 }
 
 
