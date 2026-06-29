@@ -3323,7 +3323,10 @@ function mostrarProdutosMaiorDiferenca() {
     }
     
     const submenu = document.getElementById('submenuProdutos');
-    if (submenu) submenu.style.display = 'flex';
+    if (submenu) {
+        submenu.style.display = 'flex';
+        submenu.style.background = '#f8f9fa';
+    }
     
     const dataTable = document.getElementById('dataTable');
     const statsContainer = document.getElementById('statsContainer');
@@ -3337,12 +3340,33 @@ function mostrarProdutosMaiorDiferenca() {
     
     if (semanaInfo) {
         semanaInfo.style.display = 'block';
-        semanaInfo.innerHTML = '📊 Em breve: Maior diferença de preço';
+        semanaInfo.innerHTML = `
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0; border-bottom:1px solid #e5e7eb; padding-bottom:8px; margin-bottom:8px;">
+                <button class="btn-submenu active" onclick="organizarMaiorDiferenca('compra')" id="btn-organizar-compra">Compra</button>
+                <button class="btn-submenu" onclick="organizarMaiorDiferenca('venda')" id="btn-organizar-venda">Venda</button>
+                <button class="btn-submenu" onclick="organizarMaiorDiferenca('lucro')" id="btn-organizar-lucro">Lucro R$</button>
+                <button class="btn-submenu" onclick="organizarMaiorDiferenca('percentual')" id="btn-organizar-lucro-perc">Lucro %</button>
+            </div>
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0;">
+                <button class="btn-submenu active" onclick="filtrarMaiorDiferenca('todo')">Todo o período</button>
+                <button class="btn-submenu" onclick="filtrarMaiorDiferenca('mes')">Esse mês</button>
+                <button class="btn-submenu" onclick="filtrarMaiorDiferenca('3meses')">Últimos 3 meses</button>
+                <button class="btn-submenu" onclick="filtrarMaiorDiferenca('5meses')">Últimos 5 meses</button>
+                <button class="btn-submenu" onclick="filtrarMaiorDiferenca('8meses')">Últimos 8 meses</button>
+                <button class="btn-submenu" onclick="filtrarMaiorDiferenca('12meses')">Últimos 12 meses</button>
+            </div>
+        `;
     }
+    
     if (mesContainer) {
-        mesContainer.style.display = 'block';
-        mesContainer.innerHTML = '<div style="text-align:center; padding:40px; color:#999;">📊 Funcionalidade em desenvolvimento...</div>';
+        mesContainer.style.display = 'none';
     }
+    
+    window.periodoAtualDiferenca = 'todo';
+    window.organizacaoAtualDiferenca = 'compra';
+    
+    const produtos = calcularProdutosMaiorDiferenca('todo');
+    renderizarMaiorDiferenca(produtos, '📊 Maior diferença de preço - Todo o período');
 }
 
 
@@ -4664,6 +4688,483 @@ function filtrarMenosPedidos(periodo) {
     const produtos = calcularProdutosMenosPedidos(periodo);
     const titulo = `📉 Produtos menos pedidos - ${periodos[periodo]}`;
     renderizarMenosPedidos(produtos, titulo, window.organizacaoAtualMenosPedidos || 'vezes');
+}
+
+
+
+// ===== FUNÇÃO PARA CALCULAR MAIOR DIFERENÇA DE PREÇO =====
+function calcularProdutosMaiorDiferenca(periodo) {
+    console.log('📊 Calculando maior diferença de preço - Período:', periodo);
+    
+    let dataLimite = null;
+    const agora = new Date();
+    
+    if (periodo === 'mes') {
+        dataLimite = new Date(agora.getFullYear(), agora.getMonth(), 1);
+    } else if (periodo === '3meses') {
+        dataLimite = new Date(agora);
+        dataLimite.setMonth(agora.getMonth() - 3);
+    } else if (periodo === '5meses') {
+        dataLimite = new Date(agora);
+        dataLimite.setMonth(agora.getMonth() - 5);
+    } else if (periodo === '8meses') {
+        dataLimite = new Date(agora);
+        dataLimite.setMonth(agora.getMonth() - 8);
+    } else if (periodo === '12meses') {
+        dataLimite = new Date(agora);
+        dataLimite.setMonth(agora.getMonth() - 12);
+    }
+    
+    const produtos = {};
+    let totalPedidos = 0;
+    
+    for (const pedido of produtosData) {
+        if (dataLimite) {
+            const dataPedido = new Date(pedido.data.split('/').reverse().join('/'));
+            if (dataPedido < dataLimite) continue;
+        }
+        
+        totalPedidos++;
+        
+        if (!pedido.linhas || pedido.linhas.length === 0) continue;
+        
+        const produtosDoPedido = {};
+        
+        for (const linha of pedido.linhas) {
+            if (linha.isIndisponivel) continue;
+            
+            const codigo = linha.codigo;
+            if (!codigo) continue;
+            
+            const vendaUnit = linha.vendaUnit || 0;
+            const chave = vendaUnit > 0 ? `${codigo}_${vendaUnit}` : codigo;
+            
+            if (!produtosDoPedido[chave]) {
+                produtosDoPedido[chave] = {
+                    codigo: codigo,
+                    produto: linha.produto,
+                    vendaUnit: vendaUnit,
+                    quantidadeTotal: 0,
+                    valorCompraTotal: 0,
+                    items: []
+                };
+            }
+            
+            const qtd = parseInt(linha.quantidade) || 0;
+            const valorUnit = linha.valorUnit || 0;
+            
+            produtosDoPedido[chave].quantidadeTotal += qtd;
+            produtosDoPedido[chave].valorCompraTotal += valorUnit * qtd;
+            produtosDoPedido[chave].items.push({
+                quantidade: qtd,
+                valorUnit: valorUnit
+            });
+        }
+        
+        for (const chave in produtosDoPedido) {
+            const item = produtosDoPedido[chave];
+            const codigo = item.codigo;
+            
+            const valorCompraMedio = item.quantidadeTotal > 0 ? item.valorCompraTotal / item.quantidadeTotal : 0;
+            const lucroUni = item.vendaUnit - valorCompraMedio;
+            const lucroPercentual = valorCompraMedio > 0 ? (lucroUni / valorCompraMedio) * 100 : 0;
+            
+            if (!produtos[codigo]) {
+                produtos[codigo] = {
+                    codigo: codigo,
+                    produto: item.produto,
+                    vezes: 0,
+                    quantidadeTotal: 0,
+                    valoresCompra: [],
+                    valoresVenda: [],
+                    lucros: [],
+                    lucrosPercentuais: [],
+                    pedidos: []
+                };
+            }
+            
+            produtos[codigo].vezes++;
+            produtos[codigo].quantidadeTotal += item.quantidadeTotal;
+            
+            if (valorCompraMedio > 0) produtos[codigo].valoresCompra.push(valorCompraMedio);
+            if (item.vendaUnit > 0) produtos[codigo].valoresVenda.push(item.vendaUnit);
+            if (lucroUni > 0) produtos[codigo].lucros.push(lucroUni);
+            if (lucroPercentual > 0) produtos[codigo].lucrosPercentuais.push(lucroPercentual);
+            
+            produtos[codigo].pedidos.push({
+                pedido: pedido.pedido,
+                data: pedido.data,
+                quantidade: item.quantidadeTotal,
+                valorCompra: valorCompraMedio,
+                valorVenda: item.vendaUnit,
+                lucroUni: lucroUni,
+                lucroPercentual: lucroPercentual
+            });
+        }
+    }
+    
+    const resultados = Object.values(produtos);
+    
+    // ===== ORDENAR POR MAIOR DIFERENÇA =====
+    const organizacao = window.organizacaoAtualDiferenca || 'compra';
+    resultados.sort((a, b) => {
+        let valorA, valorB;
+        
+        if (organizacao === 'compra') {
+            // Diferença entre maior e menor valor de compra
+            const minA = a.valoresCompra.length > 0 ? Math.min(...a.valoresCompra) : 0;
+            const maxA = a.valoresCompra.length > 0 ? Math.max(...a.valoresCompra) : 0;
+            const minB = b.valoresCompra.length > 0 ? Math.min(...b.valoresCompra) : 0;
+            const maxB = b.valoresCompra.length > 0 ? Math.max(...b.valoresCompra) : 0;
+            valorA = maxA - minA;
+            valorB = maxB - minB;
+        } else if (organizacao === 'venda') {
+            // Diferença entre maior e menor valor de venda
+            const minA = a.valoresVenda.length > 0 ? Math.min(...a.valoresVenda) : 0;
+            const maxA = a.valoresVenda.length > 0 ? Math.max(...a.valoresVenda) : 0;
+            const minB = b.valoresVenda.length > 0 ? Math.min(...b.valoresVenda) : 0;
+            const maxB = b.valoresVenda.length > 0 ? Math.max(...b.valoresVenda) : 0;
+            valorA = maxA - minA;
+            valorB = maxB - minB;
+        } else if (organizacao === 'lucro') {
+            // Diferença entre maior e menor lucro unitário
+            const minA = a.lucros.length > 0 ? Math.min(...a.lucros) : 0;
+            const maxA = a.lucros.length > 0 ? Math.max(...a.lucros) : 0;
+            const minB = b.lucros.length > 0 ? Math.min(...b.lucros) : 0;
+            const maxB = b.lucros.length > 0 ? Math.max(...b.lucros) : 0;
+            valorA = maxA - minA;
+            valorB = maxB - minB;
+        } else { // percentual
+            // Diferença entre maior e menor lucro percentual
+            const minA = a.lucrosPercentuais.length > 0 ? Math.min(...a.lucrosPercentuais) : 0;
+            const maxA = a.lucrosPercentuais.length > 0 ? Math.max(...a.lucrosPercentuais) : 0;
+            const minB = b.lucrosPercentuais.length > 0 ? Math.min(...b.lucrosPercentuais) : 0;
+            const maxB = b.lucrosPercentuais.length > 0 ? Math.max(...b.lucrosPercentuais) : 0;
+            valorA = maxA - minA;
+            valorB = maxB - minB;
+        }
+        
+        return valorB - valorA; // Maior diferença primeiro
+    });
+    
+    console.log(`📊 ${resultados.length} produtos encontrados em ${totalPedidos} pedidos`);
+    return resultados;
+}
+
+
+
+
+
+// ===== FUNÇÃO PARA RENDERIZAR MAIOR DIFERENÇA =====
+function renderizarMaiorDiferenca(produtos, titulo) {
+    const container = document.getElementById('tableWrapper');
+    if (!container) return;
+    
+    if (!produtos || produtos.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:40px; color:#667;">
+                📦 Nenhum produto encontrado no período selecionado.
+            </div>
+        `;
+        return;
+    }
+    
+    let topProdutos = [...produtos];
+    topProdutos = topProdutos.slice(0, 50);
+    
+    let html = `
+        <div style="overflow-x:auto; padding:20px 0;">
+            <div style="font-size:14px; font-weight:600; color:#0b4f6c; margin-bottom:15px; padding:0 10px;">
+                ${titulo} - ${topProdutos.length} produtos com maior diferença de preço
+            </div>
+            <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <thead>
+                    <tr style="background:#f8f9fa; position:sticky; top:0; z-index:10;">
+                        <th style="padding:12px 10px; text-align:left; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Código</th>
+                        <th style="padding:12px 10px; text-align:left; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Produto</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Valor Compra</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Valor Venda</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Lucro Uni</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Lucro (%)</th>
+                        <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Pedido x vezes</th>
+                        <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Quantidade Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    for (const p of topProdutos) {
+        const minCompra = p.valoresCompra.length > 0 ? Math.min(...p.valoresCompra) : 0;
+        const maxCompra = p.valoresCompra.length > 0 ? Math.max(...p.valoresCompra) : 0;
+        const minVenda = p.valoresVenda.length > 0 ? Math.min(...p.valoresVenda) : 0;
+        const maxVenda = p.valoresVenda.length > 0 ? Math.max(...p.valoresVenda) : 0;
+        
+        const minLucroUni = p.lucros.length > 0 ? Math.min(...p.lucros) : 0;
+        const maxLucroUni = p.lucros.length > 0 ? Math.max(...p.lucros) : 0;
+        const minLucroPerc = p.lucrosPercentuais.length > 0 ? Math.min(...p.lucrosPercentuais) : 0;
+        const maxLucroPerc = p.lucrosPercentuais.length > 0 ? Math.max(...p.lucrosPercentuais) : 0;
+        
+        const compraStr = minCompra === maxCompra ? formatarMoedaBR(minCompra) : `${formatarMoedaBR(minCompra)} até ${formatarMoedaBR(maxCompra)}`;
+        const vendaStr = minVenda === maxVenda ? formatarMoedaBR(minVenda) : `${formatarMoedaBR(minVenda)} até ${formatarMoedaBR(maxVenda)}`;
+        const lucroUniStr = minLucroUni === maxLucroUni ? formatarMoedaBR(minLucroUni) : `${formatarMoedaBR(minLucroUni)} até ${formatarMoedaBR(maxLucroUni)}`;
+        const lucroPercStr = minLucroPerc === maxLucroPerc ? `${minLucroPerc.toFixed(1)}%` : `${minLucroPerc.toFixed(1)}% até ${maxLucroPerc.toFixed(1)}%`;
+        
+        html += `
+            <tr class="pedido-row" onclick="toggleDetalhesProdutosMaiorDiferenca('${p.codigo}')" style="cursor:pointer; transition:background 0.2s;">
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle;">
+                    <span class="expand-icon">▶</span> ${p.codigo}
+                </td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${p.produto}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${compraStr}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${vendaStr}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${lucroUniStr}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${lucroPercStr}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.vezes}x</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${p.quantidadeTotal}</td>
+            </tr>
+            <tr id="detalhe-produto-diferenca-${p.codigo}" class="parcelas-detail">
+                <td colspan="8">
+                    <div class="detail-card">
+                        <strong>📋 Pedidos do produto ${p.codigo} - ${p.produto}</strong>
+                        <div style="margin-top:10px; overflow-x:auto;">
+                            <div id="detalhe-pedidos-diferenca-${p.codigo}">
+                                <div style="text-align:center; padding:20px; color:#999;">Clique para carregar os pedidos...</div>
+                            </div>
+                        </div>
+                    </div>
+                </td>
+            </tr>
+        `;
+    }
+    
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+
+
+
+
+
+// ===== FUNÇÃO TOGGLE DETALHES MAIOR DIFERENÇA =====
+function toggleDetalhesProdutosMaiorDiferenca(codigo) {
+    console.log('🔍 toggleDetalhesProdutosMaiorDiferenca chamado para:', codigo);
+    
+    const row = document.getElementById(`detalhe-produto-diferenca-${codigo}`);
+    if (!row) return;
+    
+    row.classList.toggle('show');
+    const icon = row.previousElementSibling.querySelector('.expand-icon');
+    if (icon) icon.innerHTML = row.classList.contains('show') ? '▼' : '▶';
+    
+    if (row.classList.contains('show')) {
+        const container = document.getElementById(`detalhe-pedidos-diferenca-${codigo}`);
+        if (!container) return;
+        
+        if (container.innerHTML.includes('Clique para carregar') === false && container.innerHTML.trim() !== '') {
+            return;
+        }
+        
+        const periodo = window.periodoAtualDiferenca || 'todo';
+        
+        let dataLimite = null;
+        const agora = new Date();
+        
+        if (periodo === 'mes') {
+            dataLimite = new Date(agora.getFullYear(), agora.getMonth(), 1);
+        } else if (periodo === '3meses') {
+            dataLimite = new Date(agora);
+            dataLimite.setMonth(agora.getMonth() - 3);
+        } else if (periodo === '5meses') {
+            dataLimite = new Date(agora);
+            dataLimite.setMonth(agora.getMonth() - 5);
+        } else if (periodo === '8meses') {
+            dataLimite = new Date(agora);
+            dataLimite.setMonth(agora.getMonth() - 8);
+        } else if (periodo === '12meses') {
+            dataLimite = new Date(agora);
+            dataLimite.setMonth(agora.getMonth() - 12);
+        }
+        
+        const pedidosAgrupados = {};
+        
+        for (const pedido of produtosData) {
+            if (dataLimite) {
+                const dataPedido = new Date(pedido.data.split('/').reverse().join('/'));
+                if (dataPedido < dataLimite) continue;
+            }
+            
+            if (!pedido.linhas) continue;
+            
+            const pedidoKey = pedido.pedido;
+            if (!pedidosAgrupados[pedidoKey]) {
+                pedidosAgrupados[pedidoKey] = {
+                    pedido: pedido.pedido,
+                    data: pedido.data,
+                    quantidadeTotal: 0,
+                    valorCompraTotal: 0,
+                    valorVenda: 0
+                };
+            }
+            
+            for (const linha of pedido.linhas) {
+                if (linha.codigo === codigo && !linha.isIndisponivel) {
+                    const qtd = parseInt(linha.quantidade) || 0;
+                    const valorUnit = linha.valorUnit || 0;
+                    const vendaUnit = linha.vendaUnit || 0;
+                    
+                    pedidosAgrupados[pedidoKey].quantidadeTotal += qtd;
+                    pedidosAgrupados[pedidoKey].valorCompraTotal += valorUnit * qtd;
+                    pedidosAgrupados[pedidoKey].valorVenda = vendaUnit;
+                }
+            }
+        }
+        
+        let html = `
+            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                <thead>
+                    <tr style="background:#f1f3f5;">
+                        <th style="padding:6px 8px; text-align:left;">Pedido</th>
+                        <th style="padding:6px 8px; text-align:left;">Data</th>
+                        <th style="padding:6px 8px; text-align:center;">Qtd</th>
+                        <th style="padding:6px 8px; text-align:right;">Valor Compra Uni</th>
+                        <th style="padding:6px 8px; text-align:right;">Valor Venda Uni</th>
+                        <th style="padding:6px 8px; text-align:right;">Valor Compra Total</th>
+                        <th style="padding:6px 8px; text-align:right;">Valor Venda Total</th>
+                        <th style="padding:6px 8px; text-align:right;">Lucro Uni</th>
+                        <th style="padding:6px 8px; text-align:right;">Lucro Total</th>
+                        <th style="padding:6px 8px; text-align:right;">Lucro %</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        let temPedidos = false;
+        
+        for (const pedidoKey in pedidosAgrupados) {
+            const item = pedidosAgrupados[pedidoKey];
+            if (item.quantidadeTotal === 0) continue;
+            temPedidos = true;
+            
+            const valorCompraMedio = item.valorCompraTotal / item.quantidadeTotal;
+            const valorCompraTotal = item.valorCompraTotal;
+            const valorVendaTotal = item.valorVenda * item.quantidadeTotal;
+            const lucroUni = item.valorVenda - valorCompraMedio;
+            const lucroTotal = lucroUni * item.quantidadeTotal;
+            const lucroPercentual = item.valorCompraTotal > 0 ? (lucroTotal / item.valorCompraTotal) * 100 : 0;
+            
+            html += `
+                <tr>
+                    <td style="padding:6px 8px;">${item.pedido}</td>
+                    <td style="padding:6px 8px;">${item.data}</td>
+                    <td style="padding:6px 8px; text-align:center;">${item.quantidadeTotal}</td>
+                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(valorCompraMedio)}</td>
+                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(item.valorVenda)}</td>
+                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(valorCompraTotal)}</td>
+                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(valorVendaTotal)}</td>
+                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(lucroUni)}</td>
+                    <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(lucroTotal)}</td>
+                    <td style="padding:6px 8px; text-align:right;">${lucroPercentual.toFixed(1)}%</td>
+                </tr>
+            `;
+        }
+        
+        html += `
+                </tbody>
+            </table>
+        `;
+        
+        if (!temPedidos) {
+            html = '<div style="text-align:center; padding:20px; color:#999;">Nenhum pedido encontrado para este produto no período selecionado.</div>';
+        }
+        
+        container.innerHTML = html;
+    }
+}
+
+
+
+
+
+
+
+// ===== FUNÇÃO PARA ORGANIZAR MAIOR DIFERENÇA =====
+function organizarMaiorDiferenca(tipo) {
+    const btnCompra = document.getElementById('btn-organizar-compra');
+    const btnVenda = document.getElementById('btn-organizar-venda');
+    const btnLucro = document.getElementById('btn-organizar-lucro');
+    const btnLucroPerc = document.getElementById('btn-organizar-lucro-perc');
+    
+    if (btnCompra) btnCompra.classList.remove('active');
+    if (btnVenda) btnVenda.classList.remove('active');
+    if (btnLucro) btnLucro.classList.remove('active');
+    if (btnLucroPerc) btnLucroPerc.classList.remove('active');
+    
+    if (tipo === 'compra') {
+        if (btnCompra) btnCompra.classList.add('active');
+        window.organizacaoAtualDiferenca = 'compra';
+    } else if (tipo === 'venda') {
+        if (btnVenda) btnVenda.classList.add('active');
+        window.organizacaoAtualDiferenca = 'venda';
+    } else if (tipo === 'lucro') {
+        if (btnLucro) btnLucro.classList.add('active');
+        window.organizacaoAtualDiferenca = 'lucro';
+    } else {
+        if (btnLucroPerc) btnLucroPerc.classList.add('active');
+        window.organizacaoAtualDiferenca = 'percentual';
+    }
+    
+    const produtos = calcularProdutosMaiorDiferenca(window.periodoAtualDiferenca || 'todo');
+    const periodos = {
+        'todo': 'Todo o período',
+        'mes': 'Esse mês',
+        '3meses': 'Últimos 3 meses',
+        '5meses': 'Últimos 5 meses',
+        '8meses': 'Últimos 8 meses',
+        '12meses': 'Últimos 12 meses'
+    };
+    const titulo = `📊 Maior diferença de preço - ${periodos[window.periodoAtualDiferenca || 'todo']}`;
+    renderizarMaiorDiferenca(produtos, titulo);
+}
+
+
+
+
+
+
+
+
+
+// ===== FUNÇÃO PARA FILTRAR MAIOR DIFERENÇA POR PERÍODO =====
+function filtrarMaiorDiferenca(periodo) {
+    const botoes = document.querySelectorAll('#semanaInfo .btn-submenu');
+    botoes.forEach(b => b.classList.remove('active'));
+    
+    const periodos = {
+        'todo': 'Todo o período',
+        'mes': 'Esse mês',
+        '3meses': 'Últimos 3 meses',
+        '5meses': 'Últimos 5 meses',
+        '8meses': 'Últimos 8 meses',
+        '12meses': 'Últimos 12 meses'
+    };
+    
+    botoes.forEach(b => {
+        if (b.textContent.trim() === periodos[periodo]) {
+            b.classList.add('active');
+        }
+    });
+    
+    window.periodoAtualDiferenca = periodo;
+    
+    const produtos = calcularProdutosMaiorDiferenca(periodo);
+    const titulo = `📊 Maior diferença de preço - ${periodos[periodo]}`;
+    renderizarMaiorDiferenca(produtos, titulo);
 }
 
 
