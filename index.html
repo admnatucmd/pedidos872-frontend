@@ -2413,10 +2413,11 @@ function toggleSubmenuProdutos() {
     if (statsContainer) statsContainer.classList.add('stats-hidden');
     if (tableWrapper) tableWrapper.innerHTML = '';
     
-    // ===== 1. Chamar mostrarProdutosPorPedido =====
+    // ===== Chamar mostrarProdutosPorPedido =====
     mostrarProdutosPorPedido();
     
-    // ===== 2. AGUARDAR A TABELA SER CRIADA E APLICAR APENAS aplicarTudo =====
+    // ===== AGUARDAR A TABELA E APLICAR STICKY APENAS UMA VEZ =====
+    let jaAplicou = false;
     let tentativas = 0;
     const maxTentativas = 30;
     
@@ -2424,19 +2425,16 @@ function toggleSubmenuProdutos() {
         tentativas++;
         
         const table = document.querySelector('#tableWrapper table');
-        if (table) {
+        if (table && !jaAplicou) {
             const ths = table.querySelectorAll('thead th');
             if (ths.length > 0) {
-                console.log(`✅ Tabela detectada (tentativa ${tentativas})! Aplicando sticky...`);
+                console.log(`✅ Tabela detectada! Aplicando sticky...`);
+                jaAplicou = true;
                 
-                // ===== USAR APENAS aplicarTudo =====
-                if (typeof window.aplicarTudo === 'function') {
-                    window.aplicarTudo();
-                } else {
-                    // Fallback: aplicar sticky diretamente
-                    aplicarStickyDireto();
-                }
+                // ===== APLICAR STICKY DIRETAMENTE =====
+                aplicarStickyDireto();
                 
+                // ===== NÃO CHAMAR aplicarTudo() DEPOIS =====
                 clearInterval(intervalo);
                 return;
             }
@@ -2444,20 +2442,85 @@ function toggleSubmenuProdutos() {
         
         if (tentativas >= maxTentativas) {
             console.log('⏳ Tempo esgotado, aplicando sticky...');
-            if (typeof window.aplicarTudo === 'function') {
-                window.aplicarTudo();
-            } else {
+            if (!jaAplicou) {
+                jaAplicou = true;
                 aplicarStickyDireto();
             }
             clearInterval(intervalo);
         }
     }, 200);
     
-    // ===== 3. NÃO CLICAR MAIS NO BOTÃO "Produtos por pedido" =====
-    // Removemos o auto-click para evitar duplicidade
-    // setTimeout(function() { ... }, 300); ← REMOVER
+    // ===== REMOVEMOS O AUTO-CLICK E O SEGUNDO SETINTERVAL =====
 }
 
+// ===== FUNÇÃO ÚNICA DE STICKY =====
+function aplicarStickyDireto() {
+    console.log('🔄 Aplicando sticky...');
+    
+    const tabela = document.querySelector('#tableWrapper table');
+    if (!tabela) {
+        console.log('❌ Tabela não encontrada');
+        return;
+    }
+    
+    // 1. Remover overflow
+    let el = tabela.parentElement;
+    while (el) {
+        el.style.overflow = 'visible';
+        el.style.overflowX = 'visible';
+        el.style.overflowY = 'visible';
+        el = el.parentElement;
+        if (el === document.body) break;
+    }
+    
+    // 2. Aplicar sticky nos <th> do cabeçalho principal
+    const ths = tabela.querySelectorAll('thead th');
+    ths.forEach((th) => {
+        th.style.cssText = `
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 9999 !important;
+            background: #1f5e7e !important;
+            color: #ffffff !important;
+        `;
+    });
+    
+    // 3. Remover sticky do thead e tr
+    const thead = tabela.querySelector('thead');
+    if (thead) thead.style.position = 'static';
+    
+    const tr = tabela.querySelector('thead tr');
+    if (tr) tr.style.position = 'static';
+    
+    // 4. Aplicar sticky nos detalhes se existirem
+    const detailCards = document.querySelectorAll('.detail-card');
+    detailCards.forEach((card) => {
+        const tabelas = card.querySelectorAll('table');
+        tabelas.forEach((tbl) => {
+            const thsDetalhe = tbl.querySelectorAll('th');
+            if (thsDetalhe.length > 0) {
+                const temPedido = Array.from(thsDetalhe).some(th => 
+                    th.textContent.includes('Pedido')
+                );
+                if (temPedido && thsDetalhe.length >= 8) {
+                    thsDetalhe.forEach((th) => {
+                        th.style.cssText = `
+                            position: sticky !important;
+                            top: 42px !important;
+                            z-index: 9998 !important;
+                            background: #3d9a8c !important;
+                            color: #ffffff !important;
+                            border-bottom: 0px solid #2c6f96 !important;
+                            font-weight: 600 !important;
+                        `;
+                    });
+                }
+            }
+        });
+    });
+    
+    console.log('✅ Sticky aplicado com sucesso!');
+}
 
 
 
