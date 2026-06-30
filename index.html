@@ -5500,13 +5500,32 @@ function filtrarMaiorDiferenca(periodo) {
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // ============================================================
-// BLOCO DE INICIALIZAÇÃO: STICKY COMPLETO
+// CORREÇÃO: BOTÃO "PRODUTOS" JÁ CARREGA A TABELA
 // ============================================================
 (function() {
-    console.log('🚀 Inicializando sticky automático...');
+    console.log('🚀 Inicializando sticky automático com abertura automática...');
 
-    // 1. Função que aplica sticky no cabeçalho principal
+    // ============================================================
+    // FUNÇÕES DE STICKY (as mesmas que funcionam)
+    // ============================================================
+    
     function aplicarStickyPrincipal() {
         const tabela = document.querySelector('#tableWrapper table');
         if (!tabela) return false;
@@ -5546,7 +5565,6 @@ function filtrarMaiorDiferenca(periodo) {
         return false;
     }
 
-    // 2. Função que aplica sticky nos detalhes (genérico)
     function aplicarStickyDetalhes() {
         const detailCards = document.querySelectorAll('.detail-card');
         let encontrados = 0;
@@ -5606,9 +5624,9 @@ function filtrarMaiorDiferenca(periodo) {
         return encontrados > 0;
     }
 
-    // 3. Função que aplica TUDO
     function aplicarTudo() {
-        // Fundo branco
+        console.log('🔄 Aplicando sticky completo...');
+        
         const tableWrapper = document.getElementById('tableWrapper');
         if (tableWrapper) {
             tableWrapper.style.overflow = 'visible';
@@ -5642,13 +5660,79 @@ function filtrarMaiorDiferenca(periodo) {
         aplicarStickyDetalhes();
     }
 
-    // 4. Interceptar funções que recriam tabelas
-    const funcoesParaInterceptar = [
+    // ============================================================
+    // INTERCEPTAR toggleSubmenuProdutos - JÁ ABRE A TABELA
+    // ============================================================
+    
+    if (typeof window.toggleSubmenuProdutos === 'function') {
+        const originalToggleSubmenu = window.toggleSubmenuProdutos;
+        
+        window.toggleSubmenuProdutos = function() {
+            console.log('🔍 Abrindo produtos...');
+            
+            // Chamar a função original (abre o submenu)
+            originalToggleSubmenu();
+            
+            // AGORA, automaticamente clicar em "Produtos por pedido"
+            setTimeout(function() {
+                const botoesSubmenu = document.querySelectorAll('#submenuProdutos .btn-submenu');
+                if (botoesSubmenu.length > 0) {
+                    console.log('🔄 Clicando automaticamente em "Produtos por pedido"...');
+                    botoesSubmenu[0].click();
+                }
+            }, 200);
+        };
+        
+        console.log('✅ toggleSubmenuProdutos interceptado!');
+    }
+
+    // ============================================================
+    // INTERCEPTAR FUNÇÕES DE PRODUTOS
+    // ============================================================
+    
+    const funcoesProdutos = [
         'mostrarProdutosPorPedido',
         'mostrarProdutosMaisPedidos',
         'mostrarProdutosMaiorLucro',
         'mostrarProdutosMenosPedidos',
-        'mostrarProdutosMaiorDiferenca',
+        'mostrarProdutosMaiorDiferenca'
+    ];
+
+    funcoesProdutos.forEach(function(nome) {
+        if (typeof window[nome] === 'function') {
+            const original = window[nome];
+            window[nome] = function() {
+                console.log('🔍 Executando:', nome);
+                original();
+                
+                let tentativas = 0;
+                const maxTentativas = 15;
+                const intervalo = setInterval(function() {
+                    tentativas++;
+                    const table = document.querySelector('#tableWrapper table');
+                    if (table) {
+                        const ths = table.querySelectorAll('thead th');
+                        if (ths.length > 0) {
+                            console.log(`✅ Tabela detectada! Aplicando sticky...`);
+                            aplicarTudo();
+                            clearInterval(intervalo);
+                            return;
+                        }
+                    }
+                    if (tentativas >= maxTentativas) {
+                        aplicarTudo();
+                        clearInterval(intervalo);
+                    }
+                }, 300);
+            };
+        }
+    });
+
+    // ============================================================
+    // INTERCEPTAR FILTROS E ORGANIZAÇÃO
+    // ============================================================
+    
+    const funcoesFiltro = [
         'filtrarProdutosPorPedido',
         'filtrarMaisPedidos',
         'filtrarMaiorLucro',
@@ -5660,18 +5744,24 @@ function filtrarMaiorDiferenca(periodo) {
         'organizarMaiorDiferenca'
     ];
 
-    funcoesParaInterceptar.forEach(function(nome) {
+    funcoesFiltro.forEach(function(nome) {
         if (typeof window[nome] === 'function') {
             const original = window[nome];
             window[nome] = function() {
                 const resultado = original.apply(this, arguments);
-                setTimeout(aplicarTudo, 400);
+                setTimeout(function() {
+                    console.log(`⏳ Aplicando sticky após ${nome}...`);
+                    aplicarTudo();
+                }, 500);
                 return resultado;
             };
         }
     });
 
-    // 5. Interceptar toggles de detalhes
+    // ============================================================
+    // INTERCEPTAR TOGGLES DE DETALHES
+    // ============================================================
+    
     const toggles = [
         'toggleDetalhesProdutos',
         'toggleDetalhesProdutosMaisPedidos',
@@ -5685,18 +5775,22 @@ function filtrarMaiorDiferenca(periodo) {
             const original = window[nome];
             window[nome] = function() {
                 original.apply(this, arguments);
-                setTimeout(aplicarStickyDetalhes, 500);
+                setTimeout(function() {
+                    aplicarStickyDetalhes();
+                }, 500);
             };
         }
     });
 
-    // 6. Aplicar agora
-    setTimeout(aplicarTudo, 300);
+    // ============================================================
+    // APLICAR AGORA (tabela inicial)
+    // ============================================================
+    
+    setTimeout(aplicarTudo, 500);
 
     console.log('✅ Sticky automático inicializado!');
+    console.log('   - Clique em "Produtos" e a tabela já vai carregar!');
 })();
-
-
 
 
 
