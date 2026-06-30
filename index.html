@@ -2413,9 +2413,24 @@ function toggleSubmenuProdutos() {
     if (statsContainer) statsContainer.classList.add('stats-hidden');
     if (tableWrapper) tableWrapper.innerHTML = '';
     
-    // Chamar mostrar produtos
+    // ===== NOVO: DELAY DE 200ms E CLIQUE AUTOMÁTICO =====
+    // Primeiro, chamar mostrarProdutosPorPedido (já existia)
     mostrarProdutosPorPedido();
+    
+    // Depois de 200ms, clicar automaticamente no botão "Produtos por pedido"
+    setTimeout(function() {
+        const botoesSubmenu = document.querySelectorAll('#submenuProdutos .btn-submenu');
+        if (botoesSubmenu.length > 0) {
+            const btnPrimeiro = botoesSubmenu[0];
+            // Verificar se o botão existe e se não está ativo
+            if (btnPrimeiro && !btnPrimeiro.classList.contains('active')) {
+                console.log('🔄 Auto-click: ativando "Produtos por pedido"...');
+                btnPrimeiro.click();
+            }
+        }
+    }, 200);
 }
+
 
 let produtosData = [];
 let produtosPorPedido = {};
