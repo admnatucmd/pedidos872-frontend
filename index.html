@@ -5606,7 +5606,596 @@ function filtrarMaiorDiferenca(periodo) {
 }
 
 
+(function() {
+    console.log('🚀 Iniciando configuração completa do sticky...');
 
+    // ============================================================
+    // BLOCO 1: FUNÇÃO PRINCIPAL
+    // ============================================================
+    
+    function aplicarTudo() {
+        console.log('🔄 Aplicando configuração completa...');
+        
+        // ===== PARTE 1: FUNDO BRANCO E AJUSTES =====
+        const tableWrapper = document.getElementById('tableWrapper');
+        if (tableWrapper) {
+            tableWrapper.style.overflow = 'visible';
+            tableWrapper.style.height = 'auto';
+            tableWrapper.style.maxHeight = 'none';
+            tableWrapper.style.background = 'white';
+            tableWrapper.style.display = 'inline-block';
+            tableWrapper.style.minWidth = '100%';
+            tableWrapper.style.width = 'auto';
+        }
+
+        const container = document.querySelector('.container');
+        if (container) {
+            container.style.overflow = 'visible';
+            container.style.background = 'white';
+            container.style.display = 'inline-block';
+            container.style.minWidth = '100%';
+            container.style.width = 'auto';
+            container.style.padding = '0 20px';
+        }
+
+        document.body.style.background = '#eef2f5';
+
+        const table = document.querySelector('#tableWrapper table');
+        if (table) {
+            table.style.width = '100%';
+            table.style.minWidth = 'max-content';
+        }
+        
+        // ===== PARTE 2: FORÇA BRUTA DO STICKY =====
+        const tabela = document.querySelector('#tableWrapper table');
+        if (!tabela) {
+            console.log('⏳ Nenhuma tabela encontrada ainda');
+            return false;
+        }
+        
+        console.log('✅ Tabela encontrada! Aplicando sticky...');
+        
+        let el = tabela.parentElement;
+        let nivel = 0;
+        while (el) {
+            el.style.overflow = 'visible';
+            el.style.overflowX = 'visible';
+            el.style.overflowY = 'visible';
+            el.style.position = 'static';
+            el.style.height = 'auto';
+            el.style.maxHeight = 'none';
+            el = el.parentElement;
+            nivel++;
+            if (nivel > 20) break;
+        }
+        
+        const ths = tabela.querySelectorAll('thead th');
+        ths.forEach((th) => {
+            th.style.cssText = `
+                position: sticky !important;
+                top: 0 !important;
+                z-index: 9999 !important;
+                background: #1f5e7e !important;
+            `;
+        });
+        
+        const thead = tabela.querySelector('thead');
+        if (thead) thead.style.position = 'static';
+        
+        const tr = tabela.querySelector('thead tr');
+        if (tr) tr.style.position = 'static';
+        
+        console.log(`✅ Sticky aplicado em ${ths.length} colunas`);
+        return true;
+    }
+
+    // ============================================================
+    // BLOCO 2: FUNÇÕES DE STICKY NOS DETALHES
+    // ============================================================
+    
+    function aplicarStickyDetalhes() {
+        console.log('🔄 Aplicando sticky nos detalhes...');
+        
+        const detailCards = document.querySelectorAll('.detail-card');
+        let encontrados = 0;
+        
+        detailCards.forEach((card) => {
+            const tabelas = card.querySelectorAll('table');
+            tabelas.forEach((tabela) => {
+                const ths = tabela.querySelectorAll('th');
+                if (ths.length > 0 && ths[0].textContent.includes('Código')) {
+                    encontrados++;
+                    
+                    let el = tabela.parentElement;
+                    while (el) {
+                        el.style.overflow = 'visible';
+                        el.style.overflowX = 'visible';
+                        el.style.overflowY = 'visible';
+                        el = el.parentElement;
+                        if (el === document.body) break;
+                    }
+                    
+                    ths.forEach((th) => {
+                        th.style.cssText = `
+                            position: sticky !important;
+                            top: 42px !important;
+                            z-index: 9998 !important;
+                            background: #3d9a8c !important;
+                            color: #ffffff !important;
+                            border-bottom: 0px solid #2c6f96 !important;
+                            font-weight: 600 !important;
+                        `;
+                    });
+                    
+                    const thead = tabela.querySelector('thead');
+                    if (thead) thead.style.position = 'static';
+                    
+                    const tr = tabela.querySelector('thead tr');
+                    if (tr) tr.style.position = 'static';
+                }
+            });
+        });
+        
+        if (encontrados > 0) {
+            console.log(`✅ Sticky detalhes aplicado em ${encontrados} cabeçalhos`);
+        }
+        return encontrados > 0;
+    }
+
+    function aplicarStickyDetalhesMaisPedidos() {
+        console.log('🔄 Aplicando sticky nos detalhes de "Mais pedidos"...');
+        
+        const detailCards = document.querySelectorAll('.detail-card');
+        let encontrados = 0;
+        
+        detailCards.forEach((card) => {
+            const tabelas = card.querySelectorAll('table');
+            tabelas.forEach((tabela) => {
+                const ths = tabela.querySelectorAll('th');
+                if (ths.length === 0) return;
+                
+                let temPedido = false;
+                let temData = false;
+                ths.forEach((th) => {
+                    const texto = th.textContent.trim();
+                    if (texto === 'Pedido' || texto.includes('Pedido')) temPedido = true;
+                    if (texto === 'Data' || texto.includes('Data')) temData = true;
+                });
+                
+                if (temPedido && temData && ths.length >= 8) {
+                    encontrados++;
+                    
+                    let el = tabela.parentElement;
+                    while (el) {
+                        el.style.overflow = 'visible';
+                        el.style.overflowX = 'visible';
+                        el.style.overflowY = 'visible';
+                        el = el.parentElement;
+                        if (el === document.body) break;
+                    }
+                    
+                    ths.forEach((th) => {
+                        const paddingLeft = th.style.paddingLeft || '6px';
+                        const align = th.style.textAlign || 'left';
+                        
+                        th.style.cssText = `
+                            position: sticky !important;
+                            top: 42px !important;
+                            z-index: 9998 !important;
+                            background: #3d9a8c !important;
+                            color: #ffffff !important;
+                            border-bottom: 0px solid #2c6f96 !important;
+                            font-weight: 600 !important;
+                            padding-left: ${paddingLeft} !important;
+                            text-align: ${align} !important;
+                        `;
+                    });
+                    
+                    const thead = tabela.querySelector('thead');
+                    if (thead) thead.style.position = 'static';
+                    
+                    const tr = tabela.querySelector('thead tr');
+                    if (tr) tr.style.position = 'static';
+                }
+            });
+        });
+        
+        if (encontrados > 0) {
+            console.log(`✅ Sticky detalhes "Mais pedidos" aplicado em ${encontrados} cabeçalhos`);
+        }
+        return encontrados > 0;
+    }
+
+    function aplicarStickyDetalhesMaiorLucro() {
+        console.log('🔄 Aplicando sticky nos detalhes de "Maior lucro"...');
+        
+        const detailCards = document.querySelectorAll('.detail-card');
+        let encontrados = 0;
+        
+        detailCards.forEach((card) => {
+            const tabelas = card.querySelectorAll('table');
+            tabelas.forEach((tabela) => {
+                const ths = tabela.querySelectorAll('th');
+                if (ths.length === 0) return;
+                
+                let temPedido = false;
+                let temData = false;
+                let temQtd = false;
+                let temCompraUni = false;
+                
+                ths.forEach((th) => {
+                    const texto = th.textContent.trim();
+                    if (texto === 'Pedido' || texto.includes('Pedido')) temPedido = true;
+                    if (texto === 'Data' || texto.includes('Data')) temData = true;
+                    if (texto === 'Qtd' || texto.includes('Qtd')) temQtd = true;
+                    if (texto === 'Valor Compra Uni' || texto.includes('Compra Uni')) temCompraUni = true;
+                });
+                
+                if (temPedido && temData && temQtd && temCompraUni && ths.length >= 8) {
+                    encontrados++;
+                    
+                    let el = tabela.parentElement;
+                    while (el) {
+                        el.style.overflow = 'visible';
+                        el.style.overflowX = 'visible';
+                        el.style.overflowY = 'visible';
+                        el = el.parentElement;
+                        if (el === document.body) break;
+                    }
+                    
+                    ths.forEach((th) => {
+                        const paddingLeft = th.style.paddingLeft || '6px';
+                        const align = th.style.textAlign || 'left';
+                        
+                        th.style.cssText = `
+                            position: sticky !important;
+                            top: 42px !important;
+                            z-index: 9998 !important;
+                            background: #3d9a8c !important;
+                            color: #ffffff !important;
+                            border-bottom: 0px solid #2c6f96 !important;
+                            font-weight: 600 !important;
+                            padding-left: ${paddingLeft} !important;
+                            text-align: ${align} !important;
+                        `;
+                    });
+                    
+                    const thead = tabela.querySelector('thead');
+                    if (thead) thead.style.position = 'static';
+                    
+                    const tr = tabela.querySelector('thead tr');
+                    if (tr) tr.style.position = 'static';
+                }
+            });
+        });
+        
+        if (encontrados > 0) {
+            console.log(`✅ Sticky detalhes "Maior lucro" aplicado em ${encontrados} cabeçalhos`);
+        }
+        return encontrados > 0;
+    }
+
+    function aplicarStickyDetalhesMenosPedidos() {
+        console.log('🔄 Aplicando sticky nos detalhes de "Menos pedidos"...');
+        
+        const detailCards = document.querySelectorAll('.detail-card');
+        let encontrados = 0;
+        
+        detailCards.forEach((card) => {
+            const tabelas = card.querySelectorAll('table');
+            tabelas.forEach((tabela) => {
+                const ths = tabela.querySelectorAll('th');
+                if (ths.length === 0) return;
+                
+                let temPedido = false;
+                let temData = false;
+                let temQtd = false;
+                let temCompraUni = false;
+                
+                ths.forEach((th) => {
+                    const texto = th.textContent.trim();
+                    if (texto === 'Pedido' || texto.includes('Pedido')) temPedido = true;
+                    if (texto === 'Data' || texto.includes('Data')) temData = true;
+                    if (texto === 'Qtd' || texto.includes('Qtd')) temQtd = true;
+                    if (texto === 'Valor Compra Uni' || texto.includes('Compra Uni')) temCompraUni = true;
+                });
+                
+                if (temPedido && temData && temQtd && temCompraUni && ths.length >= 8) {
+                    encontrados++;
+                    
+                    let el = tabela.parentElement;
+                    while (el) {
+                        el.style.overflow = 'visible';
+                        el.style.overflowX = 'visible';
+                        el.style.overflowY = 'visible';
+                        el = el.parentElement;
+                        if (el === document.body) break;
+                    }
+                    
+                    ths.forEach((th) => {
+                        const paddingLeft = th.style.paddingLeft || '6px';
+                        const align = th.style.textAlign || 'left';
+                        
+                        th.style.cssText = `
+                            position: sticky !important;
+                            top: 42px !important;
+                            z-index: 9998 !important;
+                            background: #3d9a8c !important;
+                            color: #ffffff !important;
+                            border-bottom: 0px solid #2c6f96 !important;
+                            font-weight: 600 !important;
+                            padding-left: ${paddingLeft} !important;
+                            text-align: ${align} !important;
+                        `;
+                    });
+                    
+                    const thead = tabela.querySelector('thead');
+                    if (thead) thead.style.position = 'static';
+                    
+                    const tr = tabela.querySelector('thead tr');
+                    if (tr) tr.style.position = 'static';
+                }
+            });
+        });
+        
+        if (encontrados > 0) {
+            console.log(`✅ Sticky detalhes "Menos pedidos" aplicado em ${encontrados} cabeçalhos`);
+        }
+        return encontrados > 0;
+    }
+
+    function aplicarStickyDetalhesMaiorDiferenca() {
+        console.log('🔄 Aplicando sticky nos detalhes de "Maior diferença"...');
+        
+        const detailCards = document.querySelectorAll('.detail-card');
+        let encontrados = 0;
+        
+        detailCards.forEach((card) => {
+            const tabelas = card.querySelectorAll('table');
+            tabelas.forEach((tabela) => {
+                const ths = tabela.querySelectorAll('th');
+                if (ths.length === 0) return;
+                
+                let temPedido = false;
+                let temData = false;
+                let temQtd = false;
+                let temCompraUni = false;
+                
+                ths.forEach((th) => {
+                    const texto = th.textContent.trim();
+                    if (texto === 'Pedido' || texto.includes('Pedido')) temPedido = true;
+                    if (texto === 'Data' || texto.includes('Data')) temData = true;
+                    if (texto === 'Qtd' || texto.includes('Qtd')) temQtd = true;
+                    if (texto === 'Valor Compra Uni' || texto.includes('Compra Uni')) temCompraUni = true;
+                });
+                
+                if (temPedido && temData && temQtd && temCompraUni && ths.length >= 8) {
+                    encontrados++;
+                    
+                    let el = tabela.parentElement;
+                    while (el) {
+                        el.style.overflow = 'visible';
+                        el.style.overflowX = 'visible';
+                        el.style.overflowY = 'visible';
+                        el = el.parentElement;
+                        if (el === document.body) break;
+                    }
+                    
+                    ths.forEach((th) => {
+                        const paddingLeft = th.style.paddingLeft || '6px';
+                        const align = th.style.textAlign || 'left';
+                        
+                        th.style.cssText = `
+                            position: sticky !important;
+                            top: 42px !important;
+                            z-index: 9998 !important;
+                            background: #3d9a8c !important;
+                            color: #ffffff !important;
+                            border-bottom: 0px solid #2c6f96 !important;
+                            font-weight: 600 !important;
+                            padding-left: ${paddingLeft} !important;
+                            text-align: ${align} !important;
+                        `;
+                    });
+                    
+                    const thead = tabela.querySelector('thead');
+                    if (thead) thead.style.position = 'static';
+                    
+                    const tr = tabela.querySelector('thead tr');
+                    if (tr) tr.style.position = 'static';
+                }
+            });
+        });
+        
+        if (encontrados > 0) {
+            console.log(`✅ Sticky detalhes "Maior diferença" aplicado em ${encontrados} cabeçalhos`);
+        }
+        return encontrados > 0;
+    }
+
+    // ============================================================
+    // BLOCO 3: FUNÇÃO QUE APLICA TUDO (STICKY PRINCIPAL + DETALHES)
+    // ============================================================
+    
+    function aplicarTudoCompleto() {
+        console.log('🔄 Aplicando sticky completo...');
+        aplicarTudo();
+        aplicarStickyDetalhes();
+        aplicarStickyDetalhesMaisPedidos();
+        aplicarStickyDetalhesMaiorLucro();
+        aplicarStickyDetalhesMenosPedidos();
+        aplicarStickyDetalhesMaiorDiferenca();
+    }
+
+    // ============================================================
+    // BLOCO 4: INTERCEPTAR FUNÇÕES PRINCIPAIS
+    // ============================================================
+    
+    const funcoesPrincipais = [
+        'mostrarProdutosPorPedido',
+        'mostrarProdutosMaisPedidos',
+        'mostrarProdutosMaiorLucro',
+        'mostrarProdutosMenosPedidos',
+        'mostrarProdutosMaiorDiferenca'
+    ];
+
+    funcoesPrincipais.forEach(function(nome) {
+        if (typeof window[nome] === 'function') {
+            const original = window[nome];
+            window[nome] = function() {
+                console.log('🔍 Executando principal:', nome);
+                original();
+                
+                let tentativas = 0;
+                const maxTentativas = 15;
+                const intervalo = setInterval(function() {
+                    tentativas++;
+                    const table = document.querySelector('#tableWrapper table');
+                    if (table) {
+                        const ths = table.querySelectorAll('thead th');
+                        if (ths.length > 0) {
+                            console.log(`✅ Tabela detectada (tentativa ${tentativas})!`);
+                            aplicarTudoCompleto();
+                            clearInterval(intervalo);
+                            return;
+                        }
+                    }
+                    if (tentativas >= maxTentativas) {
+                        aplicarTudoCompleto();
+                        clearInterval(intervalo);
+                    }
+                }, 300);
+            };
+            console.log('✅ Interceptado principal:', nome);
+        }
+    });
+
+    // ============================================================
+    // BLOCO 5: INTERCEPTAR FUNÇÕES DE FILTRO/PERÍODO (SUBMENUS)
+    // ============================================================
+    
+    const funcoesFiltro = [
+        'filtrarProdutosPorPedido',
+        'filtrarMaisPedidos',
+        'filtrarMaiorLucro',
+        'filtrarMenosPedidos',
+        'filtrarMaiorDiferenca'
+    ];
+
+    funcoesFiltro.forEach(function(nome) {
+        if (typeof window[nome] === 'function') {
+            const original = window[nome];
+            window[nome] = function() {
+                console.log('🔍 Executando filtro:', nome);
+                const resultado = original.apply(this, arguments);
+                setTimeout(function() {
+                    console.log(`⏳ Aplicando sticky após ${nome}...`);
+                    aplicarTudoCompleto();
+                }, 500);
+                return resultado;
+            };
+            console.log('✅ Interceptado filtro:', nome);
+        }
+    });
+
+    // ============================================================
+    // BLOCO 6: INTERCEPTAR FUNÇÕES DE ORGANIZAÇÃO (SUBMENUS)
+    // ============================================================
+    
+    const funcoesOrganizacao = [
+        'organizarMaisPedidos',
+        'organizarMaiorLucro',
+        'organizarMenosPedidos',
+        'organizarMaiorDiferenca'
+    ];
+
+    funcoesOrganizacao.forEach(function(nome) {
+        if (typeof window[nome] === 'function') {
+            const original = window[nome];
+            window[nome] = function() {
+                console.log('🔍 Executando organização:', nome);
+                const resultado = original.apply(this, arguments);
+                setTimeout(function() {
+                    console.log(`⏳ Aplicando sticky após ${nome}...`);
+                    aplicarTudoCompleto();
+                }, 500);
+                return resultado;
+            };
+            console.log('✅ Interceptado organização:', nome);
+        }
+    });
+
+    // ============================================================
+    // BLOCO 7: INTERCEPTAR TOGGLES DE DETALHES
+    // ============================================================
+    
+    const toggles = [
+        { nome: 'toggleDetalhesProdutos', funcao: aplicarStickyDetalhes },
+        { nome: 'toggleDetalhesProdutosMaisPedidos', funcao: aplicarStickyDetalhesMaisPedidos },
+        { nome: 'toggleDetalhesProdutosMaiorLucro', funcao: aplicarStickyDetalhesMaiorLucro },
+        { nome: 'toggleDetalhesProdutosMenosPedidos', funcao: aplicarStickyDetalhesMenosPedidos },
+        { nome: 'toggleDetalhesProdutosMaiorDiferenca', funcao: aplicarStickyDetalhesMaiorDiferenca }
+    ];
+
+    toggles.forEach(function(item) {
+        if (typeof window[item.nome] === 'function') {
+            const original = window[item.nome];
+            window[item.nome] = function() {
+                console.log('🔍 Executando toggle:', item.nome);
+                const args = arguments;
+                original.apply(this, args);
+                
+                let tentativas = 0;
+                const maxTentativas = 20;
+                const intervalo = setInterval(function() {
+                    tentativas++;
+                    const detailCards = document.querySelectorAll('.detail-card');
+                    let encontrado = false;
+                    
+                    detailCards.forEach((card) => {
+                        const tabelas = card.querySelectorAll('table');
+                        tabelas.forEach((tabela) => {
+                            const ths = tabela.querySelectorAll('th');
+                            if (ths.length > 0) {
+                                const texto = ths[0].textContent.trim();
+                                if (texto === 'Código' || texto.includes('Código') || 
+                                    texto === 'Pedido' || texto.includes('Pedido')) {
+                                    encontrado = true;
+                                }
+                            }
+                        });
+                    });
+                    
+                    if (encontrado) {
+                        console.log(`✅ Detalhes carregados! Aplicando sticky...`);
+                        item.funcao();
+                        clearInterval(intervalo);
+                        return;
+                    }
+                    
+                    if (tentativas >= maxTentativas) {
+                        console.log('⏳ Tempo esgotado, aplicando sticky mesmo assim...');
+                        item.funcao();
+                        clearInterval(intervalo);
+                    }
+                }, 300);
+            };
+            console.log('✅ Interceptado toggle:', item.nome);
+        }
+    });
+
+    // ============================================================
+    // BLOCO 8: APLICAR TUDO AGORA
+    // ============================================================
+    
+    aplicarTudoCompleto();
+
+    console.log('✅ CONFIGURAÇÃO COMPLETA APLICADA!');
+    console.log('   - Sticky no cabeçalho principal');
+    console.log('   - Sticky nos detalhes (todas as abas)');
+    console.log('   - Interceptação de filtros e organização (submenus)');
+    console.log('   - Interceptação de toggles de detalhes');
+})();
 
 
 
