@@ -6199,9 +6199,302 @@ function filtrarMaiorDiferenca(periodo) {
 
 
 
+
+
+
+
+
+
+
+// ============================================================
+// ESTILO COMPACTO PARA TABELAS DE PRODUTOS
+// ============================================================
+
+// 1. Função que aplica o estilo compacto
+function aplicarEstiloCompactoProdutos() {
+    console.log('🔄 Aplicando estilo compacto na tabela de produtos...');
+    
+    const tabela = document.querySelector('#tableWrapper table');
+    if (!tabela) {
+        console.log('⏳ Nenhuma tabela encontrada');
+        return;
+    }
+    
+    // Verificar se é uma tabela de produtos (não a de boletos)
+    const cabecalhos = tabela.querySelectorAll('thead th');
+    let isProdutos = false;
+    cabecalhos.forEach(th => {
+        const texto = th.textContent.trim();
+        if (texto === 'Produtos Únicos' || texto === 'Quantidade Total' || 
+            texto === 'Lucro (R$)' || texto === 'Diferença Compra' ||
+            texto === 'Pedido quantas vezes' || texto === 'Valor Lucro') {
+            isProdutos = true;
+        }
+    });
+    
+    if (!isProdutos) {
+        console.log('ℹ️ Não é uma tabela de produtos');
+        return;
+    }
+    
+    console.log('✅ Tabela de produtos encontrada! Aplicando estilo compacto...');
+    
+    // ===== 1. TABELA =====
+    tabela.style.width = '100%';
+    tabela.style.borderCollapse = 'collapse';
+    tabela.style.fontSize = '13px';
+    tabela.style.tableLayout = 'auto';
+    tabela.style.minWidth = 'auto';
+    
+    // ===== 2. CABEÇALHO =====
+    const ths = tabela.querySelectorAll('thead th');
+    ths.forEach((th) => {
+        th.style.whiteSpace = 'nowrap';
+        th.style.padding = '10px 8px';
+        th.style.borderBottom = '2px solid #e5e7eb';
+        th.style.fontWeight = '600';
+        th.style.width = 'auto';
+        th.style.maxWidth = 'none';
+        th.style.minWidth = 'auto';
+        th.style.position = 'sticky';
+        th.style.top = '0';
+        th.style.zIndex = '10';
+        th.style.background = '#1f5e7e';
+        th.style.color = '#ffffff';
+        th.style.textAlign = 'center';
+        th.style.fontSize = '13px';
+    });
+    
+    // ===== 3. AJUSTAR ALINHAMENTO DO CABEÇALHO =====
+    const cabecalhosLista = tabela.querySelectorAll('thead th');
+    cabecalhosLista.forEach((th) => {
+        const texto = th.textContent.trim();
+        if (texto === 'Código' || texto === 'Produto' || texto === 'Pedido' || 
+            texto === 'Data' || texto === 'Produtos Únicos' || texto === 'Indisponíveis') {
+            th.style.textAlign = 'left';
+        } else if (texto === 'Pedido x vezes' || texto === 'Pedido quantas vezes' || 
+                   texto === 'Quantidade Total' || texto === 'Qtd' || texto === 'Pontos') {
+            th.style.textAlign = 'center';
+        } else {
+            th.style.textAlign = 'right';
+        }
+    });
+    
+    // ===== 4. CORPO DA TABELA =====
+    const tds = tabela.querySelectorAll('tbody td');
+    tds.forEach((td) => {
+        td.style.whiteSpace = 'normal';
+        td.style.wordBreak = 'break-word';
+        td.style.padding = '8px 8px';
+        td.style.borderBottom = '1px solid #e9ecef';
+        td.style.verticalAlign = 'middle';
+        td.style.width = 'auto';
+        td.style.maxWidth = 'none';
+        td.style.minWidth = 'auto';
+        td.style.fontSize = '13px';
+    });
+    
+    // ===== 5. AJUSTAR ALINHAMENTO DO CORPO =====
+    const linhas = tabela.querySelectorAll('tbody tr');
+    linhas.forEach((row) => {
+        const cells = row.querySelectorAll('td');
+        const totalColunas = cells.length;
+        cells.forEach((td, index) => {
+            if (index === 0) {
+                td.style.textAlign = 'left';
+            } else if (index === 1) {
+                td.style.textAlign = 'left';
+                td.style.paddingLeft = '4px';
+            } else if (index === totalColunas - 1) {
+                td.style.textAlign = 'center';
+            } else {
+                td.style.textAlign = 'right';
+            }
+        });
+    });
+    
+    // ===== 6. COLUNA PRODUTO =====
+    let colunaProduto = -1;
+    cabecalhos.forEach((th, index) => {
+        const texto = th.textContent.trim();
+        if (texto === 'Produto' || texto.includes('Produto')) {
+            colunaProduto = index;
+        }
+    });
+    
+    if (colunaProduto !== -1) {
+        const thProduto = tabela.querySelectorAll('thead th')[colunaProduto];
+        if (thProduto) {
+            thProduto.style.maxWidth = '200px';
+            thProduto.style.whiteSpace = 'normal';
+            thProduto.style.wordBreak = 'break-word';
+            thProduto.style.textAlign = 'left';
+        }
+        
+        const tdProdutos = tabela.querySelectorAll(`tbody td:nth-child(${colunaProduto + 1})`);
+        tdProdutos.forEach((td) => {
+            td.style.maxWidth = '200px';
+            td.style.whiteSpace = 'normal';
+            td.style.wordBreak = 'break-word';
+            td.style.textAlign = 'left';
+            td.style.paddingRight = '4px';
+        });
+    }
+    
+    // ===== 7. COLUNAS DE VALOR =====
+    const todasLinhas = tabela.querySelectorAll('tbody tr');
+    if (todasLinhas.length > 0) {
+        const primeiraLinha = todasLinhas[0];
+        const cells = primeiraLinha.querySelectorAll('td');
+        cells.forEach((td, index) => {
+            const texto = td.textContent.trim();
+            if (texto.includes('R$') || texto.includes('%') || texto.includes('até')) {
+                const thCorrespondente = cabecalhos[index];
+                if (thCorrespondente) {
+                    thCorrespondente.style.maxWidth = '120px';
+                    thCorrespondente.style.whiteSpace = 'normal';
+                    thCorrespondente.style.wordBreak = 'break-word';
+                    thCorrespondente.style.fontSize = '12px';
+                    thCorrespondente.style.padding = '8px 4px';
+                }
+                
+                const tdsColuna = tabela.querySelectorAll(`tbody td:nth-child(${index + 1})`);
+                tdsColuna.forEach((celula) => {
+                    celula.style.maxWidth = '120px';
+                    celula.style.whiteSpace = 'normal';
+                    celula.style.wordBreak = 'break-word';
+                    celula.style.fontSize = '12px';
+                    celula.style.padding = '6px 4px';
+                    celula.style.textAlign = 'right';
+                });
+            }
+        });
+    }
+    
+    console.log('✅ Estilo compacto aplicado na tabela de produtos!');
+}
+
+// ============================================================
+// 2. INTERCEPTAR FUNÇÕES PARA REAPLICAR O ESTILO
+// ============================================================
+
+// Funções principais (abrem as abas)
+const funcoesPrincipais = [
+    'mostrarProdutosPorPedido',
+    'mostrarProdutosMaisPedidos',
+    'mostrarProdutosMaiorLucro',
+    'mostrarProdutosMenosPedidos',
+    'mostrarProdutosMaiorDiferenca'
+];
+
+funcoesPrincipais.forEach(function(nome) {
+    if (typeof window[nome] === 'function') {
+        const original = window[nome];
+        window[nome] = function() {
+            console.log('🔍 Executando principal:', nome);
+            original();
+            
+            let tentativas = 0;
+            const maxTentativas = 15;
+            const intervalo = setInterval(function() {
+                tentativas++;
+                const tabela = document.querySelector('#tableWrapper table');
+                if (tabela) {
+                    const ths = tabela.querySelectorAll('thead th');
+                    if (ths.length > 0) {
+                        console.log(`✅ Tabela detectada! Aplicando estilo compacto...`);
+                        aplicarEstiloCompactoProdutos();
+                        clearInterval(intervalo);
+                        return;
+                    }
+                }
+                if (tentativas >= maxTentativas) {
+                    aplicarEstiloCompactoProdutos();
+                    clearInterval(intervalo);
+                }
+            }, 300);
+        };
+        console.log('✅ Interceptado principal:', nome);
+    }
+});
+
+// Funções de filtro (período)
+const funcoesFiltro = [
+    'filtrarProdutosPorPedido',
+    'filtrarMaisPedidos',
+    'filtrarMaiorLucro',
+    'filtrarMenosPedidos',
+    'filtrarMaiorDiferenca'
+];
+
+funcoesFiltro.forEach(function(nome) {
+    if (typeof window[nome] === 'function') {
+        const original = window[nome];
+        window[nome] = function() {
+            console.log('🔍 Executando filtro:', nome);
+            const resultado = original.apply(this, arguments);
+            setTimeout(function() {
+                console.log(`⏳ Aplicando estilo após ${nome}...`);
+                aplicarEstiloCompactoProdutos();
+            }, 500);
+            return resultado;
+        };
+        console.log('✅ Interceptado filtro:', nome);
+    }
+});
+
+// Funções de organização
+const funcoesOrganizacao = [
+    'organizarMaisPedidos',
+    'organizarMaiorLucro',
+    'organizarMenosPedidos',
+    'organizarMaiorDiferenca'
+];
+
+funcoesOrganizacao.forEach(function(nome) {
+    if (typeof window[nome] === 'function') {
+        const original = window[nome];
+        window[nome] = function() {
+            console.log('🔍 Executando organização:', nome);
+            const resultado = original.apply(this, arguments);
+            setTimeout(function() {
+                console.log(`⏳ Aplicando estilo após ${nome}...`);
+                aplicarEstiloCompactoProdutos();
+            }, 500);
+            return resultado;
+        };
+        console.log('✅ Interceptado organização:', nome);
+    }
+});
+
+// ============================================================
+// 3. APLICAR AGORA NA TABELA ATUAL
+// ============================================================
+
+setTimeout(aplicarEstiloCompactoProdutos, 500);
+
+console.log('✅ ESTILO COMPACTO INICIALIZADO!');
+console.log('   - Aplicado na tabela atual');
+console.log('   - Será reaplicado ao mudar de aba, filtrar ou organizar');
+
+
+
+
+
+
+
+
+
+
+
+
 // Inicializar
 // (A função carregarDados será chamada após o login)
 </script>
+
+
+
+
 
 
 
