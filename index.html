@@ -2458,43 +2458,6 @@ function toggleSubmenuProdutos() {
     // setTimeout(function() { ... }, 300); ← REMOVER
 }
 
-// ===== FUNÇÃO FALLBACK (simplificada) =====
-function aplicarStickyDireto() {
-    console.log('🔄 Aplicando sticky direto (fallback)...');
-    
-    const tabela = document.querySelector('#tableWrapper table');
-    if (!tabela) return;
-    
-    // Remover overflow
-    let el = tabela.parentElement;
-    while (el) {
-        el.style.overflow = 'visible';
-        el.style.overflowX = 'visible';
-        el.style.overflowY = 'visible';
-        el = el.parentElement;
-        if (el === document.body) break;
-    }
-    
-    // Aplicar sticky nos <th> com a mesma cor do principal
-    const ths = tabela.querySelectorAll('thead th');
-    ths.forEach((th) => {
-        th.style.cssText = `
-            position: sticky !important;
-            top: 0 !important;
-            z-index: 9999 !important;
-            background: #1f5e7e !important;
-            color: #ffffff !important;
-        `;
-    });
-    
-    const thead = tabela.querySelector('thead');
-    if (thead) thead.style.position = 'static';
-    
-    const tr = tabela.querySelector('thead tr');
-    if (tr) tr.style.position = 'static';
-    
-    console.log('✅ Sticky direto aplicado!');
-}
 
 
 
