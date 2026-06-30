@@ -2413,24 +2413,96 @@ function toggleSubmenuProdutos() {
     if (statsContainer) statsContainer.classList.add('stats-hidden');
     if (tableWrapper) tableWrapper.innerHTML = '';
     
-    // ===== NOVO: DELAY DE 200ms E CLIQUE AUTOMÁTICO =====
-    // Primeiro, chamar mostrarProdutosPorPedido (já existia)
+    // ===== 1. Chamar mostrarProdutosPorPedido =====
     mostrarProdutosPorPedido();
     
-    // Depois de 200ms, clicar automaticamente no botão "Produtos por pedido"
+    // ===== 2. AGUARDAR A TABELA SER CRIADA E APLICAR STICKY =====
+    let tentativas = 0;
+    const maxTentativas = 30; // 30 * 200ms = 6 segundos
+    
+    const intervalo = setInterval(function() {
+        tentativas++;
+        
+        // Verificar se a tabela foi criada
+        const table = document.querySelector('#tableWrapper table');
+        if (table) {
+            const ths = table.querySelectorAll('thead th');
+            if (ths.length > 0) {
+                console.log(`✅ Tabela detectada (tentativa ${tentativas})! Aplicando sticky...`);
+                
+                // Aplicar sticky manualmente
+                if (typeof window.aplicarTudo === 'function') {
+                    window.aplicarTudo();
+                } else {
+                    // Fallback: aplicar sticky diretamente
+                    aplicarStickyDireto();
+                }
+                
+                clearInterval(intervalo);
+                return;
+            }
+        }
+        
+        if (tentativas >= maxTentativas) {
+            console.log('⏳ Tempo esgotado, aplicando sticky mesmo assim...');
+            if (typeof window.aplicarTudo === 'function') {
+                window.aplicarTudo();
+            } else {
+                aplicarStickyDireto();
+            }
+            clearInterval(intervalo);
+        }
+    }, 200);
+    
+    // ===== 3. Também tentar clicar no botão "Produtos por pedido" =====
     setTimeout(function() {
         const botoesSubmenu = document.querySelectorAll('#submenuProdutos .btn-submenu');
         if (botoesSubmenu.length > 0) {
             const btnPrimeiro = botoesSubmenu[0];
-            // Verificar se o botão existe e se não está ativo
             if (btnPrimeiro && !btnPrimeiro.classList.contains('active')) {
                 console.log('🔄 Auto-click: ativando "Produtos por pedido"...');
                 btnPrimeiro.click();
             }
         }
-    }, 200);
+    }, 300);
 }
 
+// ===== FUNÇÃO FALLBACK =====
+function aplicarStickyDireto() {
+    console.log('🔄 Aplicando sticky direto (fallback)...');
+    
+    const tabela = document.querySelector('#tableWrapper table');
+    if (!tabela) return;
+    
+    // Remover overflow
+    let el = tabela.parentElement;
+    while (el) {
+        el.style.overflow = 'visible';
+        el.style.overflowX = 'visible';
+        el.style.overflowY = 'visible';
+        el = el.parentElement;
+        if (el === document.body) break;
+    }
+    
+    // Aplicar sticky nos <th>
+    const ths = tabela.querySelectorAll('thead th');
+    ths.forEach((th) => {
+        th.style.cssText = `
+            position: sticky !important;
+            top: 0 !important;
+            z-index: 9999 !important;
+            background: #1f5e7e !important;
+        `;
+    });
+    
+    const thead = tabela.querySelector('thead');
+    if (thead) thead.style.position = 'static';
+    
+    const tr = tabela.querySelector('thead tr');
+    if (tr) tr.style.position = 'static';
+    
+    console.log('✅ Sticky direto aplicado!');
+}
 
 let produtosData = [];
 let produtosPorPedido = {};
