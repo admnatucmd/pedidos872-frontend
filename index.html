@@ -3088,6 +3088,12 @@ function processarDadosProdutos(data) {
     console.log('📊 ' + produtosData.length + ' pedidos carregados da aba Produtos');
 }
 
+function limparValorProduto(valor) {
+    if (!valor || valor === '') return 0;
+    const str = String(valor).replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+    return parseFloat(str) || 0;
+}
+
 
 // ============================================================
 // FUNÇÕES DE PRODUTOS (IIFE #3, #4, #7, #8, #9, #10, #11, #12, #14, #15, #16, #19, #20, #21, #22, #23)
