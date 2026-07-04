@@ -2938,6 +2938,13 @@ async function carregarProdutos() {
     }
 }
 
+function limparValorProduto(valor) {
+    if (!valor || valor === '') return 0;
+    const str = String(valor).replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+    return parseFloat(str) || 0;
+}
+
+
 
 function processarDadosProdutos(data) {
     console.log('🔄 Processando dados de produtos...');
@@ -3088,11 +3095,6 @@ function processarDadosProdutos(data) {
     console.log('📊 ' + produtosData.length + ' pedidos carregados da aba Produtos');
 }
 
-function limparValorProduto(valor) {
-    if (!valor || valor === '') return 0;
-    const str = String(valor).replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
-    return parseFloat(str) || 0;
-}
 
 
 // ============================================================
