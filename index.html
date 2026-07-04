@@ -7770,6 +7770,251 @@ console.log('   - Clique no número do pedido para ir ao pedido completo');
 
 
 
+// ============================================================
+// CONFIGURAÇÃO COMPLETA: CAMPO DE BUSCA COM "X" + FECHAR AO MUDAR DE ABA
+// ============================================================
+
+function configurarBuscaCompleta() {
+    console.log('🔄 Configurando busca completa...');
+    
+    // ===== 1. ADICIONAR BOTÃO "X" DENTRO DO CAMPO =====
+    function adicionarBotaoX() {
+        const input = document.getElementById('inputBuscaProduto');
+        if (!input) {
+            console.log('❌ Input não encontrado');
+            return;
+        }
+        
+        const container = document.getElementById('containerBuscaProduto');
+        if (!container) return;
+        
+        let wrapper = container.querySelector('.input-wrapper');
+        if (!wrapper) {
+            wrapper = document.createElement('div');
+            wrapper.className = 'input-wrapper';
+            wrapper.style.cssText = `
+                position: relative;
+                flex: 1;
+                min-width: 180px;
+                max-width: 400px;
+                display: inline-block;
+            `;
+            
+            input.parentNode.insertBefore(wrapper, input);
+            wrapper.appendChild(input);
+            
+            input.style.cssText = `
+                width: 100%;
+                padding: 6px 32px 6px 12px;
+                border: 1px solid #ccc;
+                border-radius: 6px;
+                font-size: 13px;
+                box-sizing: border-box;
+            `;
+        }
+        
+        let btnClear = wrapper.querySelector('.btn-clear-input');
+        if (!btnClear) {
+            btnClear = document.createElement('button');
+            btnClear.className = 'btn-clear-input';
+            btnClear.textContent = '✕';
+            btnClear.style.cssText = `
+                position: absolute;
+                right: 8px;
+                top: 50%;
+                transform: translateY(-50%);
+                background: none;
+                border: none;
+                cursor: pointer;
+                font-size: 14px;
+                color: #999;
+                padding: 4px 6px;
+                border-radius: 4px;
+                display: none;
+                z-index: 1;
+            `;
+            
+            btnClear.addEventListener('mouseenter', function() {
+                this.style.color = '#333';
+            });
+            btnClear.addEventListener('mouseleave', function() {
+                this.style.color = '#999';
+            });
+            
+            btnClear.addEventListener('click', function(e) {
+                e.stopPropagation();
+                input.value = '';
+                toggleClearButton();
+                input.focus();
+                console.log('🧹 Campo limpo pelo botão "X"');
+                
+                const event = new Event('input', { bubbles: true });
+                input.dispatchEvent(event);
+            });
+            
+            wrapper.appendChild(btnClear);
+        }
+        
+        function toggleClearButton() {
+            if (input.value.length > 0) {
+                btnClear.style.display = 'block';
+            } else {
+                btnClear.style.display = 'none';
+            }
+        }
+        
+        input.addEventListener('input', toggleClearButton);
+        input.addEventListener('focus', toggleClearButton);
+        input.addEventListener('blur', function() {
+            setTimeout(toggleClearButton, 200);
+        });
+        
+        toggleClearButton();
+        console.log('✅ Botão "X" adicionado');
+    }
+    
+    // ===== 2. ESCONDER O BOTÃO "LIMPAR" =====
+    function esconderBotaoLimpar() {
+        const container = document.getElementById('containerBuscaProduto');
+        if (!container) return;
+        
+        const btnLimpar = container.querySelector('.btn-limpar');
+        if (btnLimpar) {
+            btnLimpar.style.cssText = `
+                opacity: 0;
+                pointer-events: none;
+                position: absolute;
+                width: 1px;
+                height: 1px;
+                padding: 0;
+                margin: -1px;
+                overflow: hidden;
+                clip: rect(0, 0, 0, 0);
+                border: 0;
+            `;
+            console.log('✅ Botão "Limpar" escondido');
+        }
+    }
+    
+    // ===== 3. FUNÇÃO PARA FECHAR A BUSCA =====
+    function fecharBusca() {
+        const container = document.getElementById('containerBuscaProduto');
+        const btn = document.getElementById('btnBuscarProduto');
+        
+        if (container) {
+            container.style.display = 'none';
+            console.log('🔍 Busca fechada');
+        }
+        
+        if (btn) {
+            btn.classList.remove('active');
+            btn.textContent = '🔍 Buscar produto';
+            btn.style.background = '';
+        }
+        
+        const input = document.getElementById('inputBuscaProduto');
+        if (input) {
+            input.value = '';
+            const event = new Event('input', { bubbles: true });
+            input.dispatchEvent(event);
+        }
+        
+        window.modoBuscaAtivo = false;
+    }
+    
+    // ===== 4. INTERCEPTAR BOTÕES PRINCIPAIS =====
+    const botoes = [
+        'mostrarProdutosPorPedido',
+        'mostrarProdutosMaisPedidos',
+        'mostrarProdutosMaiorLucro',
+        'mostrarProdutosMenosPedidos',
+        'mostrarProdutosMaiorDiferenca'
+    ];
+    
+    botoes.forEach(function(nome) {
+        if (typeof window[nome] === 'function') {
+            const original = window[nome];
+            window[nome] = function() {
+                console.log(`🔍 Mudando para: ${nome}`);
+                fecharBusca();
+                return original.apply(this, arguments);
+            };
+            console.log(`✅ Interceptado: ${nome}`);
+        }
+    });
+    
+    // ===== 5. INTERCEPTAR BOTÃO VOLTAR =====
+    if (typeof window.voltarTabelaOriginal === 'function') {
+        const originalVoltar = window.voltarTabelaOriginal;
+        window.voltarTabelaOriginal = function() {
+            console.log('🔍 Voltando para tabela original');
+            fecharBusca();
+            return originalVoltar.apply(this, arguments);
+        };
+        console.log('✅ Interceptado: voltarTabelaOriginal');
+    }
+    
+    // ===== 6. INTERCEPTAR CLIQUE EM BOTÕES DO SUBMENU =====
+    document.addEventListener('click', function(e) {
+        const target = e.target.closest('.btn-submenu');
+        if (target && target.id !== 'btnBuscarProduto') {
+            const container = document.getElementById('containerBuscaProduto');
+            if (container && container.style.display === 'flex') {
+                console.log(`🔍 Clicou em "${target.textContent.trim()}" - fechando busca`);
+                fecharBusca();
+            }
+        }
+    });
+    
+    // ===== 7. INTERCEPTAR TOGGLE DO SUBMENU =====
+    if (typeof window.toggleSubmenuProdutos === 'function') {
+        const originalToggle = window.toggleSubmenuProdutos;
+        window.toggleSubmenuProdutos = function() {
+            const submenu = document.getElementById('submenuProdutos');
+            const estavaAberto = submenu && submenu.style.display === 'flex';
+            
+            const resultado = originalToggle.apply(this, arguments);
+            
+            if (estavaAberto) {
+                const submenuAgora = document.getElementById('submenuProdutos');
+                if (submenuAgora && submenuAgora.style.display !== 'flex') {
+                    console.log('🔍 Submenu fechado, fechando busca...');
+                    fecharBusca();
+                }
+            }
+            
+            return resultado;
+        };
+        console.log('✅ Interceptado: toggleSubmenuProdutos');
+    }
+    
+    // ===== 8. EXECUTAR =====
+    setTimeout(function() {
+        adicionarBotaoX();
+        esconderBotaoLimpar();
+    }, 300);
+    
+    console.log('✅ CONFIGURAÇÃO COMPLETA APLICADA!');
+    console.log('   - "X" aparece no campo quando há texto');
+    console.log('   - Clicar no "X" limpa o campo');
+    console.log('   - Botão "Limpar" escondido');
+    console.log('   - Mudar de aba fecha a busca');
+}
+
+// ===== EXECUTAR =====
+configurarBuscaCompleta();
+
+
+
+
+
+
+
+
+
+
+
+
 
 // Inicializar
 // (A função carregarDados será chamada após o login)
