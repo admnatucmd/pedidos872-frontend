@@ -8100,17 +8100,33 @@ console.log('   - O campo NÃO é limpo ao mudar o período');
 console.log('   - Clique no "X" para limpar o campo');
 console.log('   - Clique em outro botão para sair da busca');
 
-
 // ============================================================
-// CORREÇÃO: BOTÕES DO SUBMENU DE BOLETOS
+// FUNÇÃO: MOSTRAR BOLETOS DA PRÓXIMA SEMANA
 // ============================================================
 
+function getProximaSemana() {
+    const hoje = new Date();
+    const diaSemana = hoje.getDay();
+    
+    let diasAteSabado = (6 - diaSemana + 7) % 7;
+    if (diasAteSabado === 0) diasAteSabado = 7;
+    
+    const sabado = new Date(hoje);
+    sabado.setDate(hoje.getDate() + diasAteSabado);
+    
+    const sexta = new Date(sabado);
+    sexta.setDate(sabado.getDate() + 6);
+    
+    return { sabado, sexta };
+}
 
 function mostrarBoletosProximaSemana() {
     console.log('📅 Mostrando boletos da próxima semana...');
     
-    document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
-    const btn = document.getElementById('btnProximaSemana');
+    document.querySelectorAll('.btn-submenu').forEach(function(b) {
+        b.classList.remove('active');
+    });
+    var btn = document.getElementById('btnProximaSemana');
     if (btn) btn.classList.add('active');
     
     document.getElementById('submenuBoletos').style.display = 'flex';
@@ -8119,17 +8135,17 @@ function mostrarBoletosProximaSemana() {
     document.getElementById('semanaInfo').style.display = 'block';
     document.getElementById('statsContainer').classList.add('stats-hidden');
     
-    const { sabado, sexta } = getProximaSemana();
+    var { sabado, sexta } = getProximaSemana();
     document.getElementById('semanaInfo').innerHTML = 
-        `📅 Próxima semana: ${sabado.toLocaleDateString('pt-BR')} a ${sexta.toLocaleDateString('pt-BR')}`;
+        '📅 Próxima semana: ' + sabado.toLocaleDateString('pt-BR') + ' a ' + sexta.toLocaleDateString('pt-BR');
     
-    let boletosProximaSemana = [];
+    var boletosProximaSemana = [];
     
-    pedidosData.forEach(p => {
-        const processarParcelas = (parcelas, tipo) => {
-            parcelas.forEach(parc => {
+    pedidosData.forEach(function(p) {
+        var processarParcelas = function(parcelas, tipo) {
+            parcelas.forEach(function(parc) {
                 if (parc.status !== 'Pagos') {
-                    const dataVenc = dataParaComparacao(parc.vencimento);
+                    var dataVenc = dataParaComparacao(parc.vencimento);
                     if (dataVenc >= sabado && dataVenc <= sexta) {
                         boletosProximaSemana.push({ pedido: p, parcela: parc, tipo: tipo });
                     }
@@ -8141,16 +8157,18 @@ function mostrarBoletosProximaSemana() {
         processarParcelas(p.parcelasPropaganda, 'propaganda');
     });
     
-    boletosProximaSemana.sort((a, b) => 
-        dataParaComparacao(a.parcela.vencimento) - dataParaComparacao(b.parcela.vencimento)
-    );
+    boletosProximaSemana.sort(function(a, b) {
+        return dataParaComparacao(a.parcela.vencimento) - dataParaComparacao(b.parcela.vencimento);
+    });
     
-    const titulo = `📅 ${boletosProximaSemana.length} boletos para a próxima semana`;
+    var titulo = '📅 ' + boletosProximaSemana.length + ' boletos para a próxima semana';
     document.getElementById('mesContainer').innerHTML = renderizarBoletos(boletosProximaSemana, titulo);
     document.getElementById('mesContainer').style.display = 'block';
 }
 
-
+// ============================================================
+// CORREÇÃO: BOTÕES DO SUBMENU DE BOLETOS
+// ============================================================
 
 function limparActiveBoletos() {
     document.querySelectorAll('#submenuBoletos .btn-submenu').forEach(function(b) {
@@ -8160,7 +8178,7 @@ function limparActiveBoletos() {
 
 function ativarBotaoBoleto(id) {
     limparActiveBoletos();
-    const btn = document.getElementById(id);
+    var btn = document.getElementById(id);
     if (btn) {
         btn.classList.add('active');
     }
@@ -8168,19 +8186,19 @@ function ativarBotaoBoleto(id) {
 
 // ===== RECRIAR SUBMENU COM A ORDEM CORRETA =====
 function recriarSubmenuBoletos() {
-    const submenu = document.getElementById('submenuBoletos');
+    var submenu = document.getElementById('submenuBoletos');
     if (!submenu) return;
     
     // Salvar qual botão estava ativo
-    let activeId = null;
-    const activeBtn = submenu.querySelector('.btn-submenu.active');
+    var activeId = null;
+    var activeBtn = submenu.querySelector('.btn-submenu.active');
     if (activeBtn) {
         activeId = activeBtn.id;
     }
     
     submenu.innerHTML = '';
     
-    const botoes = [
+    var botoes = [
         { id: 'btnEssaSemana', texto: '📅 Essa semana', funcao: 'mostrarBoletosSemana()' },
         { id: 'btnProximaSemana', texto: '📅 Próxima semana', funcao: 'mostrarBoletosProximaSemana()' },
         { id: 'btnEsseMes', texto: '📅 Esse mês', funcao: 'mostrarBoletosMes()' },
@@ -8189,7 +8207,7 @@ function recriarSubmenuBoletos() {
     ];
     
     botoes.forEach(function(item) {
-        const btn = document.createElement('button');
+        var btn = document.createElement('button');
         btn.id = item.id;
         btn.className = 'btn-submenu';
         btn.textContent = item.texto;
@@ -8207,7 +8225,7 @@ function recriarSubmenuBoletos() {
 function corrigirBotoesBoletos() {
     // Corrigir mostrarBoletosSemana
     if (typeof window.mostrarBoletosSemana === 'function') {
-        const originalSemana = window.mostrarBoletosSemana;
+        var originalSemana = window.mostrarBoletosSemana;
         window.mostrarBoletosSemana = function() {
             originalSemana.apply(this, arguments);
             setTimeout(function() {
@@ -8218,7 +8236,7 @@ function corrigirBotoesBoletos() {
 
     // Corrigir mostrarBoletosProximaSemana
     if (typeof window.mostrarBoletosProximaSemana === 'function') {
-        const originalProxima = window.mostrarBoletosProximaSemana;
+        var originalProxima = window.mostrarBoletosProximaSemana;
         window.mostrarBoletosProximaSemana = function() {
             originalProxima.apply(this, arguments);
             setTimeout(function() {
@@ -8229,7 +8247,7 @@ function corrigirBotoesBoletos() {
 
     // Corrigir mostrarBoletosMes
     if (typeof window.mostrarBoletosMes === 'function') {
-        const originalMes = window.mostrarBoletosMes;
+        var originalMes = window.mostrarBoletosMes;
         window.mostrarBoletosMes = function() {
             originalMes.apply(this, arguments);
             setTimeout(function() {
@@ -8240,7 +8258,7 @@ function corrigirBotoesBoletos() {
 
     // Corrigir mostrarBoletosProximoMes
     if (typeof window.mostrarBoletosProximoMes === 'function') {
-        const originalProximoMes = window.mostrarBoletosProximoMes;
+        var originalProximoMes = window.mostrarBoletosProximoMes;
         window.mostrarBoletosProximoMes = function() {
             originalProximoMes.apply(this, arguments);
             setTimeout(function() {
@@ -8251,7 +8269,7 @@ function corrigirBotoesBoletos() {
 
     // Corrigir mostrarBoletosAtrasados
     if (typeof window.mostrarBoletosAtrasados === 'function') {
-        const originalAtrasados = window.mostrarBoletosAtrasados;
+        var originalAtrasados = window.mostrarBoletosAtrasados;
         window.mostrarBoletosAtrasados = function() {
             originalAtrasados.apply(this, arguments);
             setTimeout(function() {
@@ -8263,9 +8281,9 @@ function corrigirBotoesBoletos() {
 
 // ===== INTERCEPTAR toggleSubmenuBoletos =====
 if (typeof window.toggleSubmenuBoletos === 'function') {
-    const originalToggle = window.toggleSubmenuBoletos;
+    var originalToggle = window.toggleSubmenuBoletos;
     window.toggleSubmenuBoletos = function() {
-        const submenu = document.getElementById('submenuBoletos');
+        var submenu = document.getElementById('submenuBoletos');
         if (submenu && submenu.style.display !== 'flex') {
             recriarSubmenuBoletos();
         }
@@ -8274,8 +8292,19 @@ if (typeof window.toggleSubmenuBoletos === 'function') {
 }
 
 // ===== INICIALIZAR =====
-recriarSubmenuBoletos();
-corrigirBotoesBoletos();
+setTimeout(function() {
+    recriarSubmenuBoletos();
+    corrigirBotoesBoletos();
+}, 100);
+
+
+
+
+
+
+
+
+
 
 // Inicializar
 // (A função carregarDados será chamada após o login)
