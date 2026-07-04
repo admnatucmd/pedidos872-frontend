@@ -2905,6 +2905,40 @@ function aplicarEstiloCompactoProdutos() {
     console.log('✅ Estilo compacto aplicado na tabela de produtos!');
 }
 
+async function carregarProdutos() {
+    try {
+        // ===== USA A ROTA /api/sheet-data COM PARÂMETRO sheet=Produtos =====
+        const response = await fetch(`${API_BASE_URL}/api/sheet-data?sheet=Produtos`, {
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        });
+        
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Erro ao buscar produtos');
+        }
+        
+        // ===== PROCESSAR DADOS =====
+        processarDadosProdutos(result.data);
+        
+        return true;
+    } catch (error) {
+        console.error('❌ Erro ao carregar produtos:', error);
+        showNotification('❌ Erro ao carregar produtos: ' + error.message, 'error');
+        return false;
+    }
+}
+
+
 // ============================================================
 // FUNÇÕES DE PRODUTOS (IIFE #3, #4, #7, #8, #9, #10, #11, #12, #14, #15, #16, #19, #20, #21, #22, #23)
 // ============================================================
