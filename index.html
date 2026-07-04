@@ -7333,11 +7333,9 @@ function adicionarBuscarProduto() {
 
     console.log('✅ Sistema de busca adicionado!');
 }
-
 // ============================================================
 // FUNÇÃO: MOSTRAR BUSCA DE PRODUTOS
 // ============================================================
-
 function mostrarBuscaProdutos() {
     console.log('🔍 Abrindo busca de produtos...');
     
@@ -7727,7 +7725,6 @@ function filtrarBuscaProdutos(periodo) {
         renderizarResultadosBusca(produtos, termo, periodo);
     }
 }
-
 // ============================================================
 // INICIALIZAR BUSCA
 // ============================================================
@@ -8100,9 +8097,6 @@ console.log('   - Use o período para filtrar os resultados');
 console.log('   - O campo NÃO é limpo ao mudar o período');
 console.log('   - Clique no "X" para limpar o campo');
 console.log('   - Clique em outro botão para sair da busca');
-
-
-
 
 // ============================================================
 // SISTEMA DE NAVEGAÇÃO ENTRE PEDIDOS E PRODUTOS
@@ -8497,18 +8491,109 @@ console.log('   - Clique em outro botão para sair da busca');
 })();
 
 
+// ============================================================
+// FUNÇÃO: MOSTRAR BOLETOS DA PRÓXIMA SEMANA
+// ============================================================
 
+function getProximaSemana() {
+    const hoje = new Date();
+    const diaSemana = hoje.getDay();
+    
+    let diasAteSabado = (6 - diaSemana + 7) % 7;
+    if (diasAteSabado === 0) diasAteSabado = 7;
+    
+    const sabado = new Date(hoje);
+    sabado.setDate(hoje.getDate() + diasAteSabado);
+    
+    const sexta = new Date(sabado);
+    sexta.setDate(sabado.getDate() + 6);
+    
+    return { sabado, sexta };
+}
 
+function mostrarBoletosProximaSemana() {
+    console.log('📅 Mostrando boletos da próxima semana...');
+    
+    document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('btnProximaSemana');
+    if (btn) btn.classList.add('active');
+    
+    document.getElementById('submenuBoletos').style.display = 'flex';
+    document.getElementById('dataTable').style.display = 'none';
+    document.getElementById('mesContainer').style.display = 'none';
+    document.getElementById('semanaInfo').style.display = 'block';
+    document.getElementById('statsContainer').classList.add('stats-hidden');
+    
+    const { sabado, sexta } = getProximaSemana();
+    document.getElementById('semanaInfo').innerHTML = 
+        `📅 Próxima semana: ${sabado.toLocaleDateString('pt-BR')} a ${sexta.toLocaleDateString('pt-BR')}`;
+    
+    let boletosProximaSemana = [];
+    
+    pedidosData.forEach(p => {
+        const processarParcelas = (parcelas, tipo) => {
+            parcelas.forEach(parc => {
+                if (parc.status !== 'Pagos') {
+                    const dataVenc = dataParaComparacao(parc.vencimento);
+                    if (dataVenc >= sabado && dataVenc <= sexta) {
+                        boletosProximaSemana.push({ pedido: p, parcela: parc, tipo: tipo });
+                    }
+                }
+            });
+        };
+        processarParcelas(p.parcelasProduto, 'produto');
+        processarParcelas(p.parcelasRoyalties, 'royalties');
+        processarParcelas(p.parcelasPropaganda, 'propaganda');
+    });
+    
+    boletosProximaSemana.sort((a, b) => 
+        dataParaComparacao(a.parcela.vencimento) - dataParaComparacao(b.parcela.vencimento)
+    );
+    
+    const titulo = `📅 ${boletosProximaSemana.length} boletos para a próxima semana`;
+    document.getElementById('mesContainer').innerHTML = renderizarBoletos(boletosProximaSemana, titulo);
+    document.getElementById('mesContainer').style.display = 'block';
+}
 
+// ===== RECRIAR SUBMENU COM A ORDEM CORRETA =====
+function recriarSubmenuBoletos() {
+    const submenu = document.getElementById('submenuBoletos');
+    if (!submenu) return;
+    
+    submenu.innerHTML = '';
+    
+    const botoes = [
+        { id: 'btnEssaSemana', texto: '📅 Essa semana', funcao: 'mostrarBoletosSemana()' },
+        { id: 'btnProximaSemana', texto: '📅 Próxima semana', funcao: 'mostrarBoletosProximaSemana()' },
+        { id: 'btnEsseMes', texto: '📅 Esse mês', funcao: 'mostrarBoletosMes()' },
+        { id: 'btnProximoMes', texto: '📅 Próximo mês', funcao: 'mostrarBoletosProximoMes()' },
+        { id: 'btnAtrasados', texto: '⚠️ Atrasados', funcao: 'mostrarBoletosAtrasados()' }
+    ];
+    
+    botoes.forEach(function(item) {
+        const btn = document.createElement('button');
+        btn.id = item.id;
+        btn.className = 'btn-submenu';
+        btn.textContent = item.texto;
+        btn.setAttribute('onclick', item.funcao);
+        submenu.appendChild(btn);
+    });
+}
 
+// ===== INTERCEPTAR toggleSubmenuBoletos =====
+if (typeof window.toggleSubmenuBoletos === 'function') {
+    const originalToggle = window.toggleSubmenuBoletos;
+    window.toggleSubmenuBoletos = function() {
+        recriarSubmenuBoletos();
+        return originalToggle.apply(this, arguments);
+    };
+}
+// ===== RECRIAR INICIALMENTE =====
+setTimeout(recriarSubmenuBoletos, 100);
 
 // Inicializar
 // (A função carregarDados será chamada após o login)
 </script>
-
-
-
-
 
 </body>
 </html>
