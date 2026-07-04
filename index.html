@@ -9079,6 +9079,291 @@ setTimeout(function() {
 
 
 
+// ============================================================
+// MAIS PEDIDOS - DESTAQUE CONDICIONADO (SEM BACKGROUND)
+// ============================================================
+
+(function() {
+    console.log('🔧 CORRIGINDO DESTAQUE CONDICIONADO NO MAIS PEDIDOS...');
+
+    function destacarCelulasMaisPedidos(colunaIndex) {
+        console.log('🔄 Destacando coluna ' + colunaIndex + ' do Mais Pedidos...');
+        
+        var todasCelulas = document.querySelectorAll('#tableWrapper td');
+        todasCelulas.forEach(function(cell) {
+            cell.style.fontWeight = '';
+            cell.style.color = '';
+            cell.style.background = '';
+        });
+        
+        var cells = document.querySelectorAll('#tableWrapper td:nth-child(' + (colunaIndex + 1) + ')');
+        var total = cells.length;
+        
+        cells.forEach(function(cell) {
+            cell.style.fontWeight = 'bold';
+            cell.style.color = '#0b4f6c';
+        });
+        
+        console.log('✅ ' + total + ' células da coluna ' + colunaIndex + ' destacadas (sem background)');
+    }
+
+    if (typeof window.organizarMaisPedidos === 'function') {
+        var originalOrganizar = window.organizarMaisPedidos;
+        window.organizarMaisPedidos = function(tipo) {
+            console.log('🔄 organizarMaisPedidos chamada com tipo:', tipo);
+            originalOrganizar.apply(this, arguments);
+            setTimeout(function() {
+                if (tipo === 'vezes') {
+                    destacarCelulasMaisPedidos(2);
+                } else if (tipo === 'quantidade') {
+                    destacarCelulasMaisPedidos(3);
+                }
+            }, 300);
+            setTimeout(function() {
+                if (tipo === 'vezes') {
+                    destacarCelulasMaisPedidos(2);
+                } else if (tipo === 'quantidade') {
+                    destacarCelulasMaisPedidos(3);
+                }
+            }, 800);
+        };
+        console.log('✅ organizarMaisPedidos interceptada');
+    }
+
+    if (typeof window.mostrarProdutosMaisPedidos === 'function') {
+        var originalMostrar = window.mostrarProdutosMaisPedidos;
+        window.mostrarProdutosMaisPedidos = function() {
+            console.log('🔄 mostrarProdutosMaisPedidos chamada');
+            var resultado = originalMostrar.apply(this, arguments);
+            setTimeout(function() {
+                var tipo = window.organizacaoAtualMaisPedidos || 'vezes';
+                if (tipo === 'vezes') {
+                    destacarCelulasMaisPedidos(2);
+                } else if (tipo === 'quantidade') {
+                    destacarCelulasMaisPedidos(3);
+                }
+            }, 500);
+            return resultado;
+        };
+        console.log('✅ mostrarProdutosMaisPedidos interceptada');
+    }
+
+    if (typeof window.renderizarMaisPedidos === 'function') {
+        var originalRenderizar = window.renderizarMaisPedidos;
+        window.renderizarMaisPedidos = function(produtos, titulo, organizacao) {
+            console.log('🔄 renderizarMaisPedidos chamada com organização:', organizacao);
+            window.organizacaoAtualMaisPedidos = organizacao;
+            var resultado = originalRenderizar.apply(this, arguments);
+            setTimeout(function() {
+                if (organizacao === 'vezes') {
+                    destacarCelulasMaisPedidos(2);
+                } else if (organizacao === 'quantidade') {
+                    destacarCelulasMaisPedidos(3);
+                }
+            }, 400);
+            return resultado;
+        };
+        console.log('✅ renderizarMaisPedidos interceptada');
+    }
+
+    console.log('');
+    console.log('✅ MAIS PEDIDOS - CORREÇÃO APLICADA!');
+    console.log('');
+})();
+
+
+// ============================================================
+// MAIOR LUCRO - DESTAQUE CONDICIONADO (SEM BACKGROUND)
+// ============================================================
+
+(function() {
+    console.log('🔧 CORRIGINDO DESTAQUE CONDICIONADO NO MAIOR LUCRO...');
+
+    function destacarCelulasMaiorLucro(colunaIndex) {
+        console.log('🔄 Destacando coluna ' + colunaIndex + ' do Maior Lucro...');
+        
+        var todasCelulas = document.querySelectorAll('#tableWrapper td');
+        todasCelulas.forEach(function(cell) {
+            cell.style.fontWeight = '';
+            cell.style.color = '';
+            cell.style.background = '';
+        });
+        
+        var cells = document.querySelectorAll('#tableWrapper td:nth-child(' + (colunaIndex + 1) + ')');
+        var total = cells.length;
+        
+        cells.forEach(function(cell) {
+            cell.style.fontWeight = 'bold';
+            cell.style.color = '#0b4f6c';
+        });
+        
+        console.log('✅ ' + total + ' células da coluna ' + colunaIndex + ' destacadas (sem background)');
+    }
+
+    if (typeof window.organizarMaiorLucro === 'function') {
+        var originalOrganizar = window.organizarMaiorLucro;
+        window.organizarMaiorLucro = function(tipo) {
+            console.log('🔄 organizarMaiorLucro chamada com tipo:', tipo);
+            originalOrganizar.apply(this, arguments);
+            setTimeout(function() {
+                if (tipo === 'valor') {
+                    destacarCelulasMaiorLucro(4);
+                } else if (tipo === 'percentual') {
+                    destacarCelulasMaiorLucro(5);
+                }
+            }, 300);
+            setTimeout(function() {
+                if (tipo === 'valor') {
+                    destacarCelulasMaiorLucro(4);
+                } else if (tipo === 'percentual') {
+                    destacarCelulasMaiorLucro(5);
+                }
+            }, 800);
+        };
+        console.log('✅ organizarMaiorLucro interceptada');
+    }
+
+    if (typeof window.mostrarProdutosMaiorLucro === 'function') {
+        var originalMostrar = window.mostrarProdutosMaiorLucro;
+        window.mostrarProdutosMaiorLucro = function() {
+            console.log('🔄 mostrarProdutosMaiorLucro chamada');
+            var resultado = originalMostrar.apply(this, arguments);
+            setTimeout(function() {
+                var tipo = window.organizacaoAtualMaiorLucro || 'valor';
+                if (tipo === 'valor') {
+                    destacarCelulasMaiorLucro(4);
+                } else if (tipo === 'percentual') {
+                    destacarCelulasMaiorLucro(5);
+                }
+            }, 500);
+            return resultado;
+        };
+        console.log('✅ mostrarProdutosMaiorLucro interceptada');
+    }
+
+    if (typeof window.renderizarMaiorLucro === 'function') {
+        var originalRenderizar = window.renderizarMaiorLucro;
+        window.renderizarMaiorLucro = function(produtos, titulo, organizacao) {
+            console.log('🔄 renderizarMaiorLucro chamada com organização:', organizacao);
+            window.organizacaoAtualMaiorLucro = organizacao;
+            var resultado = originalRenderizar.apply(this, arguments);
+            setTimeout(function() {
+                if (organizacao === 'valor') {
+                    destacarCelulasMaiorLucro(4);
+                } else if (organizacao === 'percentual') {
+                    destacarCelulasMaiorLucro(5);
+                }
+            }, 400);
+            return resultado;
+        };
+        console.log('✅ renderizarMaiorLucro interceptada');
+    }
+
+    console.log('');
+    console.log('✅ MAIOR LUCRO - CORREÇÃO APLICADA!');
+    console.log('');
+})();
+
+
+// ============================================================
+// MENOS PEDIDOS - DESTAQUE CONDICIONADO (SEM BACKGROUND)
+// ============================================================
+
+(function() {
+    console.log('🔧 CORRIGINDO DESTAQUE CONDICIONADO NO MENOS PEDIDOS...');
+
+    function destacarCelulasMenosPedidos(colunaIndex) {
+        console.log('🔄 Destacando coluna ' + colunaIndex + ' do Menos Pedidos...');
+        
+        var todasCelulas = document.querySelectorAll('#tableWrapper td');
+        todasCelulas.forEach(function(cell) {
+            cell.style.fontWeight = '';
+            cell.style.color = '';
+            cell.style.background = '';
+        });
+        
+        var cells = document.querySelectorAll('#tableWrapper td:nth-child(' + (colunaIndex + 1) + ')');
+        var total = cells.length;
+        
+        cells.forEach(function(cell) {
+            cell.style.fontWeight = 'bold';
+            cell.style.color = '#0b4f6c';
+        });
+        
+        console.log('✅ ' + total + ' células da coluna ' + colunaIndex + ' destacadas (sem background)');
+    }
+
+    if (typeof window.organizarMenosPedidos === 'function') {
+        var originalOrganizar = window.organizarMenosPedidos;
+        window.organizarMenosPedidos = function(tipo) {
+            console.log('🔄 organizarMenosPedidos chamada com tipo:', tipo);
+            originalOrganizar.apply(this, arguments);
+            setTimeout(function() {
+                if (tipo === 'vezes') {
+                    destacarCelulasMenosPedidos(6);
+                } else if (tipo === 'quantidade') {
+                    destacarCelulasMenosPedidos(7);
+                }
+            }, 300);
+            setTimeout(function() {
+                if (tipo === 'vezes') {
+                    destacarCelulasMenosPedidos(6);
+                } else if (tipo === 'quantidade') {
+                    destacarCelulasMenosPedidos(7);
+                }
+            }, 800);
+        };
+        console.log('✅ organizarMenosPedidos interceptada');
+    }
+
+    if (typeof window.mostrarProdutosMenosPedidos === 'function') {
+        var originalMostrar = window.mostrarProdutosMenosPedidos;
+        window.mostrarProdutosMenosPedidos = function() {
+            console.log('🔄 mostrarProdutosMenosPedidos chamada');
+            var resultado = originalMostrar.apply(this, arguments);
+            setTimeout(function() {
+                var tipo = window.organizacaoAtualMenosPedidos || 'vezes';
+                if (tipo === 'vezes') {
+                    destacarCelulasMenosPedidos(6);
+                } else if (tipo === 'quantidade') {
+                    destacarCelulasMenosPedidos(7);
+                }
+            }, 500);
+            return resultado;
+        };
+        console.log('✅ mostrarProdutosMenosPedidos interceptada');
+    }
+
+    if (typeof window.renderizarMenosPedidos === 'function') {
+        var originalRenderizar = window.renderizarMenosPedidos;
+        window.renderizarMenosPedidos = function(produtos, titulo, organizacao) {
+            console.log('🔄 renderizarMenosPedidos chamada com organização:', organizacao);
+            window.organizacaoAtualMenosPedidos = organizacao;
+            var resultado = originalRenderizar.apply(this, arguments);
+            setTimeout(function() {
+                if (organizacao === 'vezes') {
+                    destacarCelulasMenosPedidos(6);
+                } else if (organizacao === 'quantidade') {
+                    destacarCelulasMenosPedidos(7);
+                }
+            }, 400);
+            return resultado;
+        };
+        console.log('✅ renderizarMenosPedidos interceptada');
+    }
+
+    console.log('');
+    console.log('✅ MENOS PEDIDOS - CORREÇÃO APLICADA!');
+    console.log('');
+})();
+
+
+
+
+
+
+
+
 // Inicializar
 // (A função carregarDados será chamada após o login)
 </script>
