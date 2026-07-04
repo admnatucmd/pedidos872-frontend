@@ -8105,6 +8105,53 @@ console.log('   - Clique em outro botão para sair da busca');
 // CORREÇÃO: BOTÕES DO SUBMENU DE BOLETOS
 // ============================================================
 
+
+function mostrarBoletosProximaSemana() {
+    console.log('📅 Mostrando boletos da próxima semana...');
+    
+    document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
+    const btn = document.getElementById('btnProximaSemana');
+    if (btn) btn.classList.add('active');
+    
+    document.getElementById('submenuBoletos').style.display = 'flex';
+    document.getElementById('dataTable').style.display = 'none';
+    document.getElementById('mesContainer').style.display = 'none';
+    document.getElementById('semanaInfo').style.display = 'block';
+    document.getElementById('statsContainer').classList.add('stats-hidden');
+    
+    const { sabado, sexta } = getProximaSemana();
+    document.getElementById('semanaInfo').innerHTML = 
+        `📅 Próxima semana: ${sabado.toLocaleDateString('pt-BR')} a ${sexta.toLocaleDateString('pt-BR')}`;
+    
+    let boletosProximaSemana = [];
+    
+    pedidosData.forEach(p => {
+        const processarParcelas = (parcelas, tipo) => {
+            parcelas.forEach(parc => {
+                if (parc.status !== 'Pagos') {
+                    const dataVenc = dataParaComparacao(parc.vencimento);
+                    if (dataVenc >= sabado && dataVenc <= sexta) {
+                        boletosProximaSemana.push({ pedido: p, parcela: parc, tipo: tipo });
+                    }
+                }
+            });
+        };
+        processarParcelas(p.parcelasProduto, 'produto');
+        processarParcelas(p.parcelasRoyalties, 'royalties');
+        processarParcelas(p.parcelasPropaganda, 'propaganda');
+    });
+    
+    boletosProximaSemana.sort((a, b) => 
+        dataParaComparacao(a.parcela.vencimento) - dataParaComparacao(b.parcela.vencimento)
+    );
+    
+    const titulo = `📅 ${boletosProximaSemana.length} boletos para a próxima semana`;
+    document.getElementById('mesContainer').innerHTML = renderizarBoletos(boletosProximaSemana, titulo);
+    document.getElementById('mesContainer').style.display = 'block';
+}
+
+
+
 function limparActiveBoletos() {
     document.querySelectorAll('#submenuBoletos .btn-submenu').forEach(function(b) {
         b.classList.remove('active');
