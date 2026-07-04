@@ -8300,7 +8300,108 @@ setTimeout(function() {
 
 
 
+// ============================================================
+// CORREÇÃO: irParaPedido - Comportamento correto em cada contexto
+// ============================================================
 
+(function() {
+    console.log('🔧 CORRIGINDO FUNÇÃO irParaPedido...');
+
+    // ===== SALVAR A FUNÇÃO ORIGINAL =====
+    var irParaPedidoOriginal = window.irParaPedido;
+
+    if (typeof irParaPedidoOriginal !== 'function') {
+        console.log('❌ irParaPedido não encontrada!');
+        return;
+    }
+
+    // ===== NOVA FUNÇÃO =====
+    window.irParaPedido = function(pedidoId, codigoProduto, nomeProduto) {
+        console.log('🔍 irParaPedido chamado para:', pedidoId);
+        
+        // ===== VERIFICAR SE ESTÁ NA ÁREA DE PRODUTOS =====
+        var submenuProdutos = document.getElementById('submenuProdutos');
+        var estaNaAreaProdutos = submenuProdutos && submenuProdutos.style.display === 'flex';
+        
+        // Verificar se o pedido veio de dentro da área de produtos (tem código do produto)
+        var veioDeProdutos = codigoProduto !== undefined || estaNaAreaProdutos;
+        
+        // Verificar se a busca de produtos está ativa
+        var buscaProdutosAtiva = window.modoBuscaAtivo || false;
+        
+        // ===== SE VEIO DA ÁREA DE PRODUTOS =====
+        if (veioDeProdutos || estaNaAreaProdutos || buscaProdutosAtiva) {
+            console.log('🎯 Abrindo em "Produtos por pedido"...');
+            
+            // Chamar a função para abrir em produtos
+            if (typeof window.irParaProdutosDoPedido === 'function') {
+                window.irParaProdutosDoPedido(pedidoId);
+            } else {
+                // Fallback: chamar a função original
+                irParaPedidoOriginal(pedidoId, codigoProduto, nomeProduto);
+            }
+            return;
+        }
+        
+        // ===== VEIO DE FORA DA ÁREA DE PRODUTOS =====
+        console.log('🎯 Voltando para a tabela de pedidos...');
+        
+        // Primeiro, garantir que estamos na tabela de pedidos
+        if (typeof window.voltarTabelaOriginal === 'function') {
+            window.voltarTabelaOriginal();
+        }
+        
+        // Aguardar a tabela renderizar e destacar o pedido
+        setTimeout(function() {
+            console.log('🔍 Procurando pedido na tabela de pedidos:', pedidoId);
+            
+            var rows = document.querySelectorAll('.pedido-row');
+            var encontrado = false;
+            
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                var cell = row.querySelector('td:first-child');
+                if (cell) {
+                    var texto = cell.textContent.replace('▶', '').replace('▼', '').trim();
+                    if (texto === String(pedidoId)) {
+                        encontrado = true;
+                        console.log('✅ Pedido encontrado!');
+                        
+                        // Scroll até o pedido
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        
+                        // Destacar o pedido
+                        row.style.transition = 'background 0.3s';
+                        row.style.background = '#e3f2fd';
+                        
+                        // Abrir os detalhes do pedido
+                        var detailId = 'detalhe-' + pedidoId;
+                        var detailRow = document.getElementById(detailId);
+                        if (detailRow) {
+                            detailRow.classList.add('show');
+                            var icon = row.querySelector('.expand-icon');
+                            if (icon) icon.innerHTML = '▼';
+                        }
+                        
+                        setTimeout(function() {
+                            row.style.background = '';
+                        }, 5000);
+                        
+                        break;
+                    }
+                }
+            }
+            
+            if (!encontrado) {
+                console.log('⚠️ Pedido não encontrado na tabela');
+            }
+        }, 500);
+    };
+
+    console.log('✅ irParaPedido foi substituída!');
+    console.log('   ✅ Links em "Boletos" → voltam para a tabela de pedidos');
+    console.log('   ✅ Links em "Produtos" → abrem em "Produtos por pedido"');
+})();
 
 
 
