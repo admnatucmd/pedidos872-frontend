@@ -9521,6 +9521,320 @@ setTimeout(function() {
 
 
 
+// ============================================================
+// SOLUÇÃO COMPLETA: ORGANIZAR DETALHES + BOTÕES PARA TODOS OS PEDIDOS
+// ============================================================
+
+(function() {
+    console.log('🔧 SOLUÇÃO COMPLETA PARA ORGANIZAR DETALHES...');
+
+    // ===== 1. FUNÇÃO PARA ADICIONAR BOTÕES A UM PEDIDO =====
+    function adicionarBotoesAoPedido(pedidoId) {
+        console.log('🔄 Adicionando botões ao pedido:', pedidoId);
+        
+        var detailRow = document.getElementById('detalhe-produtos-' + pedidoId);
+        if (!detailRow) {
+            console.log('⚠️ Detalhe não encontrado para:', pedidoId);
+            return false;
+        }
+        
+        if (!detailRow.classList.contains('show')) {
+            console.log('⚠️ Detalhe não está aberto para:', pedidoId);
+            return false;
+        }
+        
+        var detailCard = detailRow.querySelector('.detail-card');
+        if (!detailCard) {
+            console.log('⚠️ Detail card não encontrado para:', pedidoId);
+            return false;
+        }
+        
+        if (detailCard.querySelector('.btn-organizar-detalhe')) {
+            console.log('ℹ️ Botões já existem para:', pedidoId);
+            return true;
+        }
+        
+        var toggleBtn = detailCard.querySelector('button[onclick*="toggleVisualizacaoProdutos"]');
+        
+        if (!toggleBtn) {
+            var botoes = detailCard.querySelectorAll('button');
+            botoes.forEach(function(btn) {
+                if (btn.textContent.includes('Mostrar igual do site natura')) {
+                    toggleBtn = btn;
+                }
+            });
+        }
+        
+        if (!toggleBtn) {
+            console.log('⚠️ Botão toggle não encontrado para:', pedidoId);
+            setTimeout(function() {
+                adicionarBotoesAoPedido(pedidoId);
+            }, 500);
+            return false;
+        }
+        
+        var container = document.createElement('div');
+        container.style.cssText = 'display:flex; flex-wrap:wrap; align-items:center; gap:8px; margin-top:8px; padding:6px 0; border-top:1px solid #e5e7eb;';
+        
+        var label = document.createElement('span');
+        label.textContent = 'Organizar pedido por:';
+        label.style.cssText = 'font-size:12px; font-weight:600; color:#555; margin-right:4px;';
+        container.appendChild(label);
+        
+        var btn1 = document.createElement('button');
+        btn1.className = 'btn-organizar-detalhe';
+        btn1.textContent = 'Maior lucro R$';
+        btn1.style.cssText = 'background:#e8f4f8; color:#0b4f6c; border:1px solid #d0e4ed; padding:3px 10px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:500;';
+        btn1.onclick = function() {
+            organizar(pedidoId, 'lucro');
+        };
+        container.appendChild(btn1);
+        
+        var btn2 = document.createElement('button');
+        btn2.className = 'btn-organizar-detalhe';
+        btn2.textContent = 'Maior lucro %';
+        btn2.style.cssText = 'background:#e8f4f8; color:#0b4f6c; border:1px solid #d0e4ed; padding:3px 10px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:500;';
+        btn2.onclick = function() {
+            organizar(pedidoId, 'lucroPercentual');
+        };
+        container.appendChild(btn2);
+        
+        var btn3 = document.createElement('button');
+        btn3.className = 'btn-organizar-detalhe';
+        btn3.textContent = 'Maior qtd';
+        btn3.style.cssText = 'background:#e8f4f8; color:#0b4f6c; border:1px solid #d0e4ed; padding:3px 10px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:500;';
+        btn3.onclick = function() {
+            organizar(pedidoId, 'quantidade');
+        };
+        container.appendChild(btn3);
+        
+        toggleBtn.parentNode.insertBefore(container, toggleBtn.nextSibling);
+        console.log('✅ Botões adicionados para o pedido:', pedidoId);
+        return true;
+    }
+
+    // ===== 2. FUNÇÃO PARA ORGANIZAR =====
+    function organizar(pedidoId, criterio) {
+        console.log('🔄 Organizando pedido ' + pedidoId + ' por: ' + criterio);
+        
+        var detailRow = document.getElementById('detalhe-produtos-' + pedidoId);
+        if (!detailRow) {
+            console.log('❌ Detalhe não encontrado');
+            return;
+        }
+        
+        var tabela = detailRow.querySelector('table');
+        if (!tabela) {
+            console.log('❌ Tabela não encontrada');
+            return;
+        }
+        
+        var tbody = tabela.querySelector('tbody');
+        if (!tbody) {
+            console.log('❌ Tbody não encontrado');
+            return;
+        }
+        
+        var todasLinhas = tbody.querySelectorAll('tr');
+        console.log('📊 Total de linhas no tbody:', todasLinhas.length);
+        
+        var linhaProdutos = null;
+        todasLinhas.forEach(function(row) {
+            var id = row.id || '';
+            if (id === 'body-condensado-' + pedidoId) {
+                linhaProdutos = row;
+                console.log('✅ Linha de produtos encontrada:', id);
+            }
+        });
+        
+        if (!linhaProdutos) {
+            console.log('❌ Linha de produtos não encontrada');
+            return;
+        }
+        
+        var tabelaProdutos = linhaProdutos.querySelector('table');
+        if (!tabelaProdutos) {
+            console.log('❌ Tabela de produtos não encontrada');
+            return;
+        }
+        
+        var tbodyProdutos = tabelaProdutos.querySelector('tbody');
+        if (!tbodyProdutos) {
+            console.log('❌ Tbody de produtos não encontrado');
+            return;
+        }
+        
+        var linhasProdutos = tbodyProdutos.querySelectorAll('tr');
+        console.log('📊 Linhas de produtos encontradas:', linhasProdutos.length);
+        
+        if (linhasProdutos.length === 0) {
+            console.log('❌ Nenhum produto encontrado');
+            return;
+        }
+        
+        var colunaIndex = criterio === 'lucro' ? 8 : (criterio === 'lucroPercentual' ? 9 : 2);
+        var nomeColuna = criterio === 'lucro' ? 'Lucro R$' : (criterio === 'lucroPercentual' ? 'Lucro %' : 'Quantidade');
+        
+        function extrairValor(row) {
+            var cells = row.querySelectorAll('td');
+            if (cells.length <= colunaIndex) return 0;
+            var texto = cells[colunaIndex].textContent.trim();
+            texto = texto.replace(/R\$\s*/g, '');
+            texto = texto.replace(/\./g, '').replace(',', '.');
+            texto = texto.replace(/%/g, '');
+            var valor = parseFloat(texto);
+            return isNaN(valor) ? 0 : valor;
+        }
+        
+        var linhasArray = Array.from(linhasProdutos);
+        linhasArray.sort(function(a, b) {
+            return extrairValor(b) - extrairValor(a);
+        });
+        
+        tbodyProdutos.innerHTML = '';
+        linhasArray.forEach(function(row) {
+            tbodyProdutos.appendChild(row);
+        });
+        
+        var todasLinhasAtualizadas = tbodyProdutos.querySelectorAll('tr');
+        todasLinhasAtualizadas.forEach(function(row) {
+            var cells = row.querySelectorAll('td');
+            if (cells.length > colunaIndex) {
+                cells.forEach(function(cell, idx) {
+                    if (idx === colunaIndex) {
+                        cell.style.fontWeight = 'bold';
+                        cell.style.color = '#0b4f6c';
+                        cell.style.background = '#e3f2fd';
+                    } else {
+                        cell.style.fontWeight = '';
+                        cell.style.color = '';
+                        cell.style.background = '';
+                    }
+                });
+            }
+        });
+        
+        console.log('✅ Pedido ' + pedidoId + ' organizado por ' + nomeColuna);
+    }
+
+    // ===== 3. FUNÇÃO PARA ADICIONAR BOTÕES A TODOS OS DETALHES ABERTOS =====
+    function adicionarBotoesATodosDetalhes() {
+        console.log('🔄 Adicionando botões a todos os detalhes abertos...');
+        
+        var detailRows = document.querySelectorAll('.parcelas-detail.show');
+        var adicionados = 0;
+        
+        detailRows.forEach(function(row) {
+            var id = row.id || '';
+            if (id.startsWith('detalhe-produtos-')) {
+                var pedidoId = id.replace('detalhe-produtos-', '');
+                if (adicionarBotoesAoPedido(pedidoId)) {
+                    adicionados++;
+                }
+            }
+        });
+        
+        console.log('✅ Botões adicionados a ' + adicionados + ' detalhes');
+        return adicionados;
+    }
+
+    // ===== 4. INTERCEPTAR toggleDetalhesProdutos =====
+    if (typeof window.toggleDetalhesProdutos === 'function') {
+        var originalToggle = window.toggleDetalhesProdutos;
+        window.toggleDetalhesProdutos = function(pedidoId) {
+            console.log('🔄 toggleDetalhesProdutos chamada para:', pedidoId);
+            var resultado = originalToggle.apply(this, arguments);
+            
+            setTimeout(function() {
+                adicionarBotoesAoPedido(pedidoId);
+            }, 500);
+            
+            setTimeout(function() {
+                adicionarBotoesAoPedido(pedidoId);
+            }, 1000);
+            
+            setTimeout(function() {
+                adicionarBotoesAoPedido(pedidoId);
+            }, 2000);
+            
+            return resultado;
+        };
+        console.log('✅ toggleDetalhesProdutos interceptada');
+    }
+
+    // ===== 5. INTERCEPTAR carregarProdutosDetalhados =====
+    if (typeof window.carregarProdutosDetalhados === 'function') {
+        var originalCarregar = window.carregarProdutosDetalhados;
+        window.carregarProdutosDetalhados = function(pedidoId) {
+            var resultado = originalCarregar.apply(this, arguments);
+            
+            setTimeout(function() {
+                adicionarBotoesAoPedido(pedidoId);
+            }, 600);
+            
+            setTimeout(function() {
+                adicionarBotoesAoPedido(pedidoId);
+            }, 1200);
+            
+            return resultado;
+        };
+        console.log('✅ carregarProdutosDetalhados interceptada');
+    }
+
+    // ===== 6. OBSERVAR MUDANÇAS =====
+    var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+                var detailRows = document.querySelectorAll('.parcelas-detail.show');
+                if (detailRows.length > 0) {
+                    var temBotoes = false;
+                    detailRows.forEach(function(row) {
+                        if (row.querySelector('.btn-organizar-detalhe')) {
+                            temBotoes = true;
+                        }
+                    });
+                    if (!temBotoes) {
+                        setTimeout(function() {
+                            adicionarBotoesATodosDetalhes();
+                        }, 300);
+                    }
+                }
+            }
+        });
+    });
+
+    var tableWrapper = document.getElementById('tableWrapper');
+    if (tableWrapper) {
+        observer.observe(tableWrapper, { childList: true, subtree: true });
+        console.log('👁️ Monitorando mudanças');
+    }
+
+    // ===== 7. ADICIONAR BOTÕES AOS DETALHES JÁ ABERTOS =====
+    setTimeout(function() {
+        adicionarBotoesATodosDetalhes();
+    }, 800);
+
+    // ===== 8. EXPORTAR FUNÇÕES =====
+    window.organizar = organizar;
+    window.adicionarBotoesAoPedido = adicionarBotoesAoPedido;
+    window.adicionarBotoesATodosDetalhes = adicionarBotoesATodosDetalhes;
+
+    console.log('');
+    console.log('✅ FUNÇÃO DE ORGANIZAÇÃO CRIADA!');
+    console.log('');
+    console.log('📌 COMANDOS:');
+    console.log('   adicionarBotoesATodosDetalhes() - Adiciona botões a todos os detalhes abertos');
+    console.log('   organizar("870074089", "lucro") - Organiza por lucro');
+    console.log('');
+
+})();
+
+
+
+
+
+
+
 
 
 // Inicializar
