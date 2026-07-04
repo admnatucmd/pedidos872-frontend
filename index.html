@@ -8555,10 +8555,35 @@ function mostrarBoletosProximaSemana() {
     document.getElementById('mesContainer').style.display = 'block';
 }
 
+// ============================================================
+// CORREÇÃO: BOTÕES DO SUBMENU DE BOLETOS
+// ============================================================
+
+function limparActiveBoletos() {
+    document.querySelectorAll('#submenuBoletos .btn-submenu').forEach(function(b) {
+        b.classList.remove('active');
+    });
+}
+
+function ativarBotaoBoleto(id) {
+    limparActiveBoletos();
+    const btn = document.getElementById(id);
+    if (btn) {
+        btn.classList.add('active');
+    }
+}
+
 // ===== RECRIAR SUBMENU COM A ORDEM CORRETA =====
 function recriarSubmenuBoletos() {
     const submenu = document.getElementById('submenuBoletos');
     if (!submenu) return;
+    
+    // Salvar qual botão estava ativo
+    let activeId = null;
+    const activeBtn = submenu.querySelector('.btn-submenu.active');
+    if (activeBtn) {
+        activeId = activeBtn.id;
+    }
     
     submenu.innerHTML = '';
     
@@ -8576,24 +8601,108 @@ function recriarSubmenuBoletos() {
         btn.className = 'btn-submenu';
         btn.textContent = item.texto;
         btn.setAttribute('onclick', item.funcao);
+        
+        if (activeId === item.id) {
+            btn.classList.add('active');
+        }
+        
         submenu.appendChild(btn);
     });
+}
+
+// ===== CORRIGIR AS FUNÇÕES DE MOSTRAR BOLETOS =====
+function corrigirBotoesBoletos() {
+    // Corrigir mostrarBoletosSemana
+    if (typeof window.mostrarBoletosSemana === 'function') {
+        const originalSemana = window.mostrarBoletosSemana;
+        window.mostrarBoletosSemana = function() {
+            originalSemana.apply(this, arguments);
+            setTimeout(function() {
+                ativarBotaoBoleto('btnEssaSemana');
+            }, 50);
+        };
+    }
+
+    // Corrigir mostrarBoletosProximaSemana
+    if (typeof window.mostrarBoletosProximaSemana === 'function') {
+        const originalProxima = window.mostrarBoletosProximaSemana;
+        window.mostrarBoletosProximaSemana = function() {
+            originalProxima.apply(this, arguments);
+            setTimeout(function() {
+                ativarBotaoBoleto('btnProximaSemana');
+            }, 50);
+        };
+    }
+
+    // Corrigir mostrarBoletosMes
+    if (typeof window.mostrarBoletosMes === 'function') {
+        const originalMes = window.mostrarBoletosMes;
+        window.mostrarBoletosMes = function() {
+            originalMes.apply(this, arguments);
+            setTimeout(function() {
+                ativarBotaoBoleto('btnEsseMes');
+            }, 50);
+        };
+    }
+
+    // Corrigir mostrarBoletosProximoMes
+    if (typeof window.mostrarBoletosProximoMes === 'function') {
+        const originalProximoMes = window.mostrarBoletosProximoMes;
+        window.mostrarBoletosProximoMes = function() {
+            originalProximoMes.apply(this, arguments);
+            setTimeout(function() {
+                ativarBotaoBoleto('btnProximoMes');
+            }, 50);
+        };
+    }
+
+    // Corrigir mostrarBoletosAtrasados
+    if (typeof window.mostrarBoletosAtrasados === 'function') {
+        const originalAtrasados = window.mostrarBoletosAtrasados;
+        window.mostrarBoletosAtrasados = function() {
+            originalAtrasados.apply(this, arguments);
+            setTimeout(function() {
+                ativarBotaoBoleto('btnAtrasados');
+            }, 50);
+        };
+    }
 }
 
 // ===== INTERCEPTAR toggleSubmenuBoletos =====
 if (typeof window.toggleSubmenuBoletos === 'function') {
     const originalToggle = window.toggleSubmenuBoletos;
     window.toggleSubmenuBoletos = function() {
-        recriarSubmenuBoletos();
+        const submenu = document.getElementById('submenuBoletos');
+        if (submenu && submenu.style.display !== 'flex') {
+            recriarSubmenuBoletos();
+        }
         return originalToggle.apply(this, arguments);
     };
 }
-// ===== RECRIAR INICIALMENTE =====
-setTimeout(recriarSubmenuBoletos, 100);
 
+
+// ===== INICIALIZAR =====
+recriarSubmenuBoletos();
+corrigirBotoesBoletos();
 // Inicializar
 // (A função carregarDados será chamada após o login)
+
+
+
+
+
+
+
+
+
 </script>
+
+
+
+
+
+
+
 
 </body>
 </html>
