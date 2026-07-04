@@ -8969,7 +8969,112 @@ setTimeout(function() {
 
 
 
+// ============================================================
+// CORREÇÃO: ORDENAR BOLETOS POR DATA MAIS PRÓXIMA
+// ============================================================
 
+(function() {
+    console.log('🔧 ORDENANDO BOLETOS POR DATA MAIS PRÓXIMA...');
+
+    // ===== 1. FUNÇÃO PARA ORDENAR BOLETOS POR DATA =====
+    function ordenarBoletosPorData(boletos) {
+        return boletos.sort(function(a, b) {
+            var dataA = dataParaComparacao(a.parcela.vencimento);
+            var dataB = dataParaComparacao(b.parcela.vencimento);
+            return dataA - dataB;
+        });
+    }
+
+    // ===== 2. FUNÇÃO PARA REORDENAR OS BOLETOS NA TELA =====
+    function reordenarBoletosNaTela() {
+        var container = document.getElementById('mesContainer');
+        if (!container) return;
+        
+        var boletoCards = container.querySelectorAll('.boleto-card');
+        if (boletoCards.length === 0) return;
+        
+        var cardsComData = [];
+        
+        boletoCards.forEach(function(card) {
+            var vencimentoSpan = card.querySelector('.boleto-vencimento');
+            var dataVenc = null;
+            
+            if (vencimentoSpan) {
+                var texto = vencimentoSpan.textContent || '';
+                var match = texto.match(/(\d{2}\/\d{2}\/\d{4})/);
+                if (match) {
+                    dataVenc = match[1];
+                }
+            }
+            
+            if (!dataVenc) {
+                var allText = card.textContent || '';
+                var match = allText.match(/(\d{2}\/\d{2}\/\d{4})/);
+                if (match) {
+                    dataVenc = match[1];
+                }
+            }
+            
+            if (dataVenc) {
+                cardsComData.push({
+                    card: card,
+                    data: dataVenc,
+                    dataObj: dataParaComparacao(dataVenc)
+                });
+            } else {
+                cardsComData.push({
+                    card: card,
+                    data: null,
+                    dataObj: new Date(2099, 11, 31)
+                });
+            }
+        });
+        
+        cardsComData.sort(function(a, b) {
+            return a.dataObj - b.dataObj;
+        });
+        
+        var parent = cardsComData[0]?.card?.parentNode;
+        if (parent) {
+            cardsComData.forEach(function(item) {
+                parent.appendChild(item.card);
+            });
+        }
+    }
+
+    // ===== 3. CORRIGIR renderizarBoletos =====
+    if (typeof window.renderizarBoletos === 'function') {
+        var originalRenderizarBoletos = window.renderizarBoletos;
+        window.renderizarBoletos = function(boletos, titulo) {
+            var boletosOrdenados = ordenarBoletosPorData(boletos);
+            return originalRenderizarBoletos.call(this, boletosOrdenados, titulo);
+        };
+    }
+
+    // ===== 4. INTERCEPTAR FUNÇÕES DE BOLETOS =====
+    var funcoesBoletos = [
+        'mostrarBoletosSemana',
+        'mostrarBoletosProximaSemana',
+        'mostrarBoletosMes',
+        'mostrarBoletosProximoMes',
+        'mostrarBoletosAtrasados'
+    ];
+
+    funcoesBoletos.forEach(function(nome) {
+        if (typeof window[nome] === 'function') {
+            var original = window[nome];
+            window[nome] = function() {
+                var resultado = original.apply(this, arguments);
+                setTimeout(function() {
+                    reordenarBoletosNaTela();
+                }, 200);
+                return resultado;
+            };
+        }
+    });
+
+    console.log('✅ Boletos serão ordenados por data mais próxima');
+})();
 
 
 
