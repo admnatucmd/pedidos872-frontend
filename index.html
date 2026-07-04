@@ -2905,37 +2905,185 @@ function aplicarEstiloCompactoProdutos() {
     console.log('✅ Estilo compacto aplicado na tabela de produtos!');
 }
 
+// ============================================================
+// FUNÇÕES DE PRODUTOS (CARREGAR E PROCESSAR)
+// ============================================================
+
+function limparValorProduto(valor) {
+    if (!valor || valor === '') return 0;
+    const str = String(valor).replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+    return parseFloat(str) || 0;
+}
+
 async function carregarProdutos() {
+    console.log('🔄 Carregando produtos da planilha...');
     try {
-        // ===== USA A ROTA /api/sheet-data COM PARÂMETRO sheet=Produtos =====
-        const response = await fetch(`${API_BASE_URL}/api/sheet-data?sheet=Produtos`, {
+        const response = await fetch(API_BASE_URL + '/api/sheet-data?sheet=Produtos', {
             method: 'GET',
             credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            }
+            headers: { 'Content-Type': 'application/json' }
         });
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-        
+        if (!response.ok) throw new Error('HTTP ' + response.status);
         const result = await response.json();
+        if (!result.success) throw new Error(result.error || 'Erro ao buscar produtos');
         
-        if (!result.success) {
-            throw new Error(result.error || 'Erro ao buscar produtos');
-        }
-        
-        // ===== PROCESSAR DADOS =====
         processarDadosProdutos(result.data);
-        
+        console.log('✅ Produtos carregados:', produtosData.length, 'pedidos');
         return true;
     } catch (error) {
         console.error('❌ Erro ao carregar produtos:', error);
         showNotification('❌ Erro ao carregar produtos: ' + error.message, 'error');
         return false;
     }
+}
+
+function processarDadosProdutos(data) {
+    console.log('🔄 Processando dados de produtos...');
+    
+    if (!data || data.length < 2) {
+        produtosData = [];
+        produtosPorPedido = {};
+        window.produtosData = [];
+        window.produtosPorPedido = {};
+        return;
+    }
+    
+    const idxPedido = 0;
+    const idxData = 1;
+    const idxNotaFiscal = 2;
+    const idxPrecoCompra = 3;
+    const idxProdutosUnicos = 8;
+    const idxTotalProdutos = 9;
+    const idxCodigo = 10;
+    const idxProduto = 11;
+    const idxQuantidade = 12;
+    const idxPontos = 13;
+    const idxValorUnit = 14;
+    const idxValorTotal = 15;
+    const idxVendaUnit = 16;
+    const idxVendaTotal = 17;
+    const idxLucro = 18;
+    const idxLucroPercentual = 19;
+    const idxLucroReal = 20;
+    const idxLucroRealPercentual = 21;
+    const idxReferencia = 22;
+    
+    let pedidoAtual = null;
+    produtosPorPedido = {};
+    
+    for (let i = 1; i < data.length; i++) {
+        const row = data[i];
+        if (row.length < 10) continue;
+        
+        let pedido = String(row[idxPedido] || '').trim();
+        if (pedido === '' || pedido === 'Pedido') {
+            pedido = pedidoAtual;
+        } else {
+            pedidoAtual = pedido;
+        }
+        if (!pedido || pedido === 'Pedido') continue;
+        
+        if (!produtosPorPedido[pedido]) {
+            produtosPorPedido[pedido] = {
+                pedido: pedido,
+                data: String(row[idxData] || '').trim(),
+                notaFiscal: String(row[idxNotaFiscal] || '').trim(),
+                precoCompra: limparValorProduto(String(row[idxPrecoCompra] || '0')),
+                valorVendaTotal: 0,
+                lucroTotal: 0,
+                totalPontos: 0,
+                produtosIndisponiveis: 0,
+                linhas: []
+            };
+        }
+        
+        const codigo = row.length > idxCodigo ? String(row[idxCodigo] || '').trim() : '';
+        const produto = row.length > idxProduto ? String(row[idxProduto] || '').trim() : '';
+        const quantidade = row.length > idxQuantidade ? String(row[idxQuantidade] || '0').trim() : '0';
+        const pontos = row.length > idxPontos ? parseInt(String(row[idxPontos] || '0').replace(/\./g, '').trim()) || 0 : 0;
+        const valorUnit = row.length > idxValorUnit ? limparValorProduto(String(row[idxValorUnit] || '0')) : 0;
+        const valorTotal = row.length > idxValorTotal ? limparValorProduto(String(row[idxValorTotal] || '0')) : 0;
+        const vendaUnit = row.length > idxVendaUnit ? limparValorProduto(String(row[idxVendaUnit] || '0')) : 0;
+        const vendaTotal = row.length > idxVendaTotal ? limparValorProduto(String(row[idxVendaTotal] || '0')) : 0;
+        const lucro = row.length > idxLucro ? limparValorProduto(String(row[idxLucro] || '0')) : 0;
+        const lucroPercentual = row.length > idxLucroPercentual ? limparValorProduto(String(row[idxLucroPercentual] || '0')) : 0;
+        const referencia = row.length > idxReferencia ? String(row[idxReferencia] || '').trim() : '';
+        
+        const isIndisponivel = referencia && referencia.indexOf('Produtos indisponível') !== -1;
+        
+        produtosPorPedido[pedido].linhas.push({
+            linha: i,
+            codigo: codigo,
+            produto: produto,
+            quantidade: quantidade,
+            pontos: pontos,
+            valorUnit: valorUnit,
+            valorTotal: valorTotal,
+            vendaUnit: vendaUnit,
+            vendaTotal: vendaTotal,
+            lucro: lucro,
+            lucroPercentual: lucroPercentual,
+            referencia: referencia,
+            isIndisponivel: isIndisponivel,
+            valorCompra: valorUnit,
+            valorVenda: vendaUnit
+        });
+        
+        if (!isIndisponivel && vendaTotal > 0) {
+            produtosPorPedido[pedido].valorVendaTotal += vendaTotal;
+            produtosPorPedido[pedido].lucroTotal += lucro;
+            const qtd = parseInt(quantidade) || 0;
+            produtosPorPedido[pedido].totalPontos += pontos;
+        }
+        if (isIndisponivel) {
+            produtosPorPedido[pedido].produtosIndisponiveis++;
+        }
+    }
+    
+    produtosData = Object.values(produtosPorPedido).map(function(p) {
+        let produtosUnicos = 0;
+        let totalProdutos = 0;
+        let totalPontos = 0;
+        let produtosIndisponiveis = 0;
+        let precoVenda = 0;
+        
+        for (let item of p.linhas) {
+            if (item.isIndisponivel) {
+                produtosIndisponiveis++;
+                continue;
+            }
+            if (item.vendaTotal === 0) break;
+            const qtd = parseInt(item.quantidade) || 0;
+            if (qtd > 0) {
+                produtosUnicos++;
+                totalProdutos += qtd;
+                totalPontos += item.pontos;
+                precoVenda += (item.vendaUnit || 0) * qtd;
+            }
+        }
+        
+        const lucroTotal = precoVenda - p.precoCompra;
+        const lucroPercentual = p.precoCompra > 0 ? (lucroTotal / p.precoCompra) * 100 : 0;
+        
+        return {
+            pedido: p.pedido,
+            data: p.data,
+            notaFiscal: p.notaFiscal,
+            precoCompra: p.precoCompra,
+            linhas: p.linhas,
+            produtosUnicos: produtosUnicos,
+            totalProdutos: totalProdutos,
+            totalPontos: totalPontos,
+            produtosIndisponiveis: produtosIndisponiveis,
+            precoVenda: precoVenda,
+            lucroTotal: lucroTotal,
+            lucroPercentual: lucroPercentual
+        };
+    });
+    
+    window.produtosData = produtosData;
+    window.produtosPorPedido = produtosPorPedido;
+    console.log('📊 ' + produtosData.length + ' pedidos carregados da aba Produtos');
 }
 
 
