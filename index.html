@@ -8101,10 +8101,223 @@ console.log('   - Clique no "X" para limpar o campo');
 console.log('   - Clique em outro botão para sair da busca');
 
 
+// ============================================================
+// FUNÇÃO: MOSTRAR BOLETOS DA PRÓXIMA SEMANA
+// ============================================================
+
+function getProximaSemana() {
+    const hoje = new Date();
+    const diaSemana = hoje.getDay();
+    
+    let diasAteSabado = (6 - diaSemana + 7) % 7;
+    if (diasAteSabado === 0) diasAteSabado = 7;
+    
+    const sabado = new Date(hoje);
+    sabado.setDate(hoje.getDate() + diasAteSabado);
+    
+    const sexta = new Date(sabado);
+    sexta.setDate(sabado.getDate() + 6);
+    
+    return { sabado, sexta };
+}
+
+function mostrarBoletosProximaSemana() {
+    console.log('📅 Mostrando boletos da próxima semana...');
+    
+    document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
+    const botoes = document.querySelectorAll('.btn-submenu');
+    if (botoes.length >= 5) {
+        botoes[4].classList.add('active');
+    }
+    
+    document.getElementById('submenuBoletos').style.display = 'flex';
+    document.getElementById('dataTable').style.display = 'none';
+    document.getElementById('mesContainer').style.display = 'none';
+    document.getElementById('semanaInfo').style.display = 'block';
+    document.getElementById('statsContainer').classList.add('stats-hidden');
+    
+    const { sabado, sexta } = getProximaSemana();
+    document.getElementById('semanaInfo').innerHTML = 
+        `📅 Próxima semana: ${sabado.toLocaleDateString('pt-BR')} a ${sexta.toLocaleDateString('pt-BR')}`;
+    
+    let boletosProximaSemana = [];
+    
+    pedidosData.forEach(p => {
+        const processarParcelas = (parcelas, tipo) => {
+            parcelas.forEach(parc => {
+                if (parc.status !== 'Pagos') {
+                    const dataVenc = dataParaComparacao(parc.vencimento);
+                    if (dataVenc >= sabado && dataVenc <= sexta) {
+                        boletosProximaSemana.push({ pedido: p, parcela: parc, tipo: tipo });
+                    }
+                }
+            });
+        };
+        processarParcelas(p.parcelasProduto, 'produto');
+        processarParcelas(p.parcelasRoyalties, 'royalties');
+        processarParcelas(p.parcelasPropaganda, 'propaganda');
+    });
+    
+    boletosProximaSemana.sort((a, b) => 
+        dataParaComparacao(a.parcela.vencimento) - dataParaComparacao(b.parcela.vencimento)
+    );
+    
+    const titulo = `📅 ${boletosProximaSemana.length} boletos para a próxima semana`;
+    document.getElementById('mesContainer').innerHTML = renderizarBoletos(boletosProximaSemana, titulo);
+    document.getElementById('mesContainer').style.display = 'block';
+}
+
+// ===== ADICIONAR BOTÃO NO SUBMENU =====
+function adicionarBotaoProximaSemana() {
+    const submenu = document.getElementById('submenuBoletos');
+    if (!submenu) return;
+    
+    if (document.getElementById('btnProximaSemana')) return;
+    
+    const btn = document.createElement('button');
+    btn.id = 'btnProximaSemana';
+    btn.className = 'btn-submenu';
+    btn.textContent = '📅 Próxima semana';
+    btn.onclick = mostrarBoletosProximaSemana;
+    
+    const botoes = submenu.querySelectorAll('.btn-submenu');
+    if (botoes.length >= 3) {
+        botoes[2].parentNode.insertBefore(btn, botoes[2].nextSibling);
+    } else {
+        submenu.appendChild(btn);
+    }
+}
+
+// ===== INTERCEPTAR toggleSubmenuBoletos =====
+if (typeof window.toggleSubmenuBoletos === 'function') {
+    const originalToggle = window.toggleSubmenuBoletos;
+    window.toggleSubmenuBoletos = function() {
+        const resultado = originalToggle.apply(this, arguments);
+        setTimeout(adicionarBotaoProximaSemana, 100);
+        return resultado;
+    };
+}
+
+// ===== ADICIONAR BOTÃO INICIALMENTE =====
+setTimeout(adicionarBotaoProximaSemana, 500);
 
 
+function limparActiveBoletos() {
+    document.querySelectorAll('#submenuBoletos .btn-submenu').forEach(function(b) {
+        b.classList.remove('active');
+    });
+}
 
+// ===== RECRIAR SUBMENU COM A ORDEM CORRETA =====
+function recriarSubmenuBoletos() {
+    const submenu = document.getElementById('submenuBoletos');
+    if (!submenu) return;
+    
+    // Salvar qual botão estava ativo
+    let activeId = null;
+    const activeBtn = submenu.querySelector('.btn-submenu.active');
+    if (activeBtn) {
+        activeId = activeBtn.id;
+    }
+    
+    submenu.innerHTML = '';
+    
+    const botoes = [
+        { id: 'btnEssaSemana', texto: '📅 Essa semana', funcao: 'mostrarBoletosSemana()' },
+        { id: 'btnProximaSemana', texto: '📅 Próxima semana', funcao: 'mostrarBoletosProximaSemana()' },
+        { id: 'btnEsseMes', texto: '📅 Esse mês', funcao: 'mostrarBoletosMes()' },
+        { id: 'btnProximoMes', texto: '📅 Próximo mês', funcao: 'mostrarBoletosProximoMes()' },
+        { id: 'btnAtrasados', texto: '⚠️ Atrasados', funcao: 'mostrarBoletosAtrasados()' }
+    ];
+    
+    botoes.forEach(function(item) {
+        const btn = document.createElement('button');
+        btn.id = item.id;
+        btn.className = 'btn-submenu';
+        btn.textContent = item.texto;
+        btn.setAttribute('onclick', item.funcao);
+        
+        if (activeId === item.id) {
+            btn.classList.add('active');
+        }
+        
+        submenu.appendChild(btn);
+    });
+}
 
+// ===== CORRIGIR AS FUNÇÕES DE MOSTRAR BOLETOS =====
+function corrigirBotoesBoletos() {
+    // Corrigir mostrarBoletosSemana
+    if (typeof window.mostrarBoletosSemana === 'function') {
+        const originalSemana = window.mostrarBoletosSemana;
+        window.mostrarBoletosSemana = function() {
+            originalSemana.apply(this, arguments);
+            setTimeout(function() {
+                ativarBotaoBoleto('btnEssaSemana');
+            }, 50);
+        };
+    }
+
+    // Corrigir mostrarBoletosProximaSemana
+    if (typeof window.mostrarBoletosProximaSemana === 'function') {
+        const originalProxima = window.mostrarBoletosProximaSemana;
+        window.mostrarBoletosProximaSemana = function() {
+            originalProxima.apply(this, arguments);
+            setTimeout(function() {
+                ativarBotaoBoleto('btnProximaSemana');
+            }, 50);
+        };
+    }
+
+    // Corrigir mostrarBoletosMes
+    if (typeof window.mostrarBoletosMes === 'function') {
+        const originalMes = window.mostrarBoletosMes;
+        window.mostrarBoletosMes = function() {
+            originalMes.apply(this, arguments);
+            setTimeout(function() {
+                ativarBotaoBoleto('btnEsseMes');
+            }, 50);
+        };
+    }
+
+    // Corrigir mostrarBoletosProximoMes
+    if (typeof window.mostrarBoletosProximoMes === 'function') {
+        const originalProximoMes = window.mostrarBoletosProximoMes;
+        window.mostrarBoletosProximoMes = function() {
+            originalProximoMes.apply(this, arguments);
+            setTimeout(function() {
+                ativarBotaoBoleto('btnProximoMes');
+            }, 50);
+        };
+    }
+
+    // Corrigir mostrarBoletosAtrasados
+    if (typeof window.mostrarBoletosAtrasados === 'function') {
+        const originalAtrasados = window.mostrarBoletosAtrasados;
+        window.mostrarBoletosAtrasados = function() {
+            originalAtrasados.apply(this, arguments);
+            setTimeout(function() {
+                ativarBotaoBoleto('btnAtrasados');
+            }, 50);
+        };
+    }
+}
+
+// ===== INTERCEPTAR toggleSubmenuBoletos =====
+if (typeof window.toggleSubmenuBoletos === 'function') {
+    const originalToggle = window.toggleSubmenuBoletos;
+    window.toggleSubmenuBoletos = function() {
+        const submenu = document.getElementById('submenuBoletos');
+        if (submenu && submenu.style.display !== 'flex') {
+            recriarSubmenuBoletos();
+        }
+        return originalToggle.apply(this, arguments);
+    };
+}
+
+// ===== INICIALIZAR =====
+recriarSubmenuBoletos();
+corrigirBotoesBoletos();
 
 
 
