@@ -9358,7 +9358,6 @@ setTimeout(function() {
 })();
 
 
-
 // ============================================================
 // CORREÇÃO: APLICAR STICKY EM TODOS OS DETALHES
 // ============================================================
@@ -9366,7 +9365,6 @@ setTimeout(function() {
 (function() {
     console.log('🔧 CORRIGINDO STICKY PARA TODOS OS DETALHES...');
 
-    // ===== 1. FUNÇÃO PARA APLICAR STICKY EM TODOS OS DETALHES =====
     function aplicarStickyEmTodosDetalhes() {
         console.log('🔄 Aplicando sticky em todos os detalhes abertos...');
         
@@ -9387,9 +9385,9 @@ setTimeout(function() {
                 
                 ths.forEach(function(th) {
                     var texto = th.textContent.trim();
-                    if (texto === 'Código' || texto.includes('Código')) temCodigo = true;
-                    if (texto === 'Produto' || texto.includes('Produto')) temProduto = true;
-                    if (texto === 'Qtd' || texto.includes('Qtd')) temQtd = true;
+                    if (texto === 'Código' || texto.indexOf('Código') !== -1) temCodigo = true;
+                    if (texto === 'Produto' || texto.indexOf('Produto') !== -1) temProduto = true;
+                    if (texto === 'Qtd' || texto.indexOf('Qtd') !== -1) temQtd = true;
                 });
                 
                 if (temCodigo && temProduto && temQtd) {
@@ -9409,17 +9407,15 @@ setTimeout(function() {
                         var paddingLeft = th.style.paddingLeft || '6px';
                         var align = th.style.textAlign || 'left';
                         
-                        th.style.cssText = `
-                            position: sticky !important;
-                            top: 42px !important;
-                            z-index: 9998 !important;
-                            background: #3d9a8c !important;
-                            color: #ffffff !important;
-                            border-bottom: 1px solid #2c6f96 !important;
-                            font-weight: 600 !important;
-                            padding: 6px 8px !important;
-                            text-align: ${align} !important;
-                        `;
+                        th.style.position = 'sticky';
+                        th.style.top = '42px';
+                        th.style.zIndex = '9998';
+                        th.style.background = '#3d9a8c';
+                        th.style.color = '#ffffff';
+                        th.style.borderBottom = '1px solid #2c6f96';
+                        th.style.fontWeight = '600';
+                        th.style.padding = '6px 8px';
+                        th.style.textAlign = align;
                     });
                     
                     var thead = tabela.querySelector('thead');
@@ -9440,7 +9436,6 @@ setTimeout(function() {
         return aplicados;
     }
 
-    // ===== 2. INTERCEPTAR toggleDetalhesProdutos =====
     if (typeof window.toggleDetalhesProdutos === 'function') {
         var originalToggle = window.toggleDetalhesProdutos;
         window.toggleDetalhesProdutos = function(pedidoId) {
@@ -9456,7 +9451,6 @@ setTimeout(function() {
         console.log('✅ toggleDetalhesProdutos interceptada');
     }
 
-    // ===== 3. INTERCEPTAR carregarProdutosDetalhados =====
     if (typeof window.carregarProdutosDetalhados === 'function') {
         var originalCarregar = window.carregarProdutosDetalhados;
         window.carregarProdutosDetalhados = function(pedidoId) {
@@ -9472,7 +9466,6 @@ setTimeout(function() {
         console.log('✅ carregarProdutosDetalhados interceptada');
     }
 
-    // ===== 4. OBSERVAR MUDANÇAS NOS DETALHES =====
     var observer = new MutationObserver(function(mutations) {
         mutations.forEach(function(mutation) {
             if (mutation.type === 'childList') {
@@ -9514,7 +9507,6 @@ setTimeout(function() {
         console.log('👁️ Monitorando mudanças nos detalhes');
     }
 
-    // ===== 5. APLICAR STICKY NOS DETALHES JÁ ABERTOS =====
     setTimeout(function() {
         aplicarStickyEmTodosDetalhes();
     }, 500);
@@ -9525,7 +9517,8 @@ setTimeout(function() {
     console.log('   ✅ Funciona para "Produtos por pedido"');
     console.log('');
 
-})()
+})();
+
 
 
 
