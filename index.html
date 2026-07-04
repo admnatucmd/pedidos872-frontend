@@ -8404,6 +8404,284 @@ setTimeout(function() {
 })();
 
 
+// ============================================================
+// ADICIONAR BOTÃO "VER PRODUTOS DO PEDIDO" NA LISTA INICIAL
+// ============================================================
+
+(function() {
+    console.log('🔧 ADICIONANDO BOTÃO "VER PRODUTOS DO PEDIDO"...');
+
+    // ===== 1. FUNÇÃO PARA IR PARA PRODUTOS POR PEDIDO =====
+    window.irParaProdutosDoPedido = function(pedidoId) {
+        console.log('🔍 Abrindo produtos do pedido:', pedidoId);
+        
+        // ===== 1. Abrir o submenu de produtos =====
+        const submenuProdutos = document.getElementById('submenuProdutos');
+        const btnProdutos = document.getElementById('btnProdutos');
+        
+        if (!submenuProdutos || !btnProdutos) {
+            console.error('❌ Elementos de produtos não encontrados');
+            return;
+        }
+        
+        // ===== 2. Abrir o submenu de produtos =====
+        // Fechar outros submenus
+        const submenuBoletos = document.getElementById('submenuBoletos');
+        const btnBoletosPagar = document.getElementById('btnBoletosPagar');
+        if (submenuBoletos) submenuBoletos.style.display = 'none';
+        if (btnBoletosPagar) btnBoletosPagar.classList.remove('active');
+        
+        // Mostrar submenu de produtos
+        document.querySelectorAll('.btn-actions .btn').forEach(b => b.classList.remove('active'));
+        btnProdutos.classList.add('active');
+        submenuProdutos.style.display = 'flex';
+        
+        // ===== 3. Esconder outros elementos =====
+        const dataTable = document.getElementById('dataTable');
+        const mesContainer = document.getElementById('mesContainer');
+        const semanaInfo = document.getElementById('semanaInfo');
+        const statsContainer = document.getElementById('statsContainer');
+        const tableWrapper = document.getElementById('tableWrapper');
+        
+        if (dataTable) dataTable.style.display = 'none';
+        if (mesContainer) mesContainer.style.display = 'none';
+        if (statsContainer) statsContainer.classList.add('stats-hidden');
+        if (tableWrapper) tableWrapper.innerHTML = '';
+        
+        // ===== 4. Chamar mostrarProdutosPorPedido =====
+        if (typeof window.mostrarProdutosPorPedido === 'function') {
+            window.mostrarProdutosPorPedido();
+            
+            // ===== 5. Aguardar carregar e destacar o pedido =====
+            let tentativas = 0;
+            const maxTentativas = 30;
+            
+            const intervalo = setInterval(function() {
+                tentativas++;
+                
+                // Procurar o pedido na tabela de produtos
+                const rows = document.querySelectorAll('#tableBody tr.pedido-row');
+                let encontrado = false;
+                
+                for (let row of rows) {
+                    const cell = row.querySelector('td:first-child');
+                    if (cell) {
+                        const texto = cell.textContent.replace('▶', '').replace('▼', '').trim();
+                        if (texto === String(pedidoId)) {
+                            encontrado = true;
+                            console.log('✅ Pedido encontrado nos produtos!');
+                            
+                            // Scroll até o pedido
+                            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            
+                            // Destacar o pedido
+                            row.style.transition = 'background 0.3s';
+                            row.style.background = '#e3f2fd';
+                            
+                            // Abrir os detalhes do pedido
+                            const detailId = `detalhe-produtos-${pedidoId}`;
+                            const detailRow = document.getElementById(detailId);
+                            if (detailRow) {
+                                detailRow.classList.add('show');
+                                const icon = row.querySelector('.expand-icon');
+                                if (icon) icon.innerHTML = '▼';
+                                
+                                // Carregar produtos detalhados
+                                if (typeof window.carregarProdutosDetalhados === 'function') {
+                                    window.carregarProdutosDetalhados(pedidoId);
+                                }
+                            }
+                            
+                            setTimeout(() => {
+                                row.style.background = '';
+                            }, 5000);
+                            
+                            clearInterval(intervalo);
+                            return;
+                        }
+                    }
+                }
+                
+                if (!encontrado && tentativas >= maxTentativas) {
+                    console.log('⚠️ Pedido não encontrado nos produtos');
+                    clearInterval(intervalo);
+                }
+            }, 300);
+        } else {
+            console.error('❌ mostrarProdutosPorPedido não encontrada');
+        }
+    };
+
+    // ===== 2. FUNÇÃO PARA ADICIONAR BOTÕES AOS PEDIDOS =====
+    function adicionarBotoesProdutos() {
+        console.log('🔄 Adicionando botões "Ver produtos do pedido"...');
+        
+        // Procurar todos os pedidos na tabela
+        const rows = document.querySelectorAll('.pedido-row');
+        let adicionados = 0;
+        
+        rows.forEach(row => {
+            // Verificar se já tem o botão
+            if (row.querySelector('.btn-produtos-pedido')) {
+                return;
+            }
+            
+            // Encontrar o ID do pedido
+            const cell = row.querySelector('td:first-child');
+            if (!cell) return;
+            
+            const pedidoId = cell.textContent.replace('▶', '').replace('▼', '').trim();
+            if (!pedidoId) return;
+            
+            // Encontrar a última célula da linha (onde está a situação)
+            const cells = row.querySelectorAll('td');
+            const lastCell = cells[cells.length - 1];
+            
+            if (lastCell) {
+                // Criar o botão - SEM ÍCONE, COM ESTILO MINIMALISTA
+                const btn = document.createElement('button');
+                btn.className = 'btn-produtos-pedido';
+                btn.textContent = 'Ver produtos';
+                btn.style.cssText = `
+                    background: #e8f4f8;
+                    color: #0b4f6c;
+                    border: 1px solid #d0e4ed;
+                    padding: 3px 10px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 10px;
+                    font-weight: 500;
+                    transition: all 0.2s;
+                    margin-left: 8px;
+                    white-space: nowrap;
+                    letter-spacing: 0.3px;
+                `;
+                btn.addEventListener('mouseenter', function() {
+                    this.style.background = '#d4e8f0';
+                    this.style.borderColor = '#a8c8d8';
+                });
+                btn.addEventListener('mouseleave', function() {
+                    this.style.background = '#e8f4f8';
+                    this.style.borderColor = '#d0e4ed';
+                });
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation(); // Evitar abrir detalhes do pedido
+                    window.irParaProdutosDoPedido(pedidoId);
+                });
+                
+                // Adicionar o botão na célula
+                lastCell.appendChild(btn);
+                adicionados++;
+            }
+        });
+        
+        console.log(`✅ ${adicionados} botões adicionados`);
+    }
+
+    // ===== 3. INTERCEPTAR renderizarTabela =====
+    if (typeof window.renderizarTabela === 'function') {
+        const originalRenderizar = window.renderizarTabela;
+        window.renderizarTabela = function() {
+            console.log('🔄 renderizarTabela chamada - adicionando botões...');
+            originalRenderizar.apply(this, arguments);
+            
+            // Adicionar botões após renderizar
+            setTimeout(() => {
+                adicionarBotoesProdutos();
+            }, 300);
+        };
+        console.log('✅ renderizarTabela interceptada');
+    }
+
+    // ===== 4. INTERCEPTAR voltarTabelaOriginal =====
+    if (typeof window.voltarTabelaOriginal === 'function') {
+        const originalVoltar = window.voltarTabelaOriginal;
+        window.voltarTabelaOriginal = function() {
+            console.log('🔄 voltarTabelaOriginal chamada - adicionando botões...');
+            const resultado = originalVoltar.apply(this, arguments);
+            
+            setTimeout(() => {
+                adicionarBotoesProdutos();
+            }, 300);
+            
+            return resultado;
+        };
+        console.log('✅ voltarTabelaOriginal interceptada');
+    }
+
+    // ===== 5. INTERCEPTAR carregarDados =====
+    if (typeof window.carregarDados === 'function') {
+        const originalCarregar = window.carregarDados;
+        window.carregarDados = function() {
+            console.log('🔄 carregarDados chamada - aguardando carregar...');
+            const resultado = originalCarregar.apply(this, arguments);
+            
+            if (resultado && typeof resultado.then === 'function') {
+                resultado.then(() => {
+                    setTimeout(() => {
+                        adicionarBotoesProdutos();
+                    }, 500);
+                });
+            }
+            
+            return resultado;
+        };
+        console.log('✅ carregarDados interceptada');
+    }
+
+    // ===== 6. OBSERVAR MUDANÇAS NA TABELA =====
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+                // Verificar se a tabela foi atualizada
+                const tableBody = document.getElementById('tableBody');
+                if (tableBody && tableBody.children.length > 0) {
+                    // Verificar se já tem botões
+                    const hasButtons = tableBody.querySelector('.btn-produtos-pedido');
+                    if (!hasButtons) {
+                        setTimeout(() => {
+                            adicionarBotoesProdutos();
+                        }, 200);
+                    }
+                }
+            }
+        });
+    });
+
+    // Observar mudanças no tableBody
+    const tableBody = document.getElementById('tableBody');
+    if (tableBody) {
+        observer.observe(tableBody, { childList: true, subtree: true });
+        console.log('👁️ Monitorando mudanças na tabela');
+    }
+
+    // ===== 7. ADICIONAR BOTÕES INICIALMENTE =====
+    setTimeout(() => {
+        adicionarBotoesProdutos();
+    }, 500);
+
+    console.log('');
+    console.log('✅ SISTEMA DE BOTÕES "VER PRODUTOS DO PEDIDO" ATIVADO!');
+    console.log('');
+    console.log('📌 COMPORTAMENTO:');
+    console.log('   ✅ Cada pedido na lista inicial terá um botão "Ver produtos"');
+    console.log('   ✅ Estilo minimalista: fundo azul clarinho, sem ícone');
+    console.log('   ✅ Ao clicar, abre a aba "Produtos por pedido"');
+    console.log('   ✅ O pedido específico é destacado automaticamente');
+    console.log('   ✅ Os detalhes do pedido são abertos');
+    console.log('');
+    console.log('📌 TESTE AGORA:');
+    console.log('   1. Olhe a lista inicial de pedidos');
+    console.log('   2. Cada pedido deve ter o botão "Ver produtos" (azul clarinho)');
+    console.log('   3. Clique em qualquer botão');
+    console.log('   4. ✅ Deve abrir a aba de produtos com o pedido destacado');
+    console.log('');
+})();
+
+
+
+
+
 
 
 
