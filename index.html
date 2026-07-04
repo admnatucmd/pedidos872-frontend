@@ -430,9 +430,6 @@
 // ============================================================
 // CONFIGURAÇÃO
 // ============================================================
-// ============================================================
-// CONFIGURAÇÃO
-// ============================================================
 
 const API_BASE_URL = 'https://api-pedidos.gtgo.com.br';
 const STORAGE_KEY = 'pagamentos_confirmados';
@@ -443,34 +440,8 @@ let modoVisualizacao = 'tabela';
 let pedidosFiltrados = [];
 let currentUser = null;
 
-// ===== VARIÁVEIS DE PRODUTOS (⭐ ADICIONAR ⭐) =====
 let produtosData = [];
 let produtosPorPedido = {};
-// =================================================
-
-let buscandoPedido = false;
-let tentouRecarregar = false;
-let modoBuscaAtivo = false;
-let periodoBusca = 'todo';
-let termoBusca = '';
-
-let ordenacaoProdutosPorPedido = { coluna: null, ordem: 'asc' };
-let periodoAtualProdutosPorPedido = 'todo';
-let periodoAtualMaisPedidos = 'todo';
-let organizacaoAtualMaisPedidos = 'vezes';
-let periodoAtualMaiorLucro = 'todo';
-let organizacaoAtualMaiorLucro = 'valor';
-let periodoAtualMenosPedidos = 'todo';
-let organizacaoAtualMenosPedidos = 'vezes';
-let periodoAtualDiferenca = 'todo';
-let organizacaoAtualDiferenca = 'compra';
-
-let nomesMeses = {
-    '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril',
-    '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
-    '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro'
-};
-
 // ============================================================
 // SISTEMA DE AUTENTICAÇÃO
 // ============================================================
