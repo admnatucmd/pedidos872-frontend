@@ -6954,6 +6954,216 @@ console.log('   - Detalhes respeitam o período');
 
 
 
+window.buscandoPedido = false;
+window.tentouRecarregar = false;
+
+
+
+
+
+// ============================================================
+// FUNÇÃO: IR PARA O PEDIDO NA TABELA (COM FALLBACK PARA "TODO PERÍODO")
+// ============================================================
+
+function irParaPedidoNaTabela(pedidoId, codigoProduto, nomeProduto) {
+    // ===== EVITAR LOOP INFINITO =====
+    if (window.buscandoPedido) {
+        console.log('⏳ Já está buscando um pedido, ignorando...');
+        return;
+    }
+    window.buscandoPedido = true;
+    
+    console.log(`🔍 Procurando pedido ${pedidoId} na tabela...`);
+    
+    const linhas = document.querySelectorAll('#tableBody tr.pedido-row');
+    let linhaEncontrada = null;
+    
+    linhas.forEach((row) => {
+        const cell = row.querySelector('td:first-child');
+        if (cell) {
+            const texto = cell.textContent.replace('▶', '').replace('▼', '').trim();
+            if (texto === pedidoId) {
+                linhaEncontrada = row;
+            }
+        }
+    });
+    
+    if (linhaEncontrada) {
+        // ===== ENCONTROU O PEDIDO =====
+        window.buscandoPedido = false;
+        
+        linhaEncontrada.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        linhaEncontrada.style.transition = 'background 0.3s';
+        linhaEncontrada.style.background = '#e3f2fd';
+        
+        const icon = linhaEncontrada.querySelector('.expand-icon');
+        if (icon && icon.textContent === '▶') {
+            linhaEncontrada.click();
+        }
+        
+        if (codigoProduto || nomeProduto) {
+            console.log(`🔍 Aguardando detalhes carregarem para destacar o produto...`);
+            
+            let tentativas = 0;
+            const maxTentativas = 20;
+            
+            const intervalo = setInterval(() => {
+                tentativas++;
+                
+                const detailRow = document.getElementById(`detalhe-produtos-${pedidoId}`);
+                if (detailRow && detailRow.classList.contains('show')) {
+                    const tabelaDetalhes = detailRow.querySelector('table');
+                    if (tabelaDetalhes) {
+                        const linhasProdutos = tabelaDetalhes.querySelectorAll('tbody tr');
+                        let produtoEncontrado = false;
+                        
+                        linhasProdutos.forEach((linhaProduto) => {
+                            const cells = linhaProduto.querySelectorAll('td');
+                            let encontrou = false;
+                            
+                            if (codigoProduto && cells.length > 0) {
+                                const celulaCodigo = cells[0];
+                                if (celulaCodigo.textContent.trim() === codigoProduto) {
+                                    encontrou = true;
+                                }
+                            }
+                            
+                            if (!encontrou && nomeProduto && cells.length > 1) {
+                                const celulaNome = cells[1];
+                                if (celulaNome.textContent.trim().includes(nomeProduto)) {
+                                    encontrou = true;
+                                }
+                            }
+                            
+                            if (encontrou) {
+                                linhaProduto.style.transition = 'background 0.3s';
+                                linhaProduto.style.background = '#fff3cd';
+                                linhaProduto.style.borderLeft = '4px solid #ffc107';
+                                linhaProduto.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                produtoEncontrado = true;
+                                console.log(`✅ Produto ${codigoProduto || nomeProduto} encontrado e destacado!`);
+                            }
+                        });
+                        
+                        if (produtoEncontrado) {
+                            clearInterval(intervalo);
+                            return;
+                        }
+                    }
+                }
+                
+                if (tentativas >= maxTentativas) {
+                    console.log(`⚠️ Produto ${codigoProduto || nomeProduto} não encontrado nos detalhes`);
+                    clearInterval(intervalo);
+                }
+            }, 300);
+        }
+        
+        setTimeout(() => {
+            if (linhaEncontrada) {
+                linhaEncontrada.style.background = '';
+            }
+        }, 5000);
+        
+        console.log(`✅ Pedido ${pedidoId} encontrado e destacado!`);
+        return;
+    }
+    
+    // ===== NÃO ENCONTROU O PEDIDO =====
+    console.log(`⚠️ Pedido ${pedidoId} não encontrado na tabela atual.`);
+    
+    // Verificar se o período atual não é "todo"
+    const periodoAtual = window.periodoAtualProdutosPorPedido || 'todo';
+    
+    if (periodoAtual !== 'todo') {
+        console.log(`🔄 Mudando para "Todo o período" para encontrar o pedido...`);
+        
+        // Mudar para "Todo o período"
+        const botoesFiltro = document.querySelectorAll('#semanaInfo .btn-submenu');
+        let botaoTodoPeriodo = null;
+        botoesFiltro.forEach(btn => {
+            if (btn.textContent.trim() === 'Todo o período') {
+                botaoTodoPeriodo = btn;
+            }
+        });
+        
+        if (botaoTodoPeriodo) {
+            // ===== MUDAR PARA TODO O PERÍODO =====
+            botaoTodoPeriodo.click();
+            
+            // Aguardar a tabela recarregar e tentar novamente
+            let tentativasRecarga = 0;
+            const maxRecarga = 15;
+            
+            const intervaloRecarga = setInterval(() => {
+                tentativasRecarga++;
+                
+                // Verificar se já está em "Todo o período"
+                const periodoAtualizado = window.periodoAtualProdutosPorPedido || 'todo';
+                
+                if (periodoAtualizado === 'todo') {
+                    // Verificar se a tabela já foi recarregada
+                    const novasLinhas = document.querySelectorAll('#tableBody tr.pedido-row');
+                    if (novasLinhas.length > 0) {
+                        console.log('✅ Tabela recarregada com "Todo o período". Tentando encontrar o pedido novamente...');
+                        clearInterval(intervaloRecarga);
+                        
+                        // Tentar encontrar o pedido novamente (sem recarregar de novo)
+                        window.buscandoPedido = false;
+                        window.tentouRecarregar = true; // Evitar recarga infinita
+                        irParaPedidoNaTabela(pedidoId, codigoProduto, nomeProduto);
+                        return;
+                    }
+                }
+                
+                if (tentativasRecarga >= maxRecarga) {
+                    console.log(`⏳ Tempo esgotado para recarregar com "Todo o período"`);
+                    clearInterval(intervaloRecarga);
+                    window.buscandoPedido = false;
+                    window.tentouRecarregar = false;
+                }
+            }, 400);
+            
+        } else {
+            console.log('❌ Botão "Todo o período" não encontrado');
+            window.buscandoPedido = false;
+            window.tentouRecarregar = false;
+        }
+    } else {
+        // Já está em "Todo o período", tentar recarregar a tabela
+        if (!window.tentouRecarregar) {
+            window.tentouRecarregar = true;
+            console.log('🔄 Pedido não encontrado mesmo em "Todo o período". Recarregando tabela...');
+            
+            const botoesSubmenu = document.querySelectorAll('#submenuProdutos .btn-submenu');
+            if (botoesSubmenu.length > 0) {
+                botoesSubmenu[0].click();
+                
+                setTimeout(() => {
+                    window.tentouRecarregar = false;
+                    window.buscandoPedido = false;
+                    irParaPedidoNaTabela(pedidoId, codigoProduto, nomeProduto);
+                }, 1500);
+            } else {
+                console.log('❌ Não foi possível recarregar a tabela');
+                window.buscandoPedido = false;
+                window.tentouRecarregar = false;
+            }
+        } else {
+            console.log('❌ Pedido não encontrado após recarga');
+            window.buscandoPedido = false;
+            window.tentouRecarregar = false;
+        }
+    }
+}
+
+
+
+
+
+
+
+
 
 // Inicializar
 // (A função carregarDados será chamada após o login)
