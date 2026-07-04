@@ -7,24 +7,19 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        /* ===== RESET E BASE ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background: #eef2f5; padding: 20px; }
+        body { font-family: 'Poppins', 'Segoe UI', sans-serif; background: #eef2f5; padding: 20px; }
         .container { max-width: 1400px; margin: 0 auto; background: white; border-radius: 16px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); overflow: hidden; }
         .header { background: linear-gradient(135deg, #0b4f6c, #022c3a); color: white; padding: 20px 25px; }
         .header h1 { font-size: 24px; margin-bottom: 5px; }
         .header .subtitle { font-size: 13px; opacity: 0.85; }
         .last-update { font-size: 12px; margin-top: 8px; opacity: 0.8; }
-
-        /* ===== FILTROS ===== */
         .filters { padding: 20px; background: #f8f9fa; border-bottom: 1px solid #e0e0e0; display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end; }
         .filter-group { flex: 1; min-width: 150px; }
         .filter-group label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #555; text-transform: uppercase; }
         .filter-group input, .filter-group select { width: 100%; padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; }
         .btn { background: #0b4f6c; color: white; border: none; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; }
         .btn:hover { background: #063a4f; }
-
-        /* ===== BOTÕES DE AÇÃO ===== */
         .btn-actions { background: #f0f4f8; padding: 12px 20px; display: flex; flex-wrap: wrap; gap: 10px; border-bottom: 1px solid #e0e0e0; }
         .btn-actions .btn { background: #0b4f6c; padding: 8px 16px; font-size: 13px; }
         .btn-actions .btn:hover { background: #063a4f; }
@@ -32,19 +27,13 @@
         .btn-actions .btn.active:hover { background: #218838; }
         .btn-actions .btn.voltar { background: #6c757d; }
         .btn-actions .btn.voltar:hover { background: #5a6268; }
-
-        /* ===== SUBMENU ===== */
         .submenu-container { padding: 8px 20px; background: #f8f9fa; border-bottom: 1px solid #e0e0e0; display: flex; gap: 8px; flex-wrap: wrap; }
         .btn-submenu { background: #e9ecef; color: #333; border: 1px solid #ccc; padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
         .btn-submenu:hover { background: #0b4f6c; color: white; border-color: #0b4f6c; }
         .btn-submenu.active { background: #0b4f6c; color: white; border-color: #0b4f6c; }
-
-        /* ===== STATS ===== */
         .stats { background: #e9ecef; padding: 12px 20px; display: flex; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
         .stats span { font-weight: 700; color: #0b4f6c; }
         .stats-hidden { display: none !important; }
-
-        /* ===== TABELA PRINCIPAL ===== */
         .table-wrapper { padding: 20px; overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; font-size: 13px; }
         th { background: #1f5e7e; color: white; padding: 12px 10px; text-align: left; font-weight: 600; position: sticky; top: 0; white-space: nowrap; }
@@ -65,8 +54,6 @@
         .status-pagos { color: #28a745; font-weight: bold; }
         .status-a-vencer { color: #e67e22; font-weight: bold; }
         .status-em-atraso { color: #dc3545; font-weight: bold; }
-
-        /* ===== BOTÕES DE CÓPIA ===== */
         .btn-copiar { background: #e9ecef; border: 1px solid #ccc; border-radius: 4px; padding: 3px 8px; font-size: 10px; cursor: pointer; margin: 2px; transition: all 0.2s; }
         .btn-copiar:hover { background: #0b4f6c; color: white; border-color: #0b4f6c; }
         .btn-pix { background: #d4edda; border-color: #28a745; color: #155724; }
@@ -74,8 +61,6 @@
         .btn-barras { background: #cce5ff; border-color: #007bff; color: #004085; }
         .btn-barras:hover { background: #007bff; color: white; border-color: #007bff; }
         .codigos-container { margin-top: 5px; display: flex; flex-wrap: wrap; gap: 4px; }
-
-        /* ===== CHECKBOX DE PAGAMENTO ===== */
         .pagamento-checkbox { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: all 0.2s; }
         .pagamento-checkbox input[type="checkbox"] { width: 16px; height: 16px; cursor: pointer; accent-color: #28a745; }
         .pagamento-checkbox.pago { color: #28a745; font-weight: bold; background: #d4edda; }
@@ -88,218 +73,64 @@
         .sync-status { font-size: 11px; color: #667; margin-top: 4px; }
         .sync-status.ok { color: #28a745; }
         .sync-status.error { color: #dc3545; }
-
-        /* ===== LISTA DE MESES (ACORDION) ===== */
         .mes-container-accordion { padding: 0 20px; background: #f8f9fa; }
         .mes-accordion-item { border-bottom: 1px solid #e0e0e0; }
         .mes-accordion-item:last-child { border-bottom: none; }
-        
-        .mes-accordion-header { 
-            background: white; 
-            padding: 10px 16px; 
-            cursor: pointer; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            transition: background 0.2s;
-            border-radius: 4px;
-            margin: 2px 0;
-            flex-wrap: wrap;
-            gap: 8px;
-        }
+        .mes-accordion-header { background: white; padding: 10px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; border-radius: 4px; margin: 2px 0; flex-wrap: wrap; gap: 8px; }
         .mes-accordion-header:hover { background: #e8f4f8; }
-        .mes-accordion-header .mes-info { 
-            display: flex; 
-            gap: 15px; 
-            flex-wrap: wrap; 
-            font-size: 14px; 
-            align-items: center;
-            flex: 1;
-        }
+        .mes-accordion-header .mes-info { display: flex; gap: 15px; flex-wrap: wrap; font-size: 14px; align-items: center; flex: 1; }
         .mes-accordion-header .mes-info strong { color: #0b4f6c; font-size: 15px; min-width: 140px; }
-        .mes-accordion-header .mes-info .badge { 
-            background: #0b4f6c; 
-            color: white; 
-            padding: 2px 12px; 
-            border-radius: 12px; 
-            font-size: 12px;
-            white-space: nowrap;
-        }
+        .mes-accordion-header .mes-info .badge { background: #0b4f6c; color: white; padding: 2px 12px; border-radius: 12px; font-size: 12px; white-space: nowrap; }
         .mes-accordion-header .expand-icon { font-size: 18px; color: #0b4f6c; transition: transform 0.3s; }
         .mes-accordion-header.active .expand-icon { transform: rotate(180deg); }
-        
         .mes-total { font-weight: bold; color: #1a5c2e; min-width: 130px; }
         .mes-pago { font-weight: bold; color: #28a745; min-width: 130px; }
         .mes-pendente { font-weight: bold; color: #e67e22; min-width: 140px; }
         .mes-pendente.zerado { color: #28a745; }
         .mes-label { font-weight: 600; color: #555; font-size: 13px; }
-        
-        .mes-accordion-body { 
-            display: none; 
-            background: #f8fafd; 
-            padding: 16px;
-            border-top: 1px solid #e0e0e0;
-        }
+        .mes-accordion-body { display: none; background: #f8fafd; padding: 16px; border-top: 1px solid #e0e0e0; }
         .mes-accordion-body.show { display: block; }
-        
-        .mes-accordion-body .pedido-card {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            padding: 10px 16px;
-            margin-bottom: 8px;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-        }
+        .mes-accordion-body .pedido-card { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 10px 16px; margin-bottom: 8px; cursor: pointer; transition: all 0.2s; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
         .mes-accordion-body .pedido-card:hover { background: #f0f4f8; border-color: #0b4f6c; }
-        .mes-accordion-body .pedido-card .pedido-info { 
-            display: flex; 
-            gap: 15px; 
-            flex-wrap: wrap; 
-            font-size: 13px; 
-            align-items: center;
-            flex: 1;
-        }
+        .mes-accordion-body .pedido-card .pedido-info { display: flex; gap: 15px; flex-wrap: wrap; font-size: 13px; align-items: center; flex: 1; }
         .mes-accordion-body .pedido-card .pedido-info strong { color: #0b4f6c; min-width: 100px; }
         .mes-accordion-body .pedido-card .pedido-total { font-weight: bold; color: #28a745; min-width: 120px; text-align: right; }
-        
-        .pedido-detalhes-accordion { 
-            display: none; 
-            background: #f8fafd; 
-            padding: 12px 20px;
-            border-left: 3px solid #0b4f6c;
-            margin: 0 16px 12px 16px;
-            border-radius: 4px;
-        }
+        .pedido-detalhes-accordion { display: none; background: #f8fafd; padding: 12px 20px; border-left: 3px solid #0b4f6c; margin: 0 16px 12px 16px; border-radius: 4px; }
         .pedido-detalhes-accordion.show { display: block; }
-
-        .btn-ver-pedido {
-            background: #0b4f6c;
-            color: white;
-            border: none;
-            padding: 4px 12px;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 11px;
-            transition: all 0.2s;
-            white-space: nowrap;
-        }
+        .btn-ver-pedido { background: #0b4f6c; color: white; border: none; padding: 4px 12px; border-radius: 4px; cursor: pointer; font-size: 11px; transition: all 0.2s; white-space: nowrap; }
         .btn-ver-pedido:hover { background: #063a4f; }
-
-        /* ===== BOLETOS A PAGAR ===== */
-        .boletos-container {
-            padding: 10px 20px;
-        }
-        .boletos-container .boleto-card {
-            background: white;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            margin-bottom: 8px;
-            overflow: hidden;
-        }
-        .boletos-container .boleto-header {
-            padding: 10px 16px;
-            cursor: pointer;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            transition: background 0.2s;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
+        .boletos-container { padding: 10px 20px; }
+        .boletos-container .boleto-card { background: white; border: 1px solid #ddd; border-radius: 8px; margin-bottom: 8px; overflow: hidden; }
+        .boletos-container .boleto-header { padding: 10px 16px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; transition: background 0.2s; flex-wrap: wrap; gap: 10px; }
         .boletos-container .boleto-header:hover { background: #f0f4f8; }
-        .boletos-container .boleto-header .boleto-info {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
-            align-items: center;
-            font-size: 13px;
-            flex: 1;
-        }
+        .boletos-container .boleto-header .boleto-info { display: flex; gap: 15px; flex-wrap: wrap; align-items: center; font-size: 13px; flex: 1; }
         .boletos-container .boleto-header .boleto-info strong { color: #0b4f6c; min-width: 100px; }
-        .boletos-container .boleto-body {
-            display: none;
-            padding: 16px;
-            background: #f8fafd;
-            border-top: 1px solid #e0e0e0;
-        }
+        .boletos-container .boleto-body { display: none; padding: 16px; background: #f8fafd; border-top: 1px solid #e0e0e0; }
         .boletos-container .boleto-body.show { display: block; }
-        .boletos-container .boleto-body .parcela-item {
-            background: white;
-            padding: 10px 12px;
-            border-radius: 6px;
-            margin-bottom: 6px;
-            border-left: 3px solid #e67e22;
-        }
+        .boletos-container .boleto-body .parcela-item { background: white; padding: 10px 12px; border-radius: 6px; margin-bottom: 6px; border-left: 3px solid #e67e22; }
         .boletos-container .boleto-body .parcela-item.pago { border-left-color: #28a745; }
-        .boleto-vencimento {
-            background: #fff3cd;
-            padding: 2px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            color: #856404;
-            white-space: nowrap;
-        }
-        .boleto-total {
-            font-weight: bold;
-            color: #e67e22;
-            min-width: 120px;
-            text-align: right;
-        }
+        .boleto-vencimento { background: #fff3cd; padding: 2px 10px; border-radius: 12px; font-size: 12px; color: #856404; white-space: nowrap; }
+        .boleto-total { font-weight: bold; color: #e67e22; min-width: 120px; text-align: right; }
         .boleto-total.pago { color: #28a745; }
-
-        /* ===== SEMANA INFO ===== */
         .semana-info { background: #fff3cd; padding: 8px 20px; border-bottom: 1px solid #e0e0e0; font-size: 13px; color: #856404; }
-
-        /* ===== LOADING E ERROR ===== */
         .loading { text-align: center; padding: 50px; color: #667; }
         .error { background: #f8d7da; color: #721c24; padding: 20px; margin: 20px; border-radius: 8px; text-align: center; }
-
-        /* ===== RESPONSIVO ===== */
-        @media (max-width: 768px) { 
-            th, td { font-size: 11px; padding: 6px; }
-            .mes-accordion-header .mes-info { gap: 8px; font-size: 12px; }
-            .mes-accordion-header .mes-info strong { font-size: 13px; min-width: 100px; }
-            .mes-total, .mes-pago, .mes-pendente { min-width: 80px; font-size: 12px; }
-            .mes-label { font-size: 11px; }
-        }
-
-	* { font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-
-
-	/* ===== FUNDO VERDE LEVE PARA O SEMANAINFO ===== */
-#semanaInfo {
-    background: #e8f5e9 !important;
-    padding: 12px 16px !important;
-    border-radius: 8px !important;
-    margin-bottom: 12px !important;
-    border: 1px solid #c8e6c9 !important;
-}
-
-/* ===== FUNDO DOS SUBMENUS ===== */
-.submenu-container {
-    background: #f8f9fa !important;
-    border-bottom: 1px solid #e0e0e0 !important;
-}
-
-
-
-
-
-
-
-
+        #semanaInfo { background: #e8f5e9 !important; padding: 12px 16px !important; border-radius: 8px !important; margin-bottom: 12px !important; border: 1px solid #c8e6c9 !important; }
+        .submenu-container { background: #f8f9fa !important; border-bottom: 1px solid #e0e0e0 !important; }
+        .btn-produtos-pedido { background: #e8f4f8; color: #0b4f6c; border: 1px solid #d0e4ed; padding: 3px 10px; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: 500; transition: all 0.2s; margin-left: 8px; white-space: nowrap; letter-spacing: 0.3px; }
+        .btn-produtos-pedido:hover { background: #d4e8f0; border-color: #a8c8d8; }
+        .btn-organizar-detalhe { background: #e8f4f8; color: #0b4f6c; border: 1px solid #d0e4ed; padding: 3px 10px; border-radius: 4px; cursor: pointer; font-size: 10px; font-weight: 500; transition: all 0.2s; }
+        .btn-organizar-detalhe:hover { background: #d4e8f0; border-color: #a8c8d8; }
+        .input-wrapper { position: relative; flex: 1; min-width: 180px; max-width: 400px; display: inline-block; }
+        .input-wrapper input { width: 100%; padding: 6px 32px 6px 12px; border: 1px solid #ccc; border-radius: 6px; font-size: 13px; box-sizing: border-box; }
+        .btn-clear-input { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; font-size: 14px; color: #999; padding: 4px 6px; border-radius: 4px; display: none; z-index: 1; }
+        .btn-clear-input:hover { color: #333; }
+        @media (max-width: 768px) { th, td { font-size: 11px; padding: 6px; } }
     </style>
 </head>
 <body>
 
-<!-- ============================================================ -->
-<!-- TELA DE LOGIN -->
-<!-- ============================================================ -->
+<!-- ===== TELA DE LOGIN ===== -->
 <div id="loginScreen" class="min-h-screen flex items-center justify-center bg-gray-100 py-12 px-4 sm:px-6 lg:px-8" style="background: #eef2f5;">
     <div class="max-w-md w-full">
         <div class="bg-white p-8 rounded-lg shadow-md" style="border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
@@ -307,45 +138,22 @@
                 <h1 class="text-3xl font-bold text-gray-900 mb-2" style="color: #0b4f6c;">Gestão de Pedidos</h1>
                 <p class="text-gray-600">Faça login para acessar o sistema</p>
             </div>
-            
             <div class="mb-6">
                 <label for="loginUser" class="block text-sm font-medium text-gray-700 mb-2">Usuário</label>
-                <input 
-                    type="text" 
-                    id="loginUser" 
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Digite seu usuário"
-                >
+                <input type="text" id="loginUser" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Digite seu usuário">
             </div>
-
             <div class="mb-6">
                 <label for="loginPass" class="block text-sm font-medium text-gray-700 mb-2">Senha</label>
-                <input 
-                    type="password" 
-                    id="loginPass" 
-                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    placeholder="Digite sua senha"
-                >
+                <input type="password" id="loginPass" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Digite sua senha">
             </div>
-
             <div id="loginError" class="text-red-600 text-sm mb-4 hidden"></div>
-
-            <button 
-                onclick="fazerLogin()"
-                class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 font-medium"
-                style="background: #0b4f6c;"
-            >
-                Entrar
-            </button>
+            <button onclick="fazerLogin()" class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 font-medium" style="background: #0b4f6c;">Entrar</button>
         </div>
     </div>
 </div>
 
-<!-- ============================================================ -->
-<!-- SISTEMA PRINCIPAL (oculto inicialmente) -->
-<!-- ============================================================ -->
+<!-- ===== SISTEMA PRINCIPAL ===== -->
 <div id="appContent" style="display:none;">
-
 <div class="container">
     <div class="header">
         <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -362,7 +170,7 @@
         <div class="filter-group"><label>🔍 Buscar</label><input type="text" id="searchInput" placeholder="Pedido ou NF"></div>
         <div class="filter-group"><label>📅 Data início</label><input type="date" id="startDate"></div>
         <div class="filter-group"><label>📅 Data fim</label><input type="date" id="endDate"></div>
-        <div class="filter-group"><label> Situação</label><select id="statusFilter"><option value="">Todos</option><option value="pendente">Com parcelas pendentes</option><option value="pago">Totalmente quitados</option></select></div>
+        <div class="filter-group"><label>Situação</label><select id="statusFilter"><option value="">Todos</option><option value="pendente">Com parcelas pendentes</option><option value="pago">Totalmente quitados</option></select></div>
         <button class="btn" onclick="resetFilters()">Limpar filtros</button>
         <button class="btn" onclick="carregarDados()" style="background:#28a745;">🔄 Atualizar</button>
     </div>
@@ -371,25 +179,12 @@
         <button class="btn" id="btnPedidosMes" onclick="mostrarPedidosPorMes()">📋 Pedidos realizados por mês</button>
         <button class="btn" id="btnPagosMes" onclick="mostrarPagosPorMes()">Valor pago por mês</button>
         <button class="btn" id="btnBoletosPagar" onclick="toggleSubmenuBoletos()">📅 Boletos a pagar</button>
-	 <button class="btn" id="btnProdutos" onclick="toggleSubmenuProdutos()">Produtos</button>
+        <button class="btn" id="btnProdutos" onclick="toggleSubmenuProdutos()">Produtos</button>
         <button class="btn voltar" onclick="voltarTabelaOriginal()">⬅️ Voltar</button>
     </div>
 
-    <div id="submenuBoletos" class="submenu-container" style="display:none;">
-        <button class="btn-submenu" onclick="mostrarBoletosSemana()">📅 Essa semana</button>
-        <button class="btn-submenu" onclick="mostrarBoletosMes()">📅 Esse mês</button>
-        <button class="btn-submenu" onclick="mostrarBoletosAtrasados()">⚠️ Atrasados</button>
-	<button class="btn-submenu" onclick="mostrarBoletosProximoMes()">📅 Próximo mês</button> 
-    </div>
-
-	<div id="submenuProdutos" class="submenu-container" style="display:none;">
-    <button class="btn-submenu active" onclick="mostrarProdutosPorPedido()">📦 Produtos por pedido</button>
-    <button class="btn-submenu" onclick="mostrarProdutosMaisPedidos()">📈 Mais pedidos</button>
-    <button class="btn-submenu" onclick="mostrarProdutosMaiorLucro()">💰 Maior lucro</button>
-    <button class="btn-submenu" onclick="mostrarProdutosMenosPedidos()">📉 Menos pedidos</button>
-    <button class="btn-submenu" onclick="mostrarProdutosMaiorDiferenca()">📊 Maior diferença de preço</button>
-</div>
-
+    <div id="submenuBoletos" class="submenu-container" style="display:none;"></div>
+    <div id="submenuProdutos" class="submenu-container" style="display:none;"></div>
     <div id="mesContainer" style="display:none;"></div>
     <div id="semanaInfo" class="semana-info" style="display:none;"></div>
 
@@ -423,31 +218,202 @@
         </table>
     </div>
 </div>
-
 </div>
 
 <script>
 // ============================================================
-// CONFIGURAÇÃO
+// CONFIGURAÇÃO E VARIÁVEIS GLOBAIS
 // ============================================================
 
 const API_BASE_URL = 'https://api-pedidos.gtgo.com.br';
 const STORAGE_KEY = 'pagamentos_confirmados';
 
-let pedidosData = [];
-let pagamentosBackend = {};
-let modoVisualizacao = 'tabela';
-let pedidosFiltrados = [];
-let currentUser = null;
+var pedidosData = [];
+var pagamentosBackend = {};
+var modoVisualizacao = 'tabela';
+var pedidosFiltrados = [];
+var currentUser = null;
+var produtosData = [];
+var produtosPorPedido = {};
+var buscandoPedido = false;
+var tentouRecarregar = false;
+var modoBuscaAtivo = false;
+var periodoBusca = 'todo';
+var termoBusca = '';
+
+var ordenacaoProdutosPorPedido = { coluna: null, ordem: 'asc' };
+var periodoAtualProdutosPorPedido = 'todo';
+var periodoAtualMaisPedidos = 'todo';
+var organizacaoAtualMaisPedidos = 'vezes';
+var periodoAtualMaiorLucro = 'todo';
+var organizacaoAtualMaiorLucro = 'valor';
+var periodoAtualMenosPedidos = 'todo';
+var organizacaoAtualMenosPedidos = 'vezes';
+var periodoAtualDiferenca = 'todo';
+var organizacaoAtualDiferenca = 'compra';
+
+var nomesMeses = {
+    '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril',
+    '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
+    '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro'
+};
 
 // ============================================================
-// SISTEMA DE AUTENTICAÇÃO
+// FUNÇÕES AUXILIARES
+// ============================================================
+
+function getNomeMes(numero) { return nomesMeses[numero] || numero; }
+
+function formatarMoedaBR(valor) {
+    return 'R$ ' + valor.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+}
+
+function formatarDataBR(iso) {
+    if (!iso) return '';
+    if (iso === 'Sem Data') return 'Sem Data';
+    var p = iso.split('-');
+    if (p.length === 3) return p[2] + '/' + p[1] + '/' + p[0];
+    return iso;
+}
+
+function limparValorProduto(valor) {
+    if (!valor || valor === '') return 0;
+    var str = String(valor).replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
+    return parseFloat(str) || 0;
+}
+
+function dataParaComparacao(dataStr) {
+    var partes = dataStr.split('/');
+    if (partes.length === 3) {
+        return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
+    }
+    return new Date(dataStr);
+}
+
+function mesAnoParaComparacao(dataStr) {
+    if (!dataStr || dataStr === 'Sem Data' || dataStr === '') return null;
+    var partes = dataStr.split('/');
+    if (partes.length === 3 && partes[1] && partes[2]) {
+        var mes = partes[1].padStart(2, '0');
+        return mes + '/' + partes[2];
+    }
+    var partesISO = dataStr.split('-');
+    if (partesISO.length === 3 && partesISO[1] && partesISO[0]) {
+        var mes = partesISO[1].padStart(2, '0');
+        return mes + '/' + partesISO[0];
+    }
+    return null;
+}
+
+function formatarMesAnoComNome(mesAno) {
+    if (!mesAno) return null;
+    var partes = mesAno.split('/');
+    if (partes.length !== 2) return mesAno;
+    var mes = partes[0].padStart(2, '0');
+    var ano = partes[1];
+    return getNomeMes(mes) + ' - ' + mes + '/' + ano;
+}
+
+function showNotification(message, type) {
+    type = type || 'info';
+    var colors = {
+        success: 'bg-green-100 border-green-400 text-green-700',
+        error: 'bg-red-100 border-red-400 text-red-700',
+        loading: 'bg-blue-100 border-blue-400 text-blue-700',
+        info: 'bg-blue-100 border-blue-400 text-blue-700'
+    };
+    var div = document.createElement('div');
+    div.className = 'fixed bottom-4 right-4 p-4 rounded-lg border ' + (colors[type] || colors.info) + ' shadow-lg z-50 max-w-md';
+    div.innerHTML = message;
+    document.body.appendChild(div);
+    setTimeout(function() { div.remove(); }, 5000);
+}
+
+function copiarTexto(texto) {
+    if (!texto || texto === 'Nenhum' || texto === '') {
+        alert('⚠️ Nenhum código disponível para copiar.');
+        return;
+    }
+    navigator.clipboard.writeText(texto).then(function() {
+        alert('✅ Código copiado para a área de transferência!');
+    }).catch(function() {
+        var textarea = document.createElement('textarea');
+        textarea.value = texto;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        alert('✅ Código copiado!');
+    });
+}
+
+function extrairParcelaInfo(texto) {
+    if (!texto || texto === 'Nenhum') return null;
+    var valorMatch = texto.match(/Valor:\s*R\$\s*([\d\.,]+)/);
+    var vencMatch = texto.match(/Vencimento:\s*(\d{2}\/\d{2}\/\d{4})/);
+    var status = 'A vencer';
+    if (texto.indexOf('Pagos') !== -1) status = 'Pagos';
+    else if (texto.indexOf('Em atraso') !== -1) status = 'Em atraso';
+    else if (texto.indexOf('A vencer') !== -1) status = 'A vencer';
+    return {
+        valor: valorMatch ? parseFloat(valorMatch[1].replace(/\./g, '').replace(',', '.')) : 0,
+        vencimento: vencMatch ? vencMatch[1] : '',
+        status: status
+    };
+}
+
+function parseCSVLinha(linha) {
+    var res = [];
+    var dentro = false;
+    var val = '';
+    for (var ch = 0; ch < linha.length; ch++) {
+        var c = linha[ch];
+        if (c === '"') dentro = !dentro;
+        else if (c === ',' && !dentro) { res.push(val); val = ''; }
+        else val += c;
+    }
+    res.push(val);
+    return res;
+}
+
+function getSemanaAtual() {
+    var hoje = new Date();
+    var diaSemana = hoje.getDay();
+    var diffSabado = (diaSemana - 6 + 7) % 7;
+    var sabado = new Date(hoje);
+    sabado.setDate(hoje.getDate() - diffSabado);
+    var sexta = new Date(sabado);
+    sexta.setDate(sabado.getDate() + 6);
+    return { sabado: sabado, sexta: sexta };
+}
+
+function getMesAtual() {
+    var hoje = new Date();
+    var primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
+    var ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
+    return { primeiroDia: primeiroDia, ultimoDia: ultimoDia };
+}
+
+function getProximaSemana() {
+    var hoje = new Date();
+    var diaSemana = hoje.getDay();
+    var diasAteSabado = (6 - diaSemana + 7) % 7;
+    if (diasAteSabado === 0) diasAteSabado = 7;
+    var sabado = new Date(hoje);
+    sabado.setDate(hoje.getDate() + diasAteSabado);
+    var sexta = new Date(sabado);
+    sexta.setDate(sabado.getDate() + 6);
+    return { sabado: sabado, sexta: sexta };
+}
+
+// ============================================================
+// AUTENTICAÇÃO
 // ============================================================
 
 async function fazerLogin() {
-    const username = document.getElementById('loginUser').value.trim();
-    const password = document.getElementById('loginPass').value;
-    const errorDiv = document.getElementById('loginError');
+    var username = document.getElementById('loginUser').value.trim();
+    var password = document.getElementById('loginPass').value;
+    var errorDiv = document.getElementById('loginError');
     
     if (!username || !password) {
         errorDiv.textContent = 'Preencha usuário e senha!';
@@ -458,28 +424,21 @@ async function fazerLogin() {
     errorDiv.classList.add('hidden');
     
     try {
-        const response = await fetch(`${API_BASE_URL}/api/login`, {
+        var response = await fetch(API_BASE_URL + '/api/login', {
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Origin': window.location.origin
-            },
+            headers: { 'Content-Type': 'application/json', 'Origin': window.location.origin },
             credentials: 'include',
-            body: JSON.stringify({ username, password })
+            body: JSON.stringify({ username: username, password: password })
         });
-        
-        const data = await response.json();
-        
+        var data = await response.json();
         if (data.success) {
             currentUser = data.user;
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appContent').style.display = 'block';
             localStorage.setItem('usuario', data.user);
             localStorage.setItem('loja', data.loja);
-            
-            // ===== CARREGAR DADOS (NÃO PRECISA MAIS DE CSV_URL) =====
             carregarDados();
-            showNotification(`✅ Bem-vindo, ${data.user}!`, 'success');
+            showNotification('✅ Bem-vindo, ' + data.user + '!', 'success');
         } else {
             errorDiv.textContent = data.message || 'Erro no login';
             errorDiv.classList.remove('hidden');
@@ -491,28 +450,20 @@ async function fazerLogin() {
     }
 }
 
-
 async function verificarLogin() {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/check-auth`, {
+        var response = await fetch(API_BASE_URL + '/api/check-auth', {
             method: 'GET',
             credentials: 'include'
         });
-        
-        if (response.status === 401) {
-            return false;
-        }
-        
-        const data = await response.json();
-        
+        if (response.status === 401) return false;
+        var data = await response.json();
         if (data.success) {
             currentUser = data.user;
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appContent').style.display = 'block';
             localStorage.setItem('usuario', data.user);
             localStorage.setItem('loja', data.loja);
-            
-            // ===== CARREGAR DADOS (NÃO PRECISA MAIS DE CSV_URL) =====
             carregarDados();
             return true;
         }
@@ -523,13 +474,9 @@ async function verificarLogin() {
     }
 }
 
-
 async function fazerLogout() {
     try {
-        await fetch(`${API_BASE_URL}/api/logout`, {
-            method: 'POST',
-            credentials: 'include'
-        });
+        await fetch(API_BASE_URL + '/api/logout', { method: 'POST', credentials: 'include' });
     } catch (error) {
         console.error('Erro no logout:', error);
     } finally {
@@ -546,248 +493,25 @@ async function fazerLogout() {
 }
 
 // ============================================================
-// NOTIFICAÇÕES
+// PAGAMENTOS (BACKEND E LOCAL)
 // ============================================================
 
-function showNotification(message, type = 'info') {
-    const colors = {
-        success: 'bg-green-100 border-green-400 text-green-700',
-        error: 'bg-red-100 border-red-400 text-red-700',
-        loading: 'bg-blue-100 border-blue-400 text-blue-700',
-        info: 'bg-blue-100 border-blue-400 text-blue-700'
-    };
-    
-    const div = document.createElement('div');
-    div.className = `fixed bottom-4 right-4 p-4 rounded-lg border ${colors[type] || colors.info} shadow-lg z-50 max-w-md`;
-    div.innerHTML = message;
-    document.body.appendChild(div);
-    
-    setTimeout(() => {
-        div.remove();
-    }, 5000);
-}
-
-// ============================================================
-// INICIALIZAÇÃO
-// ============================================================
-
-// Ao carregar a página, verifica se já está autenticado
-document.addEventListener('DOMContentLoaded', async function() {
-    await verificarLogin();
-    
-    // Permite login com Enter
-    document.getElementById('loginUser').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') fazerLogin();
-    });
-    document.getElementById('loginPass').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') fazerLogin();
-    });
-});
-
-// ============================================================
-// INTERCEPTADOR DE FETCH PARA SESSÃO EXPIRADA
-// ============================================================
-
-const originalFetch = window.fetch;
-window.fetch = async function(...args) {
-    try {
-        const response = await originalFetch.apply(this, args);
-        
-        if (response.status === 401 && currentUser) {
-            const url = args[0] || '';
-            if (!url.includes('/api/login') && !url.includes('/api/check-auth')) {
-                console.log('🔐 Sessão expirada para rota protegida:', url);
-                showNotification('⏳ Sessão expirada. Faça login novamente.', 'error');
-                setTimeout(() => {
-                    if (currentUser) {
-                        fazerLogout();
-                    }
-                }, 2000);
-            }
-        }
-        return response;
-    } catch (error) {
-        console.error('Erro no interceptador fetch:', error);
-        throw error;
-    }
-};
-
-// ============================================================
-// FUNÇÕES DO SISTEMA DE PEDIDOS
-// ============================================================
-
-// ===== CONFIGURAÇÃO =====
-const nomesMeses = {
-    '01': 'Janeiro', '02': 'Fevereiro', '03': 'Março', '04': 'Abril',
-    '05': 'Maio', '06': 'Junho', '07': 'Julho', '08': 'Agosto',
-    '09': 'Setembro', '10': 'Outubro', '11': 'Novembro', '12': 'Dezembro'
-};
-
-function getNomeMes(numero) { return nomesMeses[numero] || numero; }
-
-// ===== CARREGAR DADOS VIA API DO BACKEND =====
-async function carregarDados() {
-    const loadingDiv = document.getElementById('loadingMsg');
-    const errorDiv = document.getElementById('errorMsg');
-    const table = document.getElementById('dataTable');
-    const statusDiv = document.getElementById('syncStatus');
-    
-    loadingDiv.style.display = 'block';
-    errorDiv.style.display = 'none';
-    table.style.display = 'none';
-    document.getElementById('statsContainer').classList.add('stats-hidden');
-    statusDiv.textContent = '🔄 Carregando dados da planilha...';
-    
-    try {
-        await buscarPagamentosBackend();
-        statusDiv.textContent = '✅ Backend conectado';
-        statusDiv.style.color = '#28a745';
-        
-        // ===== ENVIA sheet=Pagina1 EXPLICITAMENTE =====
-        const response = await fetch(`${API_BASE_URL}/api/sheet-data?sheet=Pagina1`, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`HTTP ${response.status}: ${errorText}`);
-        }
-        
-        const result = await response.json();
-        
-        if (!result.success) {
-            throw new Error(result.error || 'Erro ao buscar dados da planilha');
-        }
-        
-        // ===== PROCESSAR DADOS (função existente) =====
-        pedidosData = processarDadosPlanilha(result.data);
-        
-        if (pedidosData.length === 0) {
-            throw new Error('Nenhum pedido encontrado na planilha');
-        }
-        
-        // ===== RENDERIZAR =====
-        document.getElementById('mesContainer').style.display = 'none';
-        document.getElementById('semanaInfo').style.display = 'none';
-        document.getElementById('submenuBoletos').style.display = 'none';
-        
-        modoVisualizacao = 'tabela';
-        renderizarTabela();
-        table.style.display = 'table';
-        document.getElementById('statsContainer').classList.remove('stats-hidden');
-        document.getElementById('lastUpdate').innerHTML = `📆 Dados atualizados em: ${new Date().toLocaleString('pt-BR')}`;
-        
-        statusDiv.textContent = '✅ Dados carregados com sucesso!';
-        statusDiv.style.color = '#28a745';
-        
-    } catch (error) {
-        console.error('❌ Erro ao carregar dados:', error);
-        statusDiv.textContent = '❌ Erro ao carregar dados';
-        statusDiv.style.color = '#dc3545';
-        errorDiv.innerHTML = `
-            ❌ Erro ao carregar dados: ${error.message}
-            <br><br>
-            <button onclick="carregarDados()" class="btn" style="background:#28a745;">Tentar novamente</button>
-        `;
-        errorDiv.style.display = 'block';
-        document.getElementById('statsContainer').classList.add('stats-hidden');
-    }
-    
-    loadingDiv.style.display = 'none';
-}
-
-
-
-
-
-
-
-// ===== FUNÇÕES DE FORMATAÇÃO =====
-function formatarMoedaBR(valor) {
-    return 'R$ ' + valor.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-}
-
-function formatarDataBR(iso) {
-    if (!iso) return '';
-    if (iso === 'Sem Data') return 'Sem Data';
-    const p = iso.split('-');
-    if (p.length === 3) {
-        return `${p[2]}/${p[1]}/${p[0]}`;
-    }
-    return iso;
-}
-
-// ===== CALCULAR TOTAIS =====
-function calcularTotais(pedidos) {
-    let totalPendente = 0, totalPago = 0, totalGeral = 0;
-    pedidos.forEach(p => {
-        if (p.emProcessamento) {
-            return;
-        }
-        
-        totalGeral += p.valorTotal;
-        
-        let totalParcelasExtraidas = 0;
-        let totalParcelasPagas = 0;
-        
-        p.parcelasProduto.forEach(parc => {
-            totalParcelasExtraidas += parc.valor;
-            if (parc.status === 'Pagos' || isPago(p.pedido, parc.num, 'produto')) {
-                totalParcelasPagas += parc.valor;
-            }
-        });
-        p.parcelasRoyalties.forEach(parc => {
-            totalParcelasExtraidas += parc.valor;
-            if (parc.status === 'Pagos' || isPago(p.pedido, parc.num, 'royalties')) {
-                totalParcelasPagas += parc.valor;
-            }
-        });
-        p.parcelasPropaganda.forEach(parc => {
-            totalParcelasExtraidas += parc.valor;
-            if (parc.status === 'Pagos' || isPago(p.pedido, parc.num, 'propaganda')) {
-                totalParcelasPagas += parc.valor;
-            }
-        });
-        
-        if (totalParcelasExtraidas === 0) {
-            totalPago += p.valorTotal;
-        } else if (totalParcelasExtraidas < p.valorTotal) {
-            const diferenca = p.valorTotal - totalParcelasExtraidas;
-            totalPago += totalParcelasPagas + diferenca;
-            totalPendente += (totalParcelasExtraidas - totalParcelasPagas);
-        } else {
-            totalPago += totalParcelasPagas;
-            totalPendente += (totalParcelasExtraidas - totalParcelasPagas);
-        }
-    });
-    return { totalPendente, totalPago, totalGeral };
-}
-
-// ===== FUNÇÕES DE BACKEND =====
 async function buscarPagamentosBackend() {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/pagamentos`, {
-            credentials: 'include'
-        });
+        var response = await fetch(API_BASE_URL + '/api/pagamentos', { credentials: 'include' });
         if (!response.ok) throw new Error('Erro ao buscar pagamentos');
-        const data = await response.json();
-        
-        const pagamentos = {};
-        data.forEach(p => {
-            const chave = `${p.pedido}_${p.parcela}_${p.tipo}`;
+        var data = await response.json();
+        var pagamentos = {};
+        data.forEach(function(p) {
+            var chave = p.pedido + '_' + p.parcela + '_' + p.tipo;
             pagamentos[chave] = p.pago;
         });
-        
         pagamentosBackend = pagamentos;
         localStorage.setItem('pagamentos_backend', JSON.stringify(pagamentos));
         return pagamentos;
     } catch (error) {
         console.warn('Erro ao buscar pagamentos do backend:', error);
-        const cached = localStorage.getItem('pagamentos_backend');
+        var cached = localStorage.getItem('pagamentos_backend');
         if (cached) {
             pagamentosBackend = JSON.parse(cached);
             return pagamentosBackend;
@@ -797,26 +521,24 @@ async function buscarPagamentosBackend() {
 }
 
 async function salvarPagamentoBackend(pedidoId, parcelaId, tipo, pago) {
-    const data = { pedido: pedidoId, parcela: parcelaId, tipo: tipo, pago: pago };
-    
+    var data = { pedido: pedidoId, parcela: parcelaId, tipo: tipo, pago: pago };
     try {
-        const response = await fetch(`${API_BASE_URL}/api/pagamento`, {
+        var response = await fetch(API_BASE_URL + '/api/pagamento', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             body: JSON.stringify(data)
         });
         if (!response.ok) throw new Error(await response.text());
-        
-        const chave = `${pedidoId}_${parcelaId}_${tipo}`;
+        var chave = pedidoId + '_' + parcelaId + '_' + tipo;
         if (pago) pagamentosBackend[chave] = true;
         else delete pagamentosBackend[chave];
         localStorage.setItem('pagamentos_backend', JSON.stringify(pagamentosBackend));
         return true;
     } catch (error) {
         console.error('❌ Erro ao salvar pagamento:', error);
-        const chave = `${pedidoId}_${parcelaId}_${tipo}`;
-        const pagamentosLocal = carregarPagamentosSalvos();
+        var chave = pedidoId + '_' + parcelaId + '_' + tipo;
+        var pagamentosLocal = carregarPagamentosSalvos();
         if (pago) pagamentosLocal[chave] = true;
         else delete pagamentosLocal[chave];
         localStorage.setItem(STORAGE_KEY, JSON.stringify(pagamentosLocal));
@@ -826,135 +548,66 @@ async function salvarPagamentoBackend(pedidoId, parcelaId, tipo, pago) {
 
 function carregarPagamentosSalvos() {
     try {
-        const dados = localStorage.getItem(STORAGE_KEY);
+        var dados = localStorage.getItem(STORAGE_KEY);
         return dados ? JSON.parse(dados) : {};
     } catch { return {}; }
 }
 
 function isPago(pedidoId, parcelaId, tipo) {
-    const chave = `${pedidoId}_${parcelaId}_${tipo}`;
+    var chave = pedidoId + '_' + parcelaId + '_' + tipo;
     if (pagamentosBackend && pagamentosBackend[chave] !== undefined) return pagamentosBackend[chave];
-    const local = carregarPagamentosSalvos();
+    var local = carregarPagamentosSalvos();
     return local[chave] || false;
 }
 
-// ===== PROCESSAR CSV =====
-function parseCSVLinha(linha) {
-    const res = [];
-    let dentro = false;
-    let val = '';
-    for (let ch of linha) {
-        if (ch === '"') dentro = !dentro;
-        else if (ch === ',' && !dentro) { res.push(val); val = ''; }
-        else val += ch;
-    }
-    res.push(val);
-    return res;
-}
+// ============================================================
+// PROCESSAR DADOS DA PLANILHA
+// ============================================================
 
-function extrairParcelaInfo(texto) {
-    if (!texto || texto === 'Nenhum') return null;
-    
-    const valorMatch = texto.match(/Valor:\s*R\$\s*([\d\.,]+)/);
-    const vencMatch = texto.match(/Vencimento:\s*(\d{2}\/\d{2}\/\d{4})/);
-    let status = 'A vencer';
-    if (texto.includes('Pagos')) status = 'Pagos';
-    else if (texto.includes('Em atraso')) status = 'Em atraso';
-    else if (texto.includes('A vencer')) status = 'A vencer';
-    
-    return {
-        valor: valorMatch ? parseFloat(valorMatch[1].replace(/\./g, '').replace(',', '.')) : 0,
-        vencimento: vencMatch ? vencMatch[1] : '',
-        status: status
-    };
-}
-
-// ===== PROCESSAR DADOS DIRETAMENTE DA PLANILHA COM LOGS =====
 function processarDadosPlanilha(data) {
     if (!data || data.length < 2) return [];
     
-    // ===== LOG INICIAL =====
-    console.log('📊 ===== INÍCIO PROCESSAMENTO =====');
-    console.log('📊 Total de linhas na planilha:', data.length);
-    console.log('📋 Cabeçalho (linha 0):', data[0]);
-    if (data.length > 1) {
-        console.log('📋 Primeira linha de dados (linha 1):', data[1]);
-    }
-    if (data.length > 2) {
-        console.log('📋 Segunda linha de dados (linha 2):', data[2]);
-    }
-    console.log('📊 ================================');
+    var MAX_INDEX = 67;
+    var pedidos = [];
     
-    const MAX_INDEX = 67;
-    const pedidos = [];
+    var idxPedido = 0, idxData = 1, idxNF = 2, idxValorTotal = 3;
+    var idxValorProdutos = 4, idxRoyalties = 5, idxPropaganda = 6, idxParcelas = 7;
+    var idxProdutoParcelas = 10, idxRoyaltiesParcelas = 29, idxPropagandaParcelas = 48;
     
-    // ÍNDICES FIXOS (MESMOS DO processarCSV)
-    const idxPedido = 0;
-    const idxData = 1;
-    const idxNF = 2;
-    const idxValorTotal = 3;
-    const idxValorProdutos = 4;
-    const idxRoyalties = 5;
-    const idxPropaganda = 6;
-    const idxParcelas = 7;
-    const idxProdutoParcelas = 10;
-    const idxRoyaltiesParcelas = 29;
-    const idxPropagandaParcelas = 48;
+    var produtoValores = [11, 14, 17, 20, 23, 26];
+    var royaltiesValores = [30, 33, 36, 39, 42, 45];
+    var propagandaValores = [49, 52, 55, 58, 61, 64];
+    var produtoPix = [12, 15, 18, 21, 24, 27];
+    var produtoBarras = [13, 16, 19, 22, 25, 28];
+    var royaltiesBarras = [32, 35, 38, 41, 44, 47];
+    var propagandaBarras = [51, 54, 57, 60, 63, 66];
     
-    const produtoValores = [11, 14, 17, 20, 23, 26];
-    const royaltiesValores = [30, 33, 36, 39, 42, 45];
-    const propagandaValores = [49, 52, 55, 58, 61, 64];
-    const produtoPix = [12, 15, 18, 21, 24, 27];
-    const produtoBarras = [13, 16, 19, 22, 25, 28];
-    const royaltiesBarras = [32, 35, 38, 41, 44, 47];
-    const propagandaBarras = [51, 54, 57, 60, 63, 66];
-    
-    for (let i = 1; i < data.length; i++) {
-        let valores = data[i];
-        
-        // ===== GARANTIR QUE O ARRAY TENHA TAMANHO SUFICIENTE =====
+    for (var i = 1; i < data.length; i++) {
+        var valores = data[i];
         if (valores.length < MAX_INDEX) {
-            const novosValores = [...valores];
-            for (let j = valores.length; j < MAX_INDEX; j++) {
-                novosValores[j] = '';
-            }
+            var novosValores = valores.slice();
+            for (var j = valores.length; j < MAX_INDEX; j++) novosValores[j] = '';
             valores = novosValores;
         }
-        
         if (valores.length < 10) continue;
         
-        const pedidoId = String(valores[idxPedido] || '').trim();
+        var pedidoId = String(valores[idxPedido] || '').trim();
         if (!pedidoId || pedidoId === 'Pedido') continue;
         
-        // ===== LOG PARA CADA PEDIDO =====
-        console.log(`\n📦 Processando pedido: ${pedidoId} (linha ${i})`);
-        console.log(`   Data (col 1): "${valores[1]}"`);
-        console.log(`   NF (col 2): "${valores[2]}"`);
-        console.log(`   Valor Total (col 3): "${valores[3]}"`);
-        console.log(`   Parcelas totais (col 7): "${valores[7]}"`);
-        console.log(`   Parcelas Produto (col 10): "${valores[10]}"`);
-        console.log(`   Parcelas Royalties (col 29): "${valores[29]}"`);
-        console.log(`   Parcelas Propaganda (col 48): "${valores[48]}"`);
-        console.log(`   --- Colunas 30-47 (Royalties):`, valores.slice(30, 48));
-        console.log(`   --- Colunas 49-66 (Propaganda):`, valores.slice(49, 67));
-        
-        // ===== VERIFICA SE É "Sem Data" =====
-        const dataEmissao = String(valores[idxData] || '').trim();
-        const isSemData = dataEmissao === 'Sem Data';
+        var dataEmissao = String(valores[idxData] || '').trim();
+        var isSemData = dataEmissao === 'Sem Data';
         
         if (isSemData) {
-            let valorTotal = 0;
+            var valorTotal = 0;
             if (valores[idxValorTotal]) {
-                const valStr = String(valores[idxValorTotal]).replace('R$', '').replace(/\./g, '').replace(',', '.');
+                var valStr = String(valores[idxValorTotal]).replace('R$', '').replace(/\./g, '').replace(',', '.');
                 valorTotal = parseFloat(valStr) || 0;
             }
-            
-            let totalParcelas = 0;
+            var totalParcelas = 0;
             if (valores[idxParcelas]) {
-                const match = String(valores[idxParcelas]).match(/(\d+)x/);
+                var match = String(valores[idxParcelas]).match(/(\d+)x/);
                 if (match) totalParcelas = parseInt(match[1]);
             }
-            
             pedidos.push({
                 pedido: pedidoId,
                 dataEmissao: 'Sem Data',
@@ -975,53 +628,47 @@ function processarDadosPlanilha(data) {
                 emProcessamento: false,
                 isSemData: true
             });
-            console.log(`   ⚠️ Pedido SEM DATA criado com valor: R$ ${valorTotal.toFixed(2)}`);
             continue;
         }
         
-        // ===== PROCESSAMENTO NORMAL =====
-        let valorTotal = 0;
+        var valorTotal = 0;
         if (valores[idxValorTotal]) {
-            const valStr = String(valores[idxValorTotal]).replace('R$', '').replace(/\./g, '').replace(',', '.');
+            var valStr = String(valores[idxValorTotal]).replace('R$', '').replace(/\./g, '').replace(',', '.');
             valorTotal = parseFloat(valStr) || 0;
         }
         
-        let valorProdutos = 0, valorRoyaltiesVal = 0, valorPropagandaVal = 0;
+        var valorProdutos = 0, valorRoyaltiesVal = 0, valorPropagandaVal = 0;
         if (valores[idxValorProdutos]) {
-            const valStr = String(valores[idxValorProdutos]).replace('R$', '').replace(/\./g, '').replace(',', '.');
+            var valStr = String(valores[idxValorProdutos]).replace('R$', '').replace(/\./g, '').replace(',', '.');
             valorProdutos = parseFloat(valStr) || 0;
         }
         if (valores[idxRoyalties]) {
-            const valStr = String(valores[idxRoyalties]).replace('R$', '').replace(/\./g, '').replace(',', '.');
+            var valStr = String(valores[idxRoyalties]).replace('R$', '').replace(/\./g, '').replace(',', '.');
             valorRoyaltiesVal = parseFloat(valStr) || 0;
         }
         if (valores[idxPropaganda]) {
-            const valStr = String(valores[idxPropaganda]).replace('R$', '').replace(/\./g, '').replace(',', '.');
+            var valStr = String(valores[idxPropaganda]).replace('R$', '').replace(/\./g, '').replace(',', '.');
             valorPropagandaVal = parseFloat(valStr) || 0;
         }
         
-        let totalParcelas = 0;
+        var totalParcelas = 0;
         if (valores[idxParcelas]) {
-            const match = String(valores[idxParcelas]).match(/(\d+)x/);
+            var match = String(valores[idxParcelas]).match(/(\d+)x/);
             if (match) totalParcelas = parseInt(match[1]);
         }
         
-        const parcelasProduto = [];
-        const parcelasRoyalties = [];
-        const parcelasPropaganda = [];
+        var parcelasProduto = [];
+        var parcelasRoyalties = [];
+        var parcelasPropaganda = [];
         
-        // ===== PARCELAS DE PRODUTO =====
-        let parcelasProdutoCount = 0;
+        var parcelasProdutoCount = 0;
         if (valores[idxProdutoParcelas]) {
-            const match = String(valores[idxProdutoParcelas]).match(/(\d+)x/);
+            var match = String(valores[idxProdutoParcelas]).match(/(\d+)x/);
             if (match) parcelasProdutoCount = parseInt(match[1]);
         }
-        console.log(`   Produto - Count: ${parcelasProdutoCount}, coluna 10: "${valores[10]}"`);
-        
-        for (let p = 0; p < produtoValores.length && p < parcelasProdutoCount; p++) {
-            const idxValor = produtoValores[p];
-            let codigoPix = '', codigoBarras = '';
-            
+        for (var p = 0; p < produtoValores.length && p < parcelasProdutoCount; p++) {
+            var idxValor = produtoValores[p];
+            var codigoPix = '', codigoBarras = '';
             if (produtoPix[p] < valores.length) {
                 codigoPix = String(valores[produtoPix[p]] || '').trim();
                 if (codigoPix === 'Nenhum' || codigoPix === '') codigoPix = '';
@@ -1030,12 +677,10 @@ function processarDadosPlanilha(data) {
                 codigoBarras = String(valores[produtoBarras[p]] || '').trim();
                 if (codigoBarras === 'Nenhum' || codigoBarras === '') codigoBarras = '';
             }
-            
-            const valorRaw = idxValor < valores.length ? valores[idxValor] : '';
+            var valorRaw = idxValor < valores.length ? valores[idxValor] : '';
             if (valorRaw && String(valorRaw) !== 'Nenhum') {
-                const info = extrairParcelaInfo(String(valorRaw));
+                var info = extrairParcelaInfo(String(valorRaw));
                 if (info) {
-                    console.log(`      Produto Parcela ${p+1}: valor=${info.valor}, venc=${info.vencimento}, status=${info.status}`);
                     parcelasProduto.push({
                         num: p + 1,
                         valor: info.valor,
@@ -1048,30 +693,22 @@ function processarDadosPlanilha(data) {
             }
         }
         
-        // ===== PARCELAS DE ROYALTIES =====
-        let parcelasRoyaltiesCount = 0;
+        var parcelasRoyaltiesCount = 0;
         if (valores[idxRoyaltiesParcelas]) {
-            const match = String(valores[idxRoyaltiesParcelas]).match(/(\d+)x/);
+            var match = String(valores[idxRoyaltiesParcelas]).match(/(\d+)x/);
             if (match) parcelasRoyaltiesCount = parseInt(match[1]);
         }
-        console.log(`   Royalties - Count: ${parcelasRoyaltiesCount}, coluna 29: "${valores[29]}"`);
-        
-        for (let p = 0; p < royaltiesValores.length && p < parcelasRoyaltiesCount; p++) {
-            const idxValor = royaltiesValores[p];
-            let codigoBarras = '';
-            
+        for (var p = 0; p < royaltiesValores.length && p < parcelasRoyaltiesCount; p++) {
+            var idxValor = royaltiesValores[p];
+            var codigoBarras = '';
             if (royaltiesBarras[p] < valores.length) {
                 codigoBarras = String(valores[royaltiesBarras[p]] || '').trim();
                 if (codigoBarras === 'Nenhum' || codigoBarras === '') codigoBarras = '';
             }
-            
-            const valorRaw = idxValor < valores.length ? valores[idxValor] : '';
-            console.log(`      Royalties Parcela ${p+1} - idx ${idxValor}: "${valorRaw}"`);
-            
+            var valorRaw = idxValor < valores.length ? valores[idxValor] : '';
             if (valorRaw && String(valorRaw) !== 'Nenhum') {
-                const info = extrairParcelaInfo(String(valorRaw));
+                var info = extrairParcelaInfo(String(valorRaw));
                 if (info) {
-                    console.log(`      ✅ Royalties Parcela ${p+1}: valor=${info.valor}, venc=${info.vencimento}, status=${info.status}`);
                     parcelasRoyalties.push({
                         num: p + 1,
                         valor: info.valor,
@@ -1080,36 +717,26 @@ function processarDadosPlanilha(data) {
                         codigoPix: '',
                         codigoBarras: codigoBarras
                     });
-                } else {
-                    console.log(`      ❌ Royalties Parcela ${p+1}: NÃO CONSEGUIU EXTRAIR INFO de: "${valorRaw}"`);
                 }
             }
         }
         
-        // ===== PARCELAS DE PROPAGANDA =====
-        let parcelasPropagandaCount = 0;
+        var parcelasPropagandaCount = 0;
         if (valores[idxPropagandaParcelas]) {
-            const match = String(valores[idxPropagandaParcelas]).match(/(\d+)x/);
+            var match = String(valores[idxPropagandaParcelas]).match(/(\d+)x/);
             if (match) parcelasPropagandaCount = parseInt(match[1]);
         }
-        console.log(`   Propaganda - Count: ${parcelasPropagandaCount}, coluna 48: "${valores[48]}"`);
-        
-        for (let p = 0; p < propagandaValores.length && p < parcelasPropagandaCount; p++) {
-            const idxValor = propagandaValores[p];
-            let codigoBarras = '';
-            
+        for (var p = 0; p < propagandaValores.length && p < parcelasPropagandaCount; p++) {
+            var idxValor = propagandaValores[p];
+            var codigoBarras = '';
             if (propagandaBarras[p] < valores.length) {
                 codigoBarras = String(valores[propagandaBarras[p]] || '').trim();
                 if (codigoBarras === 'Nenhum' || codigoBarras === '') codigoBarras = '';
             }
-            
-            const valorRaw = idxValor < valores.length ? valores[idxValor] : '';
-            console.log(`      Propaganda Parcela ${p+1} - idx ${idxValor}: "${valorRaw}"`);
-            
+            var valorRaw = idxValor < valores.length ? valores[idxValor] : '';
             if (valorRaw && String(valorRaw) !== 'Nenhum') {
-                const info = extrairParcelaInfo(String(valorRaw));
+                var info = extrairParcelaInfo(String(valorRaw));
                 if (info) {
-                    console.log(`      ✅ Propaganda Parcela ${p+1}: valor=${info.valor}, venc=${info.vencimento}, status=${info.status}`);
                     parcelasPropaganda.push({
                         num: p + 1,
                         valor: info.valor,
@@ -1118,27 +745,23 @@ function processarDadosPlanilha(data) {
                         codigoPix: '',
                         codigoBarras: codigoBarras
                     });
-                } else {
-                    console.log(`      ❌ Propaganda Parcela ${p+1}: NÃO CONSEGUIU EXTRAIR INFO de: "${valorRaw}"`);
                 }
             }
         }
         
-        // ===== CALCULAR PENDENTE =====
-        let valorPendente = 0;
-        [...parcelasProduto, ...parcelasRoyalties, ...parcelasPropaganda].forEach(p => {
+        var valorPendente = 0;
+        var allParcelas = parcelasProduto.concat(parcelasRoyalties).concat(parcelasPropaganda);
+        allParcelas.forEach(function(p) {
             if (p.status !== 'Pagos') valorPendente += p.valor;
         });
         
-        // ===== FORMATAR DATA =====
-        let dataEmissaoFinal = dataEmissao;
+        var dataEmissaoFinal = dataEmissao;
         if (dataEmissaoFinal && dataEmissaoFinal !== 'Sem Data') {
-            const partes = dataEmissaoFinal.split('/');
-            if (partes.length === 3) dataEmissaoFinal = `${partes[2]}-${partes[1]}-${partes[0]}`;
+            var partes = dataEmissaoFinal.split('/');
+            if (partes.length === 3) dataEmissaoFinal = partes[2] + '-' + partes[1] + '-' + partes[0];
         }
         
-        // ===== CRIAR OBJETO DO PEDIDO =====
-        const pedido = {
+        pedidos.push({
             pedido: pedidoId,
             dataEmissao: dataEmissaoFinal,
             notaFiscal: String(valores[idxNF] || '').trim() || 'N/A',
@@ -1157,37 +780,280 @@ function processarDadosPlanilha(data) {
             totalmentePago: valorPendente === 0,
             emProcessamento: false,
             isSemData: false
-        };
-        
-        console.log(`   📋 Resumo ${pedidoId}: ${parcelasProduto.length} prod, ${parcelasRoyalties.length} roy, ${parcelasPropaganda.length} prop`);
-        pedidos.push(pedido);
+        });
     }
-    
-    console.log(`\n✅ Total de pedidos processados: ${pedidos.length}`);
-    console.log('📊 ===== FIM PROCESSAMENTO =====');
     return pedidos;
 }
 
+// ============================================================
+// CARREGAR DADOS
+// ============================================================
 
-// ===== RENDERIZAR TABELA =====
-function renderizarTabela() {
-    const busca = document.getElementById('searchInput').value.toLowerCase();
-    const start = document.getElementById('startDate').value;
-    const end = document.getElementById('endDate').value;
-    const filtro = document.getElementById('statusFilter').value;
+async function carregarDados() {
+    var loadingDiv = document.getElementById('loadingMsg');
+    var errorDiv = document.getElementById('errorMsg');
+    var table = document.getElementById('dataTable');
+    var statusDiv = document.getElementById('syncStatus');
     
-    let filtrados = pedidosData.filter(p => {
+    loadingDiv.style.display = 'block';
+    errorDiv.style.display = 'none';
+    table.style.display = 'none';
+    document.getElementById('statsContainer').classList.add('stats-hidden');
+    statusDiv.textContent = '🔄 Carregando dados da planilha...';
+    
+    try {
+        await buscarPagamentosBackend();
+        statusDiv.textContent = '✅ Backend conectado';
+        statusDiv.style.color = '#28a745';
+        
+        // ✅✅✅ CÓDIGO CORRETO ✅✅✅
+        var response = await fetch(API_BASE_URL + '/api/sheet-data', {
+            method: 'GET',
+            credentials: 'include'
+        });
+        // ✅✅✅ FIM DA CORREÇÃO ✅✅✅
+        
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        var result = await response.json();
+        if (!result.success) throw new Error(result.error || 'Erro ao buscar dados');
+        
+        pedidosData = processarDadosPlanilha(result.data)
+        if (pedidosData.length === 0) throw new Error('Nenhum pedido encontrado');
+        
+        document.getElementById('mesContainer').style.display = 'none';
+        document.getElementById('semanaInfo').style.display = 'none';
+        document.getElementById('submenuBoletos').style.display = 'none';
+        
+        modoVisualizacao = 'tabela';
+        renderizarTabela();
+        table.style.display = 'table';
+        document.getElementById('statsContainer').classList.remove('stats-hidden');
+        document.getElementById('lastUpdate').innerHTML = '📆 Dados atualizados em: ' + new Date().toLocaleString('pt-BR');
+        statusDiv.textContent = '✅ Dados carregados com sucesso!';
+        statusDiv.style.color = '#28a745';
+        
+    } catch (error) {
+        console.error('❌ Erro ao carregar dados:', error);
+        statusDiv.textContent = '❌ Erro ao carregar dados';
+        statusDiv.style.color = '#dc3545';
+        errorDiv.innerHTML = '❌ Erro ao carregar dados: ' + error.message + '<br><br><button onclick="carregarDados()" class="btn" style="background:#28a745;">Tentar novamente</button>';
+        errorDiv.style.display = 'block';
+        document.getElementById('statsContainer').classList.add('stats-hidden');
+    }
+    loadingDiv.style.display = 'none';
+}
+
+// ============================================================
+// CARREGAR PRODUTOS
+// ============================================================
+
+async function carregarProdutos() {
+    try {
+        var response = await fetch(API_BASE_URL + '/api/sheet-data?sheet=Produtos', {
+            method: 'GET',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' }
+        });
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        var result = await response.json();
+        if (!result.success) throw new Error(result.error || 'Erro ao buscar produtos');
+        processarDadosProdutos(result.data);
+        return true;
+    } catch (error) {
+        console.error('❌ Erro ao carregar produtos:', error);
+        showNotification('❌ Erro ao carregar produtos: ' + error.message, 'error');
+        return false;
+    }
+}
+
+function processarDadosProdutos(data) {
+    if (!data || data.length < 2) {
+        produtosData = [];
+        produtosPorPedido = {};
+        window.produtosData = [];
+        return;
+    }
+    
+    var idxPedido = 0, idxData = 1, idxNotaFiscal = 2, idxPrecoCompra = 3;
+    var idxProdutosUnicos = 8, idxTotalProdutos = 9;
+    var idxCodigo = 10, idxProduto = 11, idxQuantidade = 12, idxPontos = 13;
+    var idxValorUnit = 14, idxValorTotal = 15, idxVendaUnit = 16, idxVendaTotal = 17;
+    var idxLucro = 18, idxLucroPercentual = 19, idxLucroReal = 20, idxLucroRealPercentual = 21;
+    var idxReferencia = 22;
+    
+    var pedidoAtual = null;
+    produtosPorPedido = {};
+    
+    for (var i = 1; i < data.length; i++) {
+        var row = data[i];
+        if (row.length < 10) continue;
+        
+        var pedido = String(row[idxPedido] || '').trim();
+        if (pedido === '' || pedido === 'Pedido') {
+            pedido = pedidoAtual;
+        } else {
+            pedidoAtual = pedido;
+        }
+        if (!pedido || pedido === 'Pedido') continue;
+        
+        if (!produtosPorPedido[pedido]) {
+            produtosPorPedido[pedido] = {
+                pedido: pedido,
+                data: String(row[idxData] || '').trim(),
+                notaFiscal: String(row[idxNotaFiscal] || '').trim(),
+                precoCompra: limparValorProduto(String(row[idxPrecoCompra] || '0')),
+                valorVendaTotal: 0,
+                lucroTotal: 0,
+                totalPontos: 0,
+                produtosIndisponiveis: 0,
+                linhas: []
+            };
+        }
+        
+        var codigo = row.length > idxCodigo ? String(row[idxCodigo] || '').trim() : '';
+        var produto = row.length > idxProduto ? String(row[idxProduto] || '').trim() : '';
+        var quantidade = row.length > idxQuantidade ? String(row[idxQuantidade] || '0').trim() : '0';
+        var pontos = row.length > idxPontos ? parseInt(String(row[idxPontos] || '0').replace(/\./g, '').trim()) || 0 : 0;
+        var valorUnit = row.length > idxValorUnit ? limparValorProduto(String(row[idxValorUnit] || '0')) : 0;
+        var valorTotal = row.length > idxValorTotal ? limparValorProduto(String(row[idxValorTotal] || '0')) : 0;
+        var vendaUnit = row.length > idxVendaUnit ? limparValorProduto(String(row[idxVendaUnit] || '0')) : 0;
+        var vendaTotal = row.length > idxVendaTotal ? limparValorProduto(String(row[idxVendaTotal] || '0')) : 0;
+        var lucro = row.length > idxLucro ? limparValorProduto(String(row[idxLucro] || '0')) : 0;
+        var lucroPercentual = row.length > idxLucroPercentual ? limparValorProduto(String(row[idxLucroPercentual] || '0')) : 0;
+        var referencia = row.length > idxReferencia ? String(row[idxReferencia] || '').trim() : '';
+        
+        var isIndisponivel = referencia.indexOf('Produtos indisponível') !== -1;
+        
+        produtosPorPedido[pedido].linhas.push({
+            linha: i,
+            codigo: codigo,
+            produto: produto,
+            quantidade: quantidade,
+            pontos: pontos,
+            valorUnit: valorUnit,
+            valorTotal: valorTotal,
+            vendaUnit: vendaUnit,
+            vendaTotal: vendaTotal,
+            lucro: lucro,
+            lucroPercentual: lucroPercentual,
+            referencia: referencia,
+            isIndisponivel: isIndisponivel,
+            valorCompra: valorUnit,
+            valorVenda: vendaUnit
+        });
+        
+        if (!isIndisponivel && vendaTotal > 0) {
+            produtosPorPedido[pedido].valorVendaTotal += vendaTotal;
+            produtosPorPedido[pedido].lucroTotal += lucro;
+            var qtd = parseInt(quantidade) || 0;
+            produtosPorPedido[pedido].totalPontos += pontos;
+        }
+        if (isIndisponivel) {
+            produtosPorPedido[pedido].produtosIndisponiveis++;
+        }
+    }
+    
+    produtosData = Object.values(produtosPorPedido).map(function(p) {
+        var produtosUnicos = 0, totalProdutos = 0, totalPontos = 0, produtosIndisponiveis = 0, precoVenda = 0;
+        for (var item of p.linhas) {
+            if (item.isIndisponivel) { produtosIndisponiveis++; continue; }
+            if (item.vendaTotal === 0) break;
+            var qtd = parseInt(item.quantidade) || 0;
+            if (qtd > 0) {
+                produtosUnicos++;
+                totalProdutos += qtd;
+                totalPontos += item.pontos;
+                precoVenda += (item.vendaUnit || 0) * qtd;
+            }
+        }
+        var lucroTotal = precoVenda - p.precoCompra;
+        var lucroPercentual = p.precoCompra > 0 ? (lucroTotal / p.precoCompra) * 100 : 0;
+        return {
+            pedido: p.pedido,
+            data: p.data,
+            notaFiscal: p.notaFiscal,
+            precoCompra: p.precoCompra,
+            linhas: p.linhas,
+            produtosUnicos: produtosUnicos,
+            totalProdutos: totalProdutos,
+            totalPontos: totalPontos,
+            produtosIndisponiveis: produtosIndisponiveis,
+            precoVenda: precoVenda,
+            lucroTotal: lucroTotal,
+            lucroPercentual: lucroPercentual
+        };
+    });
+    
+    window.produtosData = produtosData;
+    window.produtosPorPedido = produtosPorPedido;
+    console.log('📊 ' + produtosData.length + ' pedidos carregados da aba Produtos');
+}
+
+// ============================================================
+// CALCULAR TOTAIS
+// ============================================================
+
+function calcularTotais(pedidos) {
+    var totalPendente = 0, totalPago = 0, totalGeral = 0;
+    pedidos.forEach(function(p) {
+        if (p.emProcessamento) return;
+        totalGeral += p.valorTotal;
+        var totalParcelasExtraidas = 0;
+        var totalParcelasPagas = 0;
+        
+        p.parcelasProduto.forEach(function(parc) {
+            totalParcelasExtraidas += parc.valor;
+            if (parc.status === 'Pagos' || isPago(p.pedido, parc.num, 'produto')) {
+                totalParcelasPagas += parc.valor;
+            }
+        });
+        p.parcelasRoyalties.forEach(function(parc) {
+            totalParcelasExtraidas += parc.valor;
+            if (parc.status === 'Pagos' || isPago(p.pedido, parc.num, 'royalties')) {
+                totalParcelasPagas += parc.valor;
+            }
+        });
+        p.parcelasPropaganda.forEach(function(parc) {
+            totalParcelasExtraidas += parc.valor;
+            if (parc.status === 'Pagos' || isPago(p.pedido, parc.num, 'propaganda')) {
+                totalParcelasPagas += parc.valor;
+            }
+        });
+        
+        if (totalParcelasExtraidas === 0) {
+            totalPago += p.valorTotal;
+        } else if (totalParcelasExtraidas < p.valorTotal) {
+            var diferenca = p.valorTotal - totalParcelasExtraidas;
+            totalPago += totalParcelasPagas + diferenca;
+            totalPendente += (totalParcelasExtraidas - totalParcelasPagas);
+        } else {
+            totalPago += totalParcelasPagas;
+            totalPendente += (totalParcelasExtraidas - totalParcelasPagas);
+        }
+    });
+    return { totalPendente: totalPendente, totalPago: totalPago, totalGeral: totalGeral };
+}
+
+// ============================================================
+// RENDERIZAR TABELA PRINCIPAL
+// ============================================================
+
+function renderizarTabela() {
+    var busca = document.getElementById('searchInput').value.toLowerCase();
+    var start = document.getElementById('startDate').value;
+    var end = document.getElementById('endDate').value;
+    var filtro = document.getElementById('statusFilter').value;
+    
+    var filtrados = pedidosData.filter(function(p) {
         if (p.isSemData) {
-            if (busca && !p.pedido.includes(busca)) return false;
+            if (busca && p.pedido.indexOf(busca) === -1) return false;
             return true;
         }
-        
         if (p.emProcessamento) {
-            if (busca && !p.pedido.includes(busca)) return false;
+            if (busca && p.pedido.indexOf(busca) === -1) return false;
             return true;
         }
-        
-        if (busca && !p.pedido.includes(busca) && !p.notaFiscal.includes(busca)) return false;
+        if (busca && p.pedido.indexOf(busca) === -1 && p.notaFiscal.indexOf(busca) === -1) return false;
         if (start && p.dataEmissao < start) return false;
         if (end && p.dataEmissao > end) return false;
         if (filtro === 'pendente' && p.totalmentePago) return false;
@@ -1197,167 +1063,94 @@ function renderizarTabela() {
     
     pedidosFiltrados = filtrados;
     
-    const stats = calcularTotais(filtrados.filter(p => !p.emProcessamento && !p.isSemData));
-    let statsSemData = { totalPendente: 0, totalPago: 0, totalGeral: 0 };
-    filtrados.forEach(p => {
+    var stats = calcularTotais(filtrados.filter(function(p) { return !p.emProcessamento && !p.isSemData; }));
+    var statsSemData = { totalPendente: 0, totalPago: 0, totalGeral: 0 };
+    filtrados.forEach(function(p) {
         if (p.isSemData) {
             statsSemData.totalPendente += p.valorTotal;
             statsSemData.totalGeral += p.valorTotal;
         }
     });
     
-    document.getElementById('totalCount').innerText = `${filtrados.length} pedidos`;
+    document.getElementById('totalCount').innerText = filtrados.length + ' pedidos';
     document.getElementById('totalPendenteGeral').innerHTML = formatarMoedaBR(stats.totalPendente + statsSemData.totalPendente);
     document.getElementById('totalPagoGeral').innerHTML = formatarMoedaBR(stats.totalPago);
     document.getElementById('totalGeral').innerHTML = formatarMoedaBR(stats.totalGeral + statsSemData.totalGeral);
     
-    const tbody = document.getElementById('tableBody');
+    var tbody = document.getElementById('tableBody');
     if (filtrados.length === 0) {
         tbody.innerHTML = '<tr><td colspan="10" style="text-align:center; padding:40px;">Nenhum pedido encontrado</td></tr>';
         return;
     }
     
-    let html = '';
-    filtrados.forEach(p => {
+    var html = '';
+    filtrados.forEach(function(p) {
         if (p.isSemData) {
-            const statusText = `⚠️ Pendente: ${formatarMoedaBR(p.valorPendente)}`;
-            html += `<tr style="background: #fff8e1;">
-                        <td><span style="color: #f39c12;">📅</span> ${p.pedido}</td>
-                        <td style="color: #e67e22; font-style: italic;">Sem Data</td>
-                        <td>${p.notaFiscal}</td>
-                        <td>${formatarMoedaBR(p.valorTotal)}</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>-</td>
-                        <td>${p.totalParcelas > 0 ? p.totalParcelas + 'x' : '-'}</td>
-                        <td>${formatarMoedaBR(p.valorPendente)}</td>
-                        <td class="status-a-vencer">${statusText}</td>
-                    </tr>
-                    <tr class="parcelas-detail">
-                        <td colspan="10">
-                            <div class="detail-card" style="border-left-color: #f39c12;">
-                                <strong>📋 Pedido ${p.pedido} - Sem dados completos</strong>
-                                <div style="color:#667; margin-top:10px;">
-                                    ⚠️ Este pedido está com a data "Sem Data" na planilha.<br>
-                                    Valor total: ${formatarMoedaBR(p.valorTotal)}<br>
-                                    Parcelas: ${p.totalParcelas}x<br>
-                                    Status: Aguardando processamento completo
-                                </div>
-                            </div>
-                        </td>
-                    </tr>`;
+            var statusText = '⚠️ Pendente: ' + formatarMoedaBR(p.valorPendente);
+            html += '<tr style="background: #fff8e1;"><td><span style="color: #f39c12;">📅</span> ' + p.pedido + '</td><td style="color: #e67e22; font-style: italic;">Sem Data</td><td>' + p.notaFiscal + '</td><td>' + formatarMoedaBR(p.valorTotal) + '</td><td>-</td><td>-</td><td>-</td><td>' + (p.totalParcelas > 0 ? p.totalParcelas + 'x' : '-') + '</td><td>' + formatarMoedaBR(p.valorPendente) + '</td><td class="status-a-vencer">' + statusText + '</td></tr><tr class="parcelas-detail"><td colspan="10"><div class="detail-card" style="border-left-color: #f39c12;"><strong>📋 Pedido ' + p.pedido + ' - Sem dados completos</strong><div style="color:#667; margin-top:10px;">⚠️ Este pedido está com a data "Sem Data" na planilha.<br>Valor total: ' + formatarMoedaBR(p.valorTotal) + '<br>Parcelas: ' + p.totalParcelas + 'x<br>Status: Aguardando processamento completo</div></div></td></tr>';
             return;
         }
-        
         if (p.emProcessamento) {
-            html += `<tr style="background: #fff3cd; opacity: 0.85;">
-                        <td><span style="color: #f39c12;">⏳</span> ${p.pedido}</td>
-                        <td colspan="9" style="color: #856404; font-style: italic;">
-                            ⏳ Pedido em processamento - Aguardando dados completos
-                        </td>
-                    </tr>`;
+            html += '<tr style="background: #fff3cd; opacity: 0.85;"><td><span style="color: #f39c12;">⏳</span> ' + p.pedido + '</td><td colspan="9" style="color: #856404; font-style: italic;">⏳ Pedido em processamento - Aguardando dados completos</td></tr>';
             return;
         }
-        
-        const statsP = calcularTotais([p]);
-        const statusText = p.totalmentePago ? '✅ Totalmente Pago' : `⚠️ Pendente: ${formatarMoedaBR(statsP.totalPendente)}`;
-        const statusClass = p.totalmentePago ? 'status-pagos' : 'status-a-vencer';
-        
-        html += `<tr class="pedido-row" onclick="toggleDetalhes('${p.pedido}')">
-                    <td><span class="expand-icon">▶</span> ${p.pedido}</td>
-                    <td>${formatarDataBR(p.dataEmissao)}</td>
-                    <td>${p.notaFiscal}</td>
-                    <td>${formatarMoedaBR(p.valorTotal)}</td>
-                    <td>${formatarMoedaBR(p.valorProdutos)}</td>
-                    <td>${formatarMoedaBR(p.valorRoyalties)}</td>
-                    <td>${formatarMoedaBR(p.valorPropaganda)}</td>
-                    <td>${p.totalParcelas > 0 ? p.totalParcelas + 'x' : '-'}</td>
-                    <td>${formatarMoedaBR(statsP.totalPendente)}</td>
-                    <td class="${statusClass}">${statusText}</td>
-                </tr>
-                <tr id="detalhe-${p.pedido}" class="parcelas-detail">
-                    <td colspan="10">
-                        <div class="detail-card">
-                            <strong>📋 Detalhamento das Parcelas - Pedido ${p.pedido}</strong>
-                            <div style="font-size:12px; color:#667; margin-bottom:10px;">
-                                ✅ Marque o checkbox para confirmar o pagamento manualmente.
-                                <span id="statusSalvo" class="status-salvo"></span>
-                            </div>
-                            <div class="parcela-grid">
-                                ${formatarParcelasHTML(p.parcelasProduto, 'Produto', 'produto', p.pedido)}
-                                ${formatarParcelasHTML(p.parcelasRoyalties, 'Royalties', 'royalties', p.pedido)}
-                                ${formatarParcelasHTML(p.parcelasPropaganda, 'Propaganda', 'propaganda', p.pedido)}
-                            </div>
-                            <div style="margin-top:12px;">
-                            </div>
-                            <small></small>
-                        </div>
-                    </td>
-                </tr>`;
+        var statsP = calcularTotais([p]);
+        var statusText = p.totalmentePago ? '✅ Totalmente Pago' : '⚠️ Pendente: ' + formatarMoedaBR(statsP.totalPendente);
+        var statusClass = p.totalmentePago ? 'status-pagos' : 'status-a-vencer';
+        html += '<tr class="pedido-row" onclick="toggleDetalhes(\'' + p.pedido + '\')"><td><span class="expand-icon">▶</span> ' + p.pedido + '</td><td>' + formatarDataBR(p.dataEmissao) + '</td><td>' + p.notaFiscal + '</td><td>' + formatarMoedaBR(p.valorTotal) + '</td><td>' + formatarMoedaBR(p.valorProdutos) + '</td><td>' + formatarMoedaBR(p.valorRoyalties) + '</td><td>' + formatarMoedaBR(p.valorPropaganda) + '</td><td>' + (p.totalParcelas > 0 ? p.totalParcelas + 'x' : '-') + '</td><td>' + formatarMoedaBR(statsP.totalPendente) + '</td><td class="' + statusClass + '">' + statusText + '</td></tr><tr id="detalhe-' + p.pedido + '" class="parcelas-detail"><td colspan="10"><div class="detail-card"><strong>📋 Detalhamento das Parcelas - Pedido ' + p.pedido + '</strong><div style="font-size:12px; color:#667; margin-bottom:10px;">✅ Marque o checkbox para confirmar o pagamento manualmente.<span id="statusSalvo" class="status-salvo"></span></div><div class="parcela-grid">' + formatarParcelasHTML(p.parcelasProduto, 'Produto', 'produto', p.pedido) + formatarParcelasHTML(p.parcelasRoyalties, 'Royalties', 'royalties', p.pedido) + formatarParcelasHTML(p.parcelasPropaganda, 'Propaganda', 'propaganda', p.pedido) + '</div></div></td></tr>';
     });
     tbody.innerHTML = html;
 }
 
-// ===== FORMATAR PARCELAS HTML =====
+// ============================================================
+// FORMATAR PARCELAS HTML
+// ============================================================
+
 function formatarParcelasHTML(parcelas, titulo, tipo, pedidoId) {
     if (!parcelas || parcelas.length === 0) {
-        return `<div class="parcela-tipo"><h4>${titulo}</h4><p style="color:#999;">Nenhuma parcela</p></div>`;
+        return '<div class="parcela-tipo"><h4>' + titulo + '</h4><p style="color:#999;">Nenhuma parcela</p></div>';
     }
-    
-    let html = `<div class="parcela-tipo"><h4>${titulo} (${parcelas.length}x)</h4>`;
-    parcelas.forEach(p => {
-        let statusClass = '', statusText = '';
+    var html = '<div class="parcela-tipo"><h4>' + titulo + ' (' + parcelas.length + 'x)</h4>';
+    parcelas.forEach(function(p) {
+        var statusClass = '', statusText = '';
         if (p.status === 'Pagos') { statusClass = 'status-pagos'; statusText = 'Pago'; }
         else if (p.status === 'A vencer') { statusClass = 'status-a-vencer'; statusText = 'A vencer'; }
         else { statusClass = 'status-em-atraso'; statusText = 'Em atraso'; }
-        
-        const pagoManual = (p.status === 'Pagos') || isPago(pedidoId, p.num, tipo);
-        const classePaga = pagoManual ? 'parcela-paga' : '';
-        const checked = pagoManual ? 'checked' : '';
-        const labelClass = pagoManual ? 'pago' : 'nao-pago';
-        const labelText = pagoManual ? '✅ Pago' : '⏳ Pendente';
-        
-        html += `<div class="parcela-item ${classePaga}">
-                    <strong>Parcela ${p.num.toString().padStart(2, '0')}</strong><br>
-                    Valor: ${formatarMoedaBR(p.valor)}<br>
-                    Vencimento: ${p.vencimento}<br>
-                    <span class="${statusClass}">${statusText}</span>`;
-        
+        var pagoManual = (p.status === 'Pagos') || isPago(pedidoId, p.num, tipo);
+        var classePaga = pagoManual ? 'parcela-paga' : '';
+        var checked = pagoManual ? 'checked' : '';
+        var labelClass = pagoManual ? 'pago' : 'nao-pago';
+        var labelText = pagoManual ? '✅ Pago' : '⏳ Pendente';
+        html += '<div class="parcela-item ' + classePaga + '"><strong>Parcela ' + String(p.num).padStart(2, '0') + '</strong><br>Valor: ' + formatarMoedaBR(p.valor) + '<br>Vencimento: ' + p.vencimento + '<br><span class="' + statusClass + '">' + statusText + '</span>';
         if (tipo === 'produto') {
-            html += `<div class="codigos-container">`;
-            if (p.codigoPix) html += `<button class="btn-copiar btn-pix" onclick="copiarTexto('${p.codigoPix.replace(/'/g, "\\'")}')">PIX</button>`;
-            if (p.codigoBarras) html += `<button class="btn-copiar btn-barras" onclick="copiarTexto('${p.codigoBarras.replace(/'/g, "\\'")}')">Cód. Barras</button>`;
-            html += `</div>`;
+            html += '<div class="codigos-container">';
+            if (p.codigoPix) html += '<button class="btn-copiar btn-pix" onclick="copiarTexto(\'' + p.codigoPix.replace(/'/g, "\\'") + '\')">PIX</button>';
+            if (p.codigoBarras) html += '<button class="btn-copiar btn-barras" onclick="copiarTexto(\'' + p.codigoBarras.replace(/'/g, "\\'") + '\')">Cód. Barras</button>';
+            html += '</div>';
         }
-        
         if (tipo === 'royalties' || tipo === 'propaganda') {
             if (p.codigoBarras) {
-                html += `<div class="codigos-container"><button class="btn-copiar btn-barras" onclick="copiarTexto('${p.codigoBarras.replace(/'/g, "\\'")}')">Cód. Barras</button></div>`;
+                html += '<div class="codigos-container"><button class="btn-copiar btn-barras" onclick="copiarTexto(\'' + p.codigoBarras.replace(/'/g, "\\'") + '\')">Cód. Barras</button></div>';
             }
         }
-        
-        const chave = `${pedidoId}_${p.num}_${tipo}`;
-        
-        html += `<div class="codigos-container" style="margin-top: 6px;">
-                    <label class="pagamento-checkbox ${labelClass}" onclick="event.stopPropagation();">
-                        <input type="checkbox" data-id="${chave}" ${checked} onchange="handlePagamentoChange('${pedidoId}', ${p.num}, '${tipo}', this.checked)">
-                        <span>${labelText}</span>
-                    </label>
-                </div>`;
-        
-        html += `</div>`;
+        var chave = pedidoId + '_' + p.num + '_' + tipo;
+        html += '<div class="codigos-container" style="margin-top: 6px;"><label class="pagamento-checkbox ' + labelClass + '" onclick="event.stopPropagation();"><input type="checkbox" data-id="' + chave + '" ' + checked + ' onchange="handlePagamentoChange(\'' + pedidoId + '\', ' + p.num + ', \'' + tipo + '\', this.checked)"><span>' + labelText + '</span></label></div>';
+        html += '</div>';
     });
-    html += `</div>`;
+    html += '</div>';
     return html;
 }
 
-// ===== HANDLE PAGAMENTO =====
+// ============================================================
+// HANDLE PAGAMENTO
+// ============================================================
+
 async function handlePagamentoChange(pedidoId, parcelaId, tipo, pago) {
-    const chave = `${pedidoId}_${parcelaId}_${tipo}`;
-    const checkbox = document.querySelector(`input[data-id="${chave}"]`);
+    var chave = pedidoId + '_' + parcelaId + '_' + tipo;
+    var checkbox = document.querySelector('input[data-id="' + chave + '"]');
     if (checkbox) {
-        const label = checkbox.closest('.pagamento-checkbox');
-        const span = label.querySelector('span');
+        var label = checkbox.closest('.pagamento-checkbox');
+        var span = label.querySelector('span');
         if (pago) {
             label.classList.add('pago');
             label.classList.remove('nao-pago');
@@ -1367,15 +1160,14 @@ async function handlePagamentoChange(pedidoId, parcelaId, tipo, pago) {
             label.classList.remove('pago');
             span.textContent = '⏳ Pendente';
         }
-        const parcelaItem = checkbox.closest('.parcela-item');
+        var parcelaItem = checkbox.closest('.parcela-item');
         if (parcelaItem) {
             if (pago) parcelaItem.classList.add('pago');
             else parcelaItem.classList.remove('pago');
         }
     }
-    
-    const salvo = await salvarPagamentoBackend(pedidoId, parcelaId, tipo, pago);
-    const statusMsg = document.getElementById('statusSalvo');
+    var salvo = await salvarPagamentoBackend(pedidoId, parcelaId, tipo, pago);
+    var statusMsg = document.getElementById('statusSalvo');
     if (statusMsg) {
         if (salvo) {
             statusMsg.textContent = '✅ Pagamento salvo no servidor!';
@@ -1384,73 +1176,45 @@ async function handlePagamentoChange(pedidoId, parcelaId, tipo, pago) {
             statusMsg.textContent = '⚠️ Salvo localmente (offline)';
             statusMsg.style.color = '#e67e22';
         }
-        setTimeout(() => { statusMsg.textContent = ''; }, 3000);
+        setTimeout(function() { statusMsg.textContent = ''; }, 3000);
     }
-    
     if (modoVisualizacao === 'boletos') {
-        const activeSubmenu = document.querySelector('.btn-submenu.active');
+        var activeSubmenu = document.querySelector('.btn-submenu.active');
         if (activeSubmenu) {
-            const text = activeSubmenu.textContent.trim();
-            if (text.includes('semana')) {
-                mostrarBoletosSemana();
-            } else if (text.includes('mês')) {
-                mostrarBoletosMes();
-            } else if (text.includes('Atrasados')) {
-                mostrarBoletosAtrasados();
-            }
+            var text = activeSubmenu.textContent.trim();
+            if (text.indexOf('semana') !== -1) mostrarBoletosSemana();
+            else if (text.indexOf('mês') !== -1) mostrarBoletosMes();
+            else if (text.indexOf('Atrasados') !== -1) mostrarBoletosAtrasados();
+            else if (text.indexOf('Próxima semana') !== -1) mostrarBoletosProximaSemana();
+            else if (text.indexOf('Próximo mês') !== -1) mostrarBoletosProximoMes();
         }
     }
 }
 
-// ===== FUNÇÕES DE VISUALIZAÇÃO =====
+// ============================================================
+// FUNÇÕES DE VISUALIZAÇÃO
+// ============================================================
+
 function toggleDetalhes(id) {
-    const row = document.getElementById(`detalhe-${id}`);
+    var row = document.getElementById('detalhe-' + id);
     if (!row) return;
     row.classList.toggle('show');
-    const icon = row.previousElementSibling.querySelector('.expand-icon');
+    var icon = row.previousElementSibling.querySelector('.expand-icon');
     if (icon) icon.innerHTML = row.classList.contains('show') ? '▼' : '▶';
 }
 
 function voltarTabelaOriginal() {
     modoVisualizacao = 'tabela';
-    
-    // ===== FECHA TODOS OS SUBMENUS =====
     document.getElementById('mesContainer').style.display = 'none';
     document.getElementById('semanaInfo').style.display = 'none';
     document.getElementById('submenuBoletos').style.display = 'none';
     document.getElementById('submenuProdutos').style.display = 'none';
-    
-    // ===== REMOVE ACTIVE DE TODOS OS BOTÕES =====
-    document.querySelectorAll('.btn-actions .btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
-    
-    // ===== RESTAURA A TABELA ORIGINAL =====
-    const wrapper = document.getElementById('tableWrapper');
-    wrapper.innerHTML = `
-        <table id="dataTable">
-            <thead>
-                <tr>
-                    <th>Pedido</th>
-                    <th>Data</th>
-                    <th>NF</th>
-                    <th>Valor Total</th>
-                    <th>Produtos</th>
-                    <th>Royalties</th>
-                    <th>Propaganda</th>
-                    <th>Parcelas</th>
-                    <th>Valor Pendente</th>
-                    <th>Situação</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
-    `;
-    
-    // ===== MOSTRA OS ELEMENTOS ORIGINAIS =====
+    document.querySelectorAll('.btn-actions .btn').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.btn-submenu').forEach(function(b) { b.classList.remove('active'); });
+    var wrapper = document.getElementById('tableWrapper');
+    wrapper.innerHTML = '<table id="dataTable"><thead><tr><th>Pedido</th><th>Data</th><th>NF</th><th>Valor Total</th><th>Produtos</th><th>Royalties</th><th>Propaganda</th><th>Parcelas</th><th>Valor Pendente</th><th>Situação</th></tr></thead><tbody id="tableBody"></tbody></table>';
     document.getElementById('dataTable').style.display = 'table';
     document.getElementById('statsContainer').classList.remove('stats-hidden');
-    
-    // ===== RENDERIZA A TABELA ORIGINAL =====
     renderizarTabela();
 }
 
@@ -1463,110 +1227,578 @@ function resetFilters() {
     else renderizarTabela();
 }
 
-function exportarPagamentos() {
-    const pagamentos = carregarPagamentosSalvos();
-    if (Object.keys(pagamentos).length === 0) { alert('Nenhum pagamento marcado ainda.'); return; }
-    const texto = JSON.stringify(pagamentos, null, 2);
-    const blob = new Blob([texto], {type: 'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `pagamentos_${new Date().toISOString().slice(0,10)}.json`;
-    a.click(); URL.revokeObjectURL(url);
-    alert('✅ Arquivo exportado!');
+// ============================================================
+// BOLETOS
+// ============================================================
+
+function renderizarBoletos(boletos, titulo) {
+    var html = '<div class="mes-resumo" style="padding: 10px 20px; background: #e9ecef; border-bottom: 1px solid #ddd;">' + titulo + ' | Total: <strong>' + formatarMoedaBR(boletos.reduce(function(sum, item) { return sum + item.parcela.valor; }, 0)) + '</strong></div>';
+    html += '<div class="boletos-container">';
+    if (boletos.length === 0) {
+        html += '<div style="text-align:center; padding:20px; color:#667;">✅ Nenhum boleto encontrado!</div>';
+    } else {
+        var pedidosAgrupados = {};
+        boletos.forEach(function(item) {
+            if (!pedidosAgrupados[item.pedido.pedido]) {
+                pedidosAgrupados[item.pedido.pedido] = { pedido: item.pedido, parcelas: [] };
+            }
+            pedidosAgrupados[item.pedido.pedido].parcelas.push(item);
+        });
+        Object.keys(pedidosAgrupados).forEach(function(pedidoId) {
+            var item = pedidosAgrupados[pedidoId];
+            var totalPedido = item.parcelas.reduce(function(sum, p) { return sum + p.parcela.valor; }, 0);
+            var todasPagas = item.parcelas.every(function(p) {
+                return p.parcela.status === 'Pagos' || isPago(pedidoId, p.parcela.num, p.tipo);
+            });
+            item.parcelas.sort(function(a, b) { return dataParaComparacao(a.parcela.vencimento) - dataParaComparacao(b.parcela.vencimento); });
+            html += '<div class="boleto-card"><div class="boleto-header" onclick="toggleBoletoDetalhe(\'boleto-' + pedidoId + '\')"><div class="boleto-info"><span class="expand-icon" id="icon-boleto-' + pedidoId + '">▶</span><strong>' + pedidoId + '</strong><span>NF: ' + item.pedido.notaFiscal + '</span><span>📅 Vencimento: ' + item.parcelas[0].parcela.vencimento + '</span><span class="boleto-vencimento">' + item.parcelas.length + ' boletos</span>' + (todasPagas ? '<span style="color:#28a745; font-weight:bold;">✅ Todos pagos</span>' : '<span style="color:#e67e22; font-weight:bold;">⏳ Pendentes</span>') + '</div><div style="display:flex; gap:10px; align-items:center;"><span class="boleto-total ' + (todasPagas ? 'pago' : '') + '">' + formatarMoedaBR(totalPedido) + '</span><button class="btn-ver-pedido" onclick="event.stopPropagation(); irParaPedido(\'' + pedidoId + '\')">🔍 Ver pedido completo</button></div></div><div class="boleto-body" id="boleto-' + pedidoId + '">';
+            item.parcelas.forEach(function(p) {
+                var parc = p.parcela;
+                var tipo = p.tipo;
+                var pagoManual = isPago(pedidoId, parc.num, tipo);
+                var pagoOriginal = parc.status === 'Pagos';
+                var pago = pagoOriginal || pagoManual;
+                var checked = pago ? 'checked' : '';
+                var labelClass = pago ? 'pago' : 'nao-pago';
+                var labelText = pago ? '✅ Pago' : '⏳ Pendente';
+                var classePaga = pago ? 'pago' : '';
+                html += '<div class="parcela-item ' + classePaga + '"><div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap;"><div><strong>' + tipo.charAt(0).toUpperCase() + tipo.slice(1) + ' - Parcela ' + String(parc.num).padStart(2, '0') + '</strong><br>Valor: ' + formatarMoedaBR(parc.valor) + '<br>Vencimento: ' + parc.vencimento + '</div><div style="text-align:right;"><span class="' + (parc.status === 'Pagos' ? 'status-pagos' : 'status-a-vencer') + '">' + (parc.status || 'A vencer') + '</span></div></div><div class="codigos-container" style="margin-top: 6px;">';
+                if (tipo === 'produto') {
+                    if (parc.codigoPix) html += '<button class="btn-copiar btn-pix" onclick="copiarTexto(\'' + parc.codigoPix.replace(/'/g, "\\'") + '\')">PIX</button>';
+                    if (parc.codigoBarras) html += '<button class="btn-copiar btn-barras" onclick="copiarTexto(\'' + parc.codigoBarras.replace(/'/g, "\\'") + '\')">Cód. Barras</button>';
+                }
+                if (tipo === 'royalties' || tipo === 'propaganda') {
+                    if (parc.codigoBarras) html += '<button class="btn-copiar btn-barras" onclick="copiarTexto(\'' + parc.codigoBarras.replace(/'/g, "\\'") + '\')">Cód. Barras</button>';
+                }
+                var chave = pedidoId + '_' + parc.num + '_' + tipo;
+                html += '</div><div class="codigos-container" style="margin-top: 6px;"><label class="pagamento-checkbox ' + labelClass + '" onclick="event.stopPropagation();"><input type="checkbox" data-id="' + chave + '" ' + checked + ' onchange="handlePagamentoChange(\'' + pedidoId + '\', ' + parc.num + ', \'' + tipo + '\', this.checked)"><span>' + labelText + '</span></label></div></div>';
+            });
+            html += '</div></div>';
+        });
+    }
+    html += '</div>';
+    return html;
 }
 
-function limparPagamentos() {
-    if (confirm('Tem certeza que deseja limpar TODAS as marcações de pagamento?')) {
-        localStorage.removeItem(STORAGE_KEY);
-        localStorage.removeItem('pagamentos_backend');
-        pagamentosBackend = {};
-        renderizarTabela();
-        alert('🗑️ Todas as marcações foram removidas.');
+function toggleBoletoDetalhe(id) {
+    var body = document.getElementById(id);
+    var icon = document.getElementById('icon-' + id);
+    if (!body) return;
+    if (body.classList.contains('show')) {
+        body.classList.remove('show');
+        icon.textContent = '▶';
+    } else {
+        body.classList.add('show');
+        icon.textContent = '▼';
     }
 }
 
-// ===== EVENT LISTENERS =====
-document.getElementById('searchInput')?.addEventListener('input', renderizarTabela);
-document.getElementById('startDate')?.addEventListener('change', renderizarTabela);
-document.getElementById('endDate')?.addEventListener('change', renderizarTabela);
-document.getElementById('statusFilter')?.addEventListener('change', renderizarTabela);
-
-function getSemanaAtual() {
-    const hoje = new Date();
-    const diaSemana = hoje.getDay(); // 5 (Sexta)
+function toggleSubmenuBoletos() {
+    var submenu = document.getElementById('submenuBoletos');
+    var btnBoletos = document.getElementById('btnBoletosPagar');
+    if (!submenu || !btnBoletos) return;
     
-    // ===== CALCULAR O ÚLTIMO SÁBADO =====
-    const diffSabado = (diaSemana - 6 + 7) % 7; // (5 - 6 + 7) % 7 = 6
-    
-    const sabado = new Date(hoje);
-    sabado.setDate(hoje.getDate() - diffSabado); // 26/06 - 6 = 20/06
-    
-    const sexta = new Date(sabado);
-    sexta.setDate(sabado.getDate() + 6); // 20/06 + 6 = 26/06
-    
-    return { sabado, sexta };
-}
-
-function getMesAtual() {
-    const hoje = new Date();
-    const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
-    const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
-    return { primeiroDia, ultimoDia };
-}
-
-function dataParaComparacao(dataStr) {
-    const partes = dataStr.split('/');
-    if (partes.length === 3) {
-        return new Date(parseInt(partes[2]), parseInt(partes[1]) - 1, parseInt(partes[0]));
-    }
-    return new Date(dataStr);
-}
-
-function mesAnoParaComparacao(dataStr) {
-    if (!dataStr || dataStr === 'Sem Data' || dataStr === '') return null;
-    
-    const partes = dataStr.split('/');
-    if (partes.length === 3 && partes[1] && partes[2]) {
-        const mes = partes[1].padStart(2, '0');
-        return `${mes}/${partes[2]}`;
-    }
-    
-    const partesISO = dataStr.split('-');
-    if (partesISO.length === 3 && partesISO[1] && partesISO[0]) {
-        const mes = partesISO[1].padStart(2, '0');
-        return `${mes}/${partesISO[0]}`;
-    }
-    
-    return null;
-}
-
-function formatarMesAnoComNome(mesAno) {
-    if (!mesAno) return null;
-    const partes = mesAno.split('/');
-    if (partes.length !== 2) return mesAno;
-    const mes = partes[0].padStart(2, '0');
-    const ano = partes[1];
-    return `${getNomeMes(mes)} - ${mes}/${ano}`;
-}
-
-function copiarTexto(texto) {
-    if (!texto || texto === 'Nenhum' || texto === '') {
-        alert('⚠️ Nenhum código disponível para copiar.');
+    if (submenu.style.display === 'flex') {
+        submenu.style.display = 'none';
+        btnBoletos.classList.remove('active');
+        document.querySelectorAll('.btn-submenu').forEach(function(b) { b.classList.remove('active'); });
+        voltarTabelaOriginal();
         return;
     }
-    navigator.clipboard.writeText(texto).then(() => {
-        alert('✅ Código copiado para a área de transferência!');
-    }).catch(() => {
-        const textarea = document.createElement('textarea');
-        textarea.value = texto;
-        document.body.appendChild(textarea);
-        textarea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textarea);
-        alert('✅ Código copiado!');
+    
+    document.querySelectorAll('.btn-actions .btn').forEach(function(b) { b.classList.remove('active'); });
+    document.getElementById('mesContainer').style.display = 'none';
+    document.getElementById('semanaInfo').style.display = 'none';
+    submenu.style.display = 'flex';
+    btnBoletos.classList.add('active');
+    document.getElementById('dataTable').style.display = 'none';
+    document.getElementById('statsContainer').classList.add('stats-hidden');
+    modoVisualizacao = 'boletos';
+    recriarSubmenuBoletos();
+    mostrarBoletosSemana();
+}
+
+function recriarSubmenuBoletos() {
+    var submenu = document.getElementById('submenuBoletos');
+    if (!submenu) return;
+    
+    var activeId = null;
+    var activeBtn = submenu.querySelector('.btn-submenu.active');
+    if (activeBtn) activeId = activeBtn.id;
+    
+    submenu.innerHTML = '';
+    var botoes = [
+        { id: 'btnEssaSemana', texto: '📅 Essa semana', funcao: 'mostrarBoletosSemana()' },
+        { id: 'btnProximaSemana', texto: '📅 Próxima semana', funcao: 'mostrarBoletosProximaSemana()' },
+        { id: 'btnEsseMes', texto: '📅 Esse mês', funcao: 'mostrarBoletosMes()' },
+        { id: 'btnProximoMes', texto: '📅 Próximo mês', funcao: 'mostrarBoletosProximoMes()' },
+        { id: 'btnAtrasados', texto: '⚠️ Atrasados', funcao: 'mostrarBoletosAtrasados()' }
+    ];
+    botoes.forEach(function(item) {
+        var btn = document.createElement('button');
+        btn.id = item.id;
+        btn.className = 'btn-submenu';
+        btn.textContent = item.texto;
+        btn.setAttribute('onclick', item.funcao);
+        if (activeId === item.id) btn.classList.add('active');
+        submenu.appendChild(btn);
     });
 }
 
+function limparActiveBoletos() {
+    document.querySelectorAll('#submenuBoletos .btn-submenu').forEach(function(b) { b.classList.remove('active'); });
+}
+
+function ativarBotaoBoleto(id) {
+    limparActiveBoletos();
+    var btn = document.getElementById(id);
+    if (btn) btn.classList.add('active');
+}
+
+function mostrarBoletosSemana() {
+    var botoes = document.querySelectorAll('.btn-submenu');
+    botoes.forEach(function(b) { b.classList.remove('active'); });
+    var btn = document.getElementById('btnEssaSemana');
+    if (btn) btn.classList.add('active');
+    
+    document.getElementById('submenuBoletos').style.display = 'flex';
+    document.getElementById('dataTable').style.display = 'none';
+    document.getElementById('mesContainer').style.display = 'none';
+    document.getElementById('semanaInfo').style.display = 'block';
+    document.getElementById('statsContainer').classList.add('stats-hidden');
+    
+    var { sabado, sexta } = getSemanaAtual();
+    document.getElementById('semanaInfo').innerHTML = '📅 Semana atual: ' + sabado.toLocaleDateString('pt-BR') + ' a ' + sexta.toLocaleDateString('pt-BR');
+    
+    var boletosSemana = [];
+    pedidosData.forEach(function(p) {
+        var processarParcelas = function(parcelas, tipo) {
+            parcelas.forEach(function(parc) {
+                if (parc.status !== 'Pagos') {
+                    var dataVenc = dataParaComparacao(parc.vencimento);
+                    if (dataVenc >= sabado && dataVenc <= sexta) {
+                        boletosSemana.push({ pedido: p, parcela: parc, tipo: tipo });
+                    }
+                }
+            });
+        };
+        processarParcelas(p.parcelasProduto, 'produto');
+        processarParcelas(p.parcelasRoyalties, 'royalties');
+        processarParcelas(p.parcelasPropaganda, 'propaganda');
+    });
+    boletosSemana.sort(function(a, b) { return dataParaComparacao(a.parcela.vencimento) - dataParaComparacao(b.parcela.vencimento); });
+    var titulo = '📅 ' + boletosSemana.length + ' boletos a pagar esta semana';
+    document.getElementById('mesContainer').innerHTML = renderizarBoletos(boletosSemana, titulo);
+    document.getElementById('mesContainer').style.display = 'block';
+}
+
+function mostrarBoletosProximaSemana() {
+    document.querySelectorAll('.btn-submenu').forEach(function(b) { b.classList.remove('active'); });
+    var btn = document.getElementById('btnProximaSemana');
+    if (btn) btn.classList.add('active');
+    
+    document.getElementById('submenuBoletos').style.display = 'flex';
+    document.getElementById('dataTable').style.display = 'none';
+    document.getElementById('mesContainer').style.display = 'none';
+    document.getElementById('semanaInfo').style.display = 'block';
+    document.getElementById('statsContainer').classList.add('stats-hidden');
+    
+    var { sabado, sexta } = getProximaSemana();
+    document.getElementById('semanaInfo').innerHTML = '📅 Próxima semana: ' + sabado.toLocaleDateString('pt-BR') + ' a ' + sexta.toLocaleDateString('pt-BR');
+    
+    var boletosProximaSemana = [];
+    pedidosData.forEach(function(p) {
+        var processarParcelas = function(parcelas, tipo) {
+            parcelas.forEach(function(parc) {
+                if (parc.status !== 'Pagos') {
+                    var dataVenc = dataParaComparacao(parc.vencimento);
+                    if (dataVenc >= sabado && dataVenc <= sexta) {
+                        boletosProximaSemana.push({ pedido: p, parcela: parc, tipo: tipo });
+                    }
+                }
+            });
+        };
+        processarParcelas(p.parcelasProduto, 'produto');
+        processarParcelas(p.parcelasRoyalties, 'royalties');
+        processarParcelas(p.parcelasPropaganda, 'propaganda');
+    });
+    boletosProximaSemana.sort(function(a, b) { return dataParaComparacao(a.parcela.vencimento) - dataParaComparacao(b.parcela.vencimento); });
+    var titulo = '📅 ' + boletosProximaSemana.length + ' boletos para a próxima semana';
+    document.getElementById('mesContainer').innerHTML = renderizarBoletos(boletosProximaSemana, titulo);
+    document.getElementById('mesContainer').style.display = 'block';
+}
+
+function mostrarBoletosMes() {
+    document.querySelectorAll('.btn-submenu').forEach(function(b) { b.classList.remove('active'); });
+    var btn = document.getElementById('btnEsseMes');
+    if (btn) btn.classList.add('active');
+    
+    document.getElementById('submenuBoletos').style.display = 'flex';
+    document.getElementById('dataTable').style.display = 'none';
+    document.getElementById('mesContainer').style.display = 'none';
+    document.getElementById('semanaInfo').style.display = 'block';
+    document.getElementById('statsContainer').classList.add('stats-hidden');
+    
+    var { primeiroDia, ultimoDia } = getMesAtual();
+    document.getElementById('semanaInfo').innerHTML = '📅 Mês atual: ' + primeiroDia.toLocaleDateString('pt-BR') + ' a ' + ultimoDia.toLocaleDateString('pt-BR');
+    
+    var boletosMes = [];
+    pedidosData.forEach(function(p) {
+        var processarParcelas = function(parcelas, tipo) {
+            parcelas.forEach(function(parc) {
+                if (parc.status !== 'Pagos') {
+                    var dataVenc = dataParaComparacao(parc.vencimento);
+                    if (dataVenc >= primeiroDia && dataVenc <= ultimoDia) {
+                        boletosMes.push({ pedido: p, parcela: parc, tipo: tipo });
+                    }
+                }
+            });
+        };
+        processarParcelas(p.parcelasProduto, 'produto');
+        processarParcelas(p.parcelasRoyalties, 'royalties');
+        processarParcelas(p.parcelasPropaganda, 'propaganda');
+    });
+    boletosMes.sort(function(a, b) { return dataParaComparacao(a.parcela.vencimento) - dataParaComparacao(b.parcela.vencimento); });
+    var titulo = '📅 ' + boletosMes.length + ' boletos a pagar neste mês';
+    document.getElementById('mesContainer').innerHTML = renderizarBoletos(boletosMes, titulo);
+    document.getElementById('mesContainer').style.display = 'block';
+}
+
+function mostrarBoletosProximoMes() {
+    document.querySelectorAll('.btn-submenu').forEach(function(b) { b.classList.remove('active'); });
+    var btn = document.getElementById('btnProximoMes');
+    if (btn) btn.classList.add('active');
+    
+    document.getElementById('submenuBoletos').style.display = 'flex';
+    document.getElementById('dataTable').style.display = 'none';
+    document.getElementById('mesContainer').style.display = 'none';
+    document.getElementById('semanaInfo').style.display = 'block';
+    document.getElementById('statsContainer').classList.add('stats-hidden');
+    
+    var hoje = new Date();
+    var mesProximo = hoje.getMonth() + 2;
+    var anoProximo = hoje.getFullYear();
+    if (mesProximo > 12) { mesProximo = 1; anoProximo++; }
+    var primeiroDia = new Date(anoProximo, mesProximo - 1, 1);
+    var ultimoDia = new Date(anoProximo, mesProximo, 0);
+    var meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    document.getElementById('semanaInfo').innerHTML = '📅 Próximo mês: ' + meses[mesProximo - 1] + ' ' + anoProximo + ' (' + primeiroDia.toLocaleDateString('pt-BR') + ' a ' + ultimoDia.toLocaleDateString('pt-BR') + ')';
+    
+    var boletosProximoMes = [];
+    pedidosData.forEach(function(p) {
+        var processarParcelas = function(parcelas, tipo) {
+            parcelas.forEach(function(parc) {
+                if (parc.status !== 'Pagos') {
+                    var dataVenc = dataParaComparacao(parc.vencimento);
+                    if (dataVenc.getMonth() + 1 === mesProximo && dataVenc.getFullYear() === anoProximo) {
+                        boletosProximoMes.push({ pedido: p, parcela: parc, tipo: tipo });
+                    }
+                }
+            });
+        };
+        processarParcelas(p.parcelasProduto, 'produto');
+        processarParcelas(p.parcelasRoyalties, 'royalties');
+        processarParcelas(p.parcelasPropaganda, 'propaganda');
+    });
+    boletosProximoMes.sort(function(a, b) { return dataParaComparacao(a.parcela.vencimento) - dataParaComparacao(b.parcela.vencimento); });
+    var titulo = '📅 ' + boletosProximoMes.length + ' boletos no próximo mês';
+    document.getElementById('mesContainer').innerHTML = renderizarBoletos(boletosProximoMes, titulo);
+    document.getElementById('mesContainer').style.display = 'block';
+}
+
+function mostrarBoletosAtrasados() {
+    document.querySelectorAll('.btn-submenu').forEach(function(b) { b.classList.remove('active'); });
+    var btn = document.getElementById('btnAtrasados');
+    if (btn) btn.classList.add('active');
+    
+    document.getElementById('submenuBoletos').style.display = 'flex';
+    document.getElementById('dataTable').style.display = 'none';
+    document.getElementById('mesContainer').style.display = 'none';
+    document.getElementById('semanaInfo').style.display = 'block';
+    document.getElementById('statsContainer').classList.add('stats-hidden');
+    
+    var hoje = new Date();
+    document.getElementById('semanaInfo').innerHTML = '⚠️ Boletos com vencimento anterior a ' + hoje.toLocaleDateString('pt-BR');
+    
+    var boletosAtrasados = [];
+    pedidosData.forEach(function(p) {
+        var processarParcelas = function(parcelas, tipo) {
+            parcelas.forEach(function(parc) {
+                if (parc.status !== 'Pagos') {
+                    var dataVenc = dataParaComparacao(parc.vencimento);
+                    if (dataVenc < hoje) {
+                        boletosAtrasados.push({ pedido: p, parcela: parc, tipo: tipo });
+                    }
+                }
+            });
+        };
+        processarParcelas(p.parcelasProduto, 'produto');
+        processarParcelas(p.parcelasRoyalties, 'royalties');
+        processarParcelas(p.parcelasPropaganda, 'propaganda');
+    });
+    boletosAtrasados.sort(function(a, b) { return dataParaComparacao(a.parcela.vencimento) - dataParaComparacao(b.parcela.vencimento); });
+    var titulo = '⚠️ ' + boletosAtrasados.length + ' boletos em atraso';
+    document.getElementById('mesContainer').innerHTML = renderizarBoletos(boletosAtrasados, titulo);
+    document.getElementById('mesContainer').style.display = 'block';
+}
+
+// ============================================================
+// PEDIDOS POR MÊS
+// ============================================================
+
+function mostrarPedidosPorMes() {
+    modoVisualizacao = 'pedidosMes';
+    document.querySelectorAll('.btn-actions .btn').forEach(function(b) { b.classList.remove('active'); });
+    document.getElementById('btnPedidosMes').classList.add('active');
+    document.getElementById('dataTable').style.display = 'none';
+    document.getElementById('semanaInfo').style.display = 'none';
+    document.getElementById('submenuBoletos').style.display = 'none';
+    document.getElementById('statsContainer').classList.add('stats-hidden');
+    document.querySelectorAll('.btn-submenu').forEach(function(b) { b.classList.remove('active'); });
+    
+    var mesMaisRecente = null;
+    var dataMaisRecente = null;
+    pedidosData.forEach(function(p) {
+        if (!p.isSemData && p.dataEmissao && p.dataEmissao !== 'Sem Data') {
+            var data = new Date(p.dataEmissao);
+            if (!isNaN(data)) {
+                if (!dataMaisRecente || data > dataMaisRecente) {
+                    dataMaisRecente = data;
+                    var mesAno = String(data.getMonth() + 1).padStart(2, '0') + '/' + data.getFullYear();
+                    mesMaisRecente = mesAno;
+                }
+            }
+        }
+    });
+    
+    var meses = {};
+    pedidosData.forEach(function(p) {
+        var mesAno;
+        if (p.isSemData) {
+            mesAno = mesMaisRecente;
+        } else {
+            mesAno = mesAnoParaComparacao(p.dataEmissao);
+        }
+        if (mesAno) {
+            if (!meses[mesAno]) meses[mesAno] = [];
+            meses[mesAno].push(p);
+        }
+    });
+    
+    var mesesOrdenados = Object.keys(meses).sort(function(a, b) {
+        var ma = a.split('/'), mb = b.split('/');
+        if (ma[1] !== mb[1]) return parseInt(mb[1]) - parseInt(ma[1]);
+        return parseInt(mb[0]) - parseInt(ma[0]);
+    });
+    
+    var html = '<div class="mes-container-accordion">';
+    mesesOrdenados.forEach(function(mes) {
+        var pedidos = meses[mes];
+        var totalPedidos = pedidos.length;
+        var totalValor = pedidos.reduce(function(sum, p) { return sum + p.valorTotal; }, 0);
+        var totalPagoMes = 0, totalPendenteMes = 0;
+        pedidos.forEach(function(p) {
+            var stats = calcularTotais([p]);
+            totalPagoMes += stats.totalPago;
+            totalPendenteMes += stats.totalPendente;
+        });
+        var nomeMes = formatarMesAnoComNome(mes);
+        var mesId = mes.replace('/', '_');
+        var pendenteClass = totalPendenteMes === 0 ? 'zerado' : '';
+        html += '<div class="mes-accordion-item"><div class="mes-accordion-header" onclick="toggleMesAcordion(\'' + mesId + '\')"><div class="mes-info"><strong>' + nomeMes + '</strong><span class="badge">' + totalPedidos + ' pedidos</span><span class="mes-total"><span class="mes-label">Total:</span> ' + formatarMoedaBR(totalValor) + '</span><span class="mes-pago"><span class="mes-label">Pago:</span> ' + formatarMoedaBR(totalPagoMes) + '</span><span class="mes-pendente ' + pendenteClass + '"><span class="mes-label">Pendente:</span> ' + formatarMoedaBR(totalPendenteMes) + '</span></div><span class="expand-icon" id="icon-' + mesId + '">▼</span></div><div class="mes-accordion-body" id="body-' + mesId + '">';
+        pedidos.forEach(function(p) {
+            var statsP = calcularTotais([p]);
+            var statusText = p.totalmentePago ? '✅ Totalmente Pago' : '⚠️ Pendente: ' + formatarMoedaBR(statsP.totalPendente);
+            var statusClass = p.totalmentePago ? 'status-pagos' : 'status-a-vencer';
+            var pedidoId = p.pedido.replace(/[^a-zA-Z0-9]/g, '_');
+            var isSemData = p.isSemData;
+            var dataDisplay = isSemData ? '📅 Sem Data' : '📅 ' + formatarDataBR(p.dataEmissao);
+            var styleSemData = isSemData ? 'background: #fff8e1;' : '';
+            html += '<div class="pedido-card" onclick="togglePedidoAcordion(\'' + pedidoId + '\', \'' + mesId + '\')" style="' + styleSemData + '"><div class="pedido-info"><span class="expand-icon" id="icon-pedido-' + pedidoId + '">▶</span><strong>' + p.pedido + '</strong><span>' + dataDisplay + '</span><span>NF: ' + p.notaFiscal + '</span><span>' + p.totalParcelas + 'x</span><span class="' + statusClass + '">' + statusText + '</span>' + (isSemData ? '<span style="color:#f39c12; font-size:11px;">⚠️ Sem data</span>' : '') + '</div><div style="display:flex; gap:10px; align-items:center;"><span class="pedido-total">' + formatarMoedaBR(p.valorTotal) + '</span><button class="btn-ver-pedido" onclick="event.stopPropagation(); irParaPedido(\'' + p.pedido + '\')">🔍 Ver pedido completo</button></div></div><div class="pedido-detalhes-accordion" id="detalhe-pedido-' + pedidoId + '"><div class="detail-card" style="' + (isSemData ? 'border-left-color: #f39c12;' : '') + '"><strong>📋 Detalhamento das Parcelas - Pedido ' + p.pedido + '</strong>' + (isSemData ? '<div style="color:#f39c12; margin-bottom:10px;">⚠️ Este pedido está com "Sem Data" - Aguardando processamento completo</div>' : '') + '<div style="font-size:12px; color:#667; margin-bottom:10px;">✅ Marque o checkbox para confirmar o pagamento manualmente.<span id="statusSalvo" class="status-salvo"></span></div><div class="parcela-grid">' + formatarParcelasHTML(p.parcelasProduto, 'Produto', 'produto', p.pedido) + formatarParcelasHTML(p.parcelasRoyalties, 'Royalties', 'royalties', p.pedido) + formatarParcelasHTML(p.parcelasPropaganda, 'Propaganda', 'propaganda', p.pedido) + '</div><div style="margin-top:12px;"><button class="btn-ver-pedido" onclick="irParaPedido(\'' + p.pedido + '\')" style="padding:8px 16px;">🔍 Ver pedido completo na lista</button></div></div></div>';
+        });
+        html += '</div></div>';
+    });
+    html += '</div>';
+    document.getElementById('mesContainer').innerHTML = html;
+    document.getElementById('mesContainer').style.display = 'block';
+}
+
+function toggleMesAcordion(mesId) {
+    var body = document.getElementById('body-' + mesId);
+    var icon = document.getElementById('icon-' + mesId);
+    var header = body ? body.previousElementSibling : null;
+    if (!body) return;
+    if (body.classList.contains('show')) {
+        body.classList.remove('show');
+        icon.textContent = '▼';
+        if (header) header.classList.remove('active');
+    } else {
+        body.classList.add('show');
+        icon.textContent = '▲';
+        if (header) header.classList.add('active');
+    }
+}
+
+function togglePedidoAcordion(pedidoId, mesId) {
+    var detalhe = document.getElementById('detalhe-pedido-' + pedidoId);
+    var icon = document.getElementById('icon-pedido-' + pedidoId);
+    if (!detalhe) return;
+    if (detalhe.classList.contains('show')) {
+        detalhe.classList.remove('show');
+        icon.textContent = '▶';
+    } else {
+        detalhe.classList.add('show');
+        icon.textContent = '▼';
+    }
+}
+
+// ============================================================
+// VALOR PAGO POR MÊS
+// ============================================================
+
+function mostrarPagosPorMes() {
+    modoVisualizacao = 'pagosMes';
+    document.querySelectorAll('.btn-actions .btn').forEach(function(b) { b.classList.remove('active'); });
+    document.getElementById('btnPagosMes').classList.add('active');
+    document.getElementById('dataTable').style.display = 'none';
+    document.getElementById('semanaInfo').style.display = 'none';
+    document.getElementById('submenuBoletos').style.display = 'none';
+    document.getElementById('statsContainer').classList.add('stats-hidden');
+    document.querySelectorAll('.btn-submenu').forEach(function(b) { b.classList.remove('active'); });
+    
+    var pagamentosPorMes = {};
+    pedidosData.forEach(function(p) {
+        var processarParcelas = function(parcelas, tipo) {
+            parcelas.forEach(function(parc) {
+                if (parc.status === 'Pagos' || isPago(p.pedido, parc.num, tipo)) {
+                    var mesAno = mesAnoParaComparacao(parc.vencimento);
+                    if (mesAno) {
+                        if (!pagamentosPorMes[mesAno]) pagamentosPorMes[mesAno] = [];
+                        pagamentosPorMes[mesAno].push({ pedido: p, parcela: parc, tipo: tipo });
+                    }
+                }
+            });
+        };
+        processarParcelas(p.parcelasProduto, 'produto');
+        processarParcelas(p.parcelasRoyalties, 'royalties');
+        processarParcelas(p.parcelasPropaganda, 'propaganda');
+    });
+    
+    var mesesOrdenados = Object.keys(pagamentosPorMes).sort(function(a, b) {
+        var ma = a.split('/'), mb = b.split('/');
+        if (ma[1] !== mb[1]) return parseInt(mb[1]) - parseInt(ma[1]);
+        return parseInt(mb[0]) - parseInt(ma[0]);
+    });
+    
+    var html = '<div class="mes-container-accordion">';
+    mesesOrdenados.forEach(function(mes) {
+        var itens = pagamentosPorMes[mes];
+        var total = itens.reduce(function(sum, item) { return sum + item.parcela.valor; }, 0);
+        var nomeMes = formatarMesAnoComNome(mes);
+        var mesId = 'pagos_' + mes.replace('/', '_');
+        html += '<div class="mes-accordion-item"><div class="mes-accordion-header" onclick="toggleMesAcordion(\'' + mesId + '\')"><div class="mes-info"><strong>' + nomeMes + '</strong><span class="badge">' + itens.length + ' boletos pagos</span><span class="mes-total"><span class="mes-label">Total:</span> ' + formatarMoedaBR(total) + '</span></div><div style="display:flex; align-items:center; gap:10px;"><button class="btn-download" onclick="event.stopPropagation(); baixarBoletosPagosDoMes(\'' + mes + '\')" style="background:#28a745; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600;">⬇️ Baixar boletos pagos do mês</button><span class="expand-icon" id="icon-' + mesId + '">▼</span></div></div><div class="mes-accordion-body" id="body-' + mesId + '">';
+        
+        var pedidosPagos = {};
+        itens.forEach(function(item) {
+            if (!pedidosPagos[item.pedido.pedido]) {
+                pedidosPagos[item.pedido.pedido] = { pedido: item.pedido, parcelas: [] };
+            }
+            pedidosPagos[item.pedido.pedido].parcelas.push(item);
+        });
+        var pedidosOrdenados = Object.keys(pedidosPagos).sort(function(a, b) {
+            var itemA = pedidosPagos[a], itemB = pedidosPagos[b];
+            return dataParaComparacao(itemB.parcelas[0].parcela.vencimento) - dataParaComparacao(itemA.parcelas[0].parcela.vencimento);
+        });
+        var pedidoIndex = 0;
+        pedidosOrdenados.forEach(function(pedidoId) {
+            pedidoIndex++;
+            var item = pedidosPagos[pedidoId];
+            var totalPedido = item.parcelas.reduce(function(sum, p) { return sum + p.parcela.valor; }, 0);
+            var pId = 'pago_' + mesId + '_' + pedidoIndex;
+            html += '<div class="pedido-card" onclick="togglePedidoAcordion(\'' + pId + '\', \'' + mesId + '\')" style="border-left-color: #28a745;"><div class="pedido-info"><span class="expand-icon" id="icon-pedido-' + pId + '">▶</span><strong>' + item.pedido.pedido + '</strong><span>📅 Boleto: ' + item.parcelas[0].parcela.vencimento + '</span><span>' + item.parcelas.length + ' boletos pagos</span><span style="font-size:11px; color:#667;">Pedido feito em ' + formatarDataBR(item.pedido.dataEmissao) + '</span></div><div style="display:flex; gap:10px; align-items:center;"><span class="pedido-total">' + formatarMoedaBR(totalPedido) + '</span><button class="btn-ver-pedido" onclick="event.stopPropagation(); irParaPedido(\'' + item.pedido.pedido + '\')">🔍 Ver pedido completo</button></div></div><div class="pedido-detalhes-accordion" id="detalhe-pedido-' + pId + '"><div class="detail-card" style="border-left-color: #28a745;"><strong>📋 Boletos pagos do Pedido ' + item.pedido.pedido + '</strong><table style="width:100%; margin-top:10px;"><thead><tr><th>Parcela</th><th>Tipo</th><th>Valor</th><th>Vencimento</th></tr></thead><tbody>';
+            var parcelasOrdenadas = item.parcelas.slice().sort(function(a, b) {
+                return dataParaComparacao(b.parcela.vencimento) - dataParaComparacao(a.parcela.vencimento);
+            });
+            parcelasOrdenadas.forEach(function(p) {
+                html += '<tr><td>' + p.parcela.num + 'ª parcela</td><td>' + p.tipo + '</td><td>' + formatarMoedaBR(p.parcela.valor) + '</td><td>' + p.parcela.vencimento + '</td></tr>';
+            });
+            html += '</tbody></table><div style="margin-top:12px;"><button class="btn-ver-pedido" onclick="irParaPedido(\'' + item.pedido.pedido + '\')" style="padding:8px 16px;">🔍 Ver pedido completo na lista</button></div></div></div>';
+        });
+        html += '</div></div>';
+    });
+    html += '</div>';
+    document.getElementById('mesContainer').innerHTML = html;
+    document.getElementById('mesContainer').style.display = 'block';
+}
+
+function baixarBoletosPagosDoMes(mesAno) {
+    var partes = mesAno.split('/');
+    var mes = parseInt(partes[0]);
+    var ano = parseInt(partes[1]);
+    var boletosPagos = [];
+    pedidosData.forEach(function(p) {
+        var processarParcelas = function(parcelas, tipo) {
+            parcelas.forEach(function(parc) {
+                if (parc.status === 'Pagos' || isPago(p.pedido, parc.num, tipo)) {
+                    var dataParc = dataParaComparacao(parc.vencimento);
+                    if (dataParc.getMonth() + 1 === mes && dataParc.getFullYear() === ano) {
+                        boletosPagos.push({ dia: dataParc.getDate(), valor: parc.valor, tipo: tipo });
+                    }
+                }
+            });
+        };
+        processarParcelas(p.parcelasProduto, 'produto');
+        processarParcelas(p.parcelasRoyalties, 'royalties');
+        processarParcelas(p.parcelasPropaganda, 'propaganda');
+    });
+    if (boletosPagos.length === 0) {
+        alert('Nenhum boleto pago encontrado para este mês.');
+        return;
+    }
+    var ultimoDia = new Date(ano, mes, 0).getDate();
+    var dias = {};
+    for (var d = 1; d <= ultimoDia; d++) {
+        dias[d] = { produto: 0, royalties: 0, propaganda: 0 };
+    }
+    boletosPagos.forEach(function(b) {
+        if (b.tipo === 'produto') dias[b.dia].produto += b.valor;
+        else if (b.tipo === 'royalties') dias[b.dia].royalties += b.valor;
+        else if (b.tipo === 'propaganda') dias[b.dia].propaganda += b.valor;
+    });
+    var meses = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+    var nomeMes = meses[mes - 1];
+    var linha1 = '';
+    for (var d = 1; d <= ultimoDia; d++) {
+        linha1 += ';' + String(d).padStart(2, '0') + '/' + nomeMes;
+    }
+    var linha2 = 'Produtos = Natura';
+    for (var d = 1; d <= ultimoDia; d++) {
+        linha2 += ';' + (Math.round(dias[d].produto)).toFixed(2).replace('.', ',');
+    }
+    var linha3 = 'Produtos = Outras Marcas';
+    for (var d = 1; d <= ultimoDia; d++) {
+        linha3 += ';';
+    }
+    var linha4 = 'Royalties';
+    for (var d = 1; d <= ultimoDia; d++) {
+        linha4 += ';' + (Math.round(dias[d].royalties)).toFixed(2).replace('.', ',');
+    }
+    var linha5 = 'Fundo de Propaganda';
+    for (var d = 1; d <= ultimoDia; d++) {
+        linha5 += ';' + (Math.round(dias[d].propaganda)).toFixed(2).replace('.', ',');
+    }
+    var csvContent = [linha1, linha2, linha3, linha4, linha5].join('\n');
+    var blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    var link = document.createElement('a');
+    var url = URL.createObjectURL(blob);
+    link.href = url;
+    link.download = 'boletos_pagos_' + mesAno.replace('/', '_') + '.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    showNotification('✅ Arquivo baixado: boletos_pagos_' + mesAno.replace('/', '_') + '.csv', 'success');
+}
 
 // ============================================================
 // SUBMENU PRODUTOS
