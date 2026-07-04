@@ -7190,7 +7190,582 @@ function irParaPedidoNaTabela(pedidoId, codigoProduto, nomeProduto) {
 
 
 
+// ============================================================
+// SISTEMA DE BUSCA DE PRODUTOS
+// ============================================================
 
+function adicionarBuscarProduto() {
+    console.log('🔍 Adicionando sistema de busca de produtos...');
+    
+    // ===== 1. ADICIONAR CSS =====
+    const style = document.createElement('style');
+    style.textContent = `
+        .parcelas-detail {
+            display: none;
+        }
+        .parcelas-detail.show {
+            display: table-row;
+        }
+        .pedido-row {
+            cursor: pointer;
+        }
+        .pedido-row:hover {
+            background: #e8f4f8 !important;
+        }
+        #containerBuscaProduto {
+            display: none;
+            padding: 8px 16px;
+            background: #f0f4f8;
+            border-bottom: 1px solid #e0e0e0;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        #containerBuscaProduto input {
+            flex: 1;
+            min-width: 180px;
+            max-width: 400px;
+            padding: 6px 12px;
+            border: 1px solid #ccc;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+        #containerBuscaProduto button {
+            padding: 5px 14px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .btn-buscar {
+            background: #0b4f6c;
+            color: white;
+        }
+        .btn-buscar:hover {
+            background: #063a4f;
+        }
+        .btn-limpar {
+            background: #6c757d;
+            color: white;
+        }
+        .btn-limpar:hover {
+            background: #5a6268;
+        }
+    `;
+    document.head.appendChild(style);
+
+    // ===== 2. ADICIONAR BOTÃO NO SUBMENU =====
+    const submenu = document.getElementById('submenuProdutos');
+    if (!submenu) {
+        console.log('❌ Submenu não encontrado');
+        return;
+    }
+
+    if (document.getElementById('btnBuscarProduto')) {
+        console.log('ℹ️ Botão já existe');
+        return;
+    }
+
+    const btnBuscar = document.createElement('button');
+    btnBuscar.id = 'btnBuscarProduto';
+    btnBuscar.className = 'btn-submenu';
+    btnBuscar.textContent = '🔍 Buscar produto';
+    btnBuscar.onclick = function() {
+        mostrarBuscaProdutos();
+        document.querySelectorAll('#submenuProdutos .btn-submenu').forEach(b => {
+            b.classList.remove('active');
+        });
+        this.classList.add('active');
+    };
+
+    const botoes = submenu.querySelectorAll('.btn-submenu');
+    if (botoes.length > 0) {
+        botoes[botoes.length - 1].parentNode.insertBefore(btnBuscar, botoes[botoes.length - 1].nextSibling);
+    } else {
+        submenu.appendChild(btnBuscar);
+    }
+
+    // ===== 3. CRIAR CONTAINER DE BUSCA =====
+    if (!document.getElementById('containerBuscaProduto')) {
+        const container = document.createElement('div');
+        container.id = 'containerBuscaProduto';
+        
+        const input = document.createElement('input');
+        input.id = 'inputBuscaProduto';
+        input.type = 'text';
+        input.placeholder = 'Digite o código ou nome do produto...';
+        
+        const btnBuscarAction = document.createElement('button');
+        btnBuscarAction.className = 'btn-buscar';
+        btnBuscarAction.textContent = '🔍 Buscar';
+        btnBuscarAction.onclick = function() {
+            executarBuscaProduto();
+        };
+        
+        const btnLimpar = document.createElement('button');
+        btnLimpar.className = 'btn-limpar';
+        btnLimpar.textContent = '✕ Limpar';
+        btnLimpar.onclick = function() {
+            document.getElementById('inputBuscaProduto').value = '';
+            document.getElementById('containerBuscaProduto').style.display = 'none';
+            document.getElementById('btnBuscarProduto').classList.remove('active');
+            if (typeof mostrarProdutosPorPedido === 'function') {
+                mostrarProdutosPorPedido();
+            }
+        };
+        
+        container.appendChild(input);
+        container.appendChild(btnBuscarAction);
+        container.appendChild(btnLimpar);
+        
+        if (submenu) {
+            submenu.parentNode.insertBefore(container, submenu.nextSibling);
+        }
+        
+        input.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                executarBuscaProduto();
+            }
+        });
+    }
+
+    console.log('✅ Sistema de busca adicionado!');
+}
+
+// ============================================================
+// FUNÇÃO: MOSTRAR BUSCA DE PRODUTOS
+// ============================================================
+
+function mostrarBuscaProdutos() {
+    console.log('🔍 Abrindo busca de produtos...');
+    
+    const tableWrapper = document.getElementById('tableWrapper');
+    if (tableWrapper) {
+        tableWrapper.innerHTML = `
+            <div style="text-align:center; padding:60px 20px; color:#667;">
+                <div style="font-size:48px; margin-bottom:16px;">🔍</div>
+                <div style="font-size:18px; font-weight:600; margin-bottom:8px;">Buscar produtos</div>
+                <div style="font-size:14px; color:#999;">Digite o código ou nome do produto abaixo e clique em Buscar</div>
+            </div>
+        `;
+    }
+    
+    const container = document.getElementById('containerBuscaProduto');
+    if (container) {
+        container.style.display = 'flex';
+        document.getElementById('inputBuscaProduto').focus();
+    }
+    
+    const semanaInfo = document.getElementById('semanaInfo');
+    if (semanaInfo) {
+        semanaInfo.innerHTML = `
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0;">
+                <span style="font-weight:600; color:#0b4f6c; font-size:13px;">Período:</span>
+                <button class="btn-submenu active" onclick="filtrarBuscaProdutos('todo')">Todo o período</button>
+                <button class="btn-submenu" onclick="filtrarBuscaProdutos('mes')">Esse mês</button>
+                <button class="btn-submenu" onclick="filtrarBuscaProdutos('3meses')">Últimos 3 meses</button>
+                <button class="btn-submenu" onclick="filtrarBuscaProdutos('5meses')">Últimos 5 meses</button>
+                <button class="btn-submenu" onclick="filtrarBuscaProdutos('8meses')">Últimos 8 meses</button>
+                <button class="btn-submenu" onclick="filtrarBuscaProdutos('12meses')">Últimos 12 meses</button>
+            </div>
+        `;
+        semanaInfo.style.display = 'block';
+        semanaInfo.style.background = '#e8f5e9';
+        semanaInfo.style.padding = '12px 16px';
+        semanaInfo.style.borderRadius = '8px';
+        semanaInfo.style.marginBottom = '12px';
+        semanaInfo.style.border = '1px solid #c8e6c9';
+    }
+    
+    window.modoBuscaAtivo = true;
+    window.periodoBusca = 'todo';
+    window.termoBusca = '';
+    
+    console.log('✅ Busca de produtos ativada');
+}
+
+// ============================================================
+// FUNÇÃO: EXECUTAR BUSCA DE PRODUTO
+// ============================================================
+
+function executarBuscaProduto() {
+    const input = document.getElementById('inputBuscaProduto');
+    if (!input) return;
+    
+    const termo = input.value.trim();
+    if (termo === '') {
+        mostrarBuscaProdutos();
+        return;
+    }
+    
+    console.log(`🔍 Buscando por: "${termo}"`);
+    window.termoBusca = termo;
+    
+    const periodo = window.periodoBusca || 'todo';
+    const produtosEncontrados = buscarProdutosPorTermo(termo, periodo);
+    
+    renderizarResultadosBusca(produtosEncontrados, termo, periodo);
+}
+
+// ============================================================
+// FUNÇÃO: BUSCAR PRODUTOS POR TERMO E PERÍODO
+// ============================================================
+
+function buscarProdutosPorTermo(termo, periodo) {
+    console.log(`🔍 Buscando "${termo}" no período: ${periodo}`);
+    
+    let dataLimite = null;
+    const agora = new Date();
+    
+    if (periodo === 'mes') {
+        dataLimite = new Date(agora.getFullYear(), agora.getMonth(), 1);
+    } else if (periodo === '3meses') {
+        dataLimite = new Date(agora);
+        dataLimite.setMonth(agora.getMonth() - 3);
+    } else if (periodo === '5meses') {
+        dataLimite = new Date(agora);
+        dataLimite.setMonth(agora.getMonth() - 5);
+    } else if (periodo === '8meses') {
+        dataLimite = new Date(agora);
+        dataLimite.setMonth(agora.getMonth() - 8);
+    } else if (periodo === '12meses') {
+        dataLimite = new Date(agora);
+        dataLimite.setMonth(agora.getMonth() - 12);
+    }
+    
+    const produtosMap = {};
+    const termoLower = termo.toLowerCase();
+    
+    if (typeof produtosData === 'undefined' || produtosData.length === 0) {
+        console.log('⏳ Produtos não carregados');
+        return [];
+    }
+    
+    produtosData.forEach(pedido => {
+        if (dataLimite) {
+            const dataPedido = new Date(pedido.data.split('/').reverse().join('/'));
+            if (dataPedido < dataLimite) return;
+        }
+        
+        if (!pedido.linhas || pedido.linhas.length === 0) return;
+        
+        pedido.linhas.forEach(linha => {
+            if (linha.isIndisponivel) return;
+            
+            const codigo = (linha.codigo || '').toLowerCase();
+            const produto = (linha.produto || '').toLowerCase();
+            
+            if (codigo.includes(termoLower) || produto.includes(termoLower)) {
+                const chave = linha.codigo;
+                
+                if (!produtosMap[chave]) {
+                    const qtd = parseInt(linha.quantidade) || 0;
+                    const valorUnit = linha.valorUnit || 0;
+                    const vendaUnit = linha.vendaUnit || 0;
+                    const lucroUni = vendaUnit - valorUnit;
+                    const lucroPercentual = valorUnit > 0 ? (lucroUni / valorUnit) * 100 : 0;
+                    
+                    produtosMap[chave] = {
+                        codigo: linha.codigo || '',
+                        produto: linha.produto || '',
+                        vezes: 1,
+                        quantidadeTotal: qtd,
+                        valoresCompra: [valorUnit],
+                        valoresVenda: [vendaUnit],
+                        lucros: [lucroUni],
+                        lucrosPercentuais: [lucroPercentual],
+                        pedidos: [{
+                            pedido: pedido.pedido,
+                            data: pedido.data,
+                            quantidade: qtd,
+                            valorCompra: valorUnit,
+                            valorVenda: vendaUnit,
+                            lucroUni: lucroUni,
+                            lucroPercentual: lucroPercentual
+                        }]
+                    };
+                } else {
+                    const item = produtosMap[chave];
+                    const qtd = parseInt(linha.quantidade) || 0;
+                    const valorUnit = linha.valorUnit || 0;
+                    const vendaUnit = linha.vendaUnit || 0;
+                    const lucroUni = vendaUnit - valorUnit;
+                    const lucroPercentual = valorUnit > 0 ? (lucroUni / valorUnit) * 100 : 0;
+                    
+                    item.vezes++;
+                    item.quantidadeTotal += qtd;
+                    item.valoresCompra.push(valorUnit);
+                    item.valoresVenda.push(vendaUnit);
+                    item.lucros.push(lucroUni);
+                    item.lucrosPercentuais.push(lucroPercentual);
+                    item.pedidos.push({
+                        pedido: pedido.pedido,
+                        data: pedido.data,
+                        quantidade: qtd,
+                        valorCompra: valorUnit,
+                        valorVenda: vendaUnit,
+                        lucroUni: lucroUni,
+                        lucroPercentual: lucroPercentual
+                    });
+                }
+            }
+        });
+    });
+    
+    const resultados = Object.values(produtosMap);
+    resultados.sort((a, b) => b.quantidadeTotal - a.quantidadeTotal);
+    
+    console.log(`📊 ${resultados.length} produtos encontrados`);
+    return resultados;
+}
+
+// ============================================================
+// FUNÇÃO: RENDERIZAR RESULTADOS DA BUSCA
+// ============================================================
+
+function renderizarResultadosBusca(produtos, termo, periodo) {
+    const container = document.getElementById('tableWrapper');
+    if (!container) return;
+    
+    if (produtos.length === 0) {
+        container.innerHTML = `
+            <div style="text-align:center; padding:60px 20px; color:#667;">
+                <div style="font-size:48px; margin-bottom:16px;">🔍</div>
+                <div style="font-size:18px; font-weight:600; margin-bottom:8px;">Nenhum produto encontrado</div>
+                <div style="font-size:14px; color:#999;">Não encontramos resultados para "<strong>${termo}</strong>"</div>
+                <br>
+                <button onclick="document.getElementById('inputBuscaProduto').value=''; executarBuscaProduto();" class="btn" style="background:#28a745; padding:8px 24px;">Limpar busca</button>
+            </div>
+        `;
+        return;
+    }
+    
+    const periodos = {
+        'todo': 'Todo o período',
+        'mes': 'Esse mês',
+        '3meses': 'Últimos 3 meses',
+        '5meses': 'Últimos 5 meses',
+        '8meses': 'Últimos 8 meses',
+        '12meses': 'Últimos 12 meses'
+    };
+    
+    let html = `
+        <div style="overflow-x:auto; padding:20px 0;">
+            <div style="font-size:14px; font-weight:600; color:#0b4f6c; margin-bottom:15px; padding:0 10px;">
+                🔍 Resultados para "${termo}" - ${produtos.length} produto(s) (${periodos[periodo] || 'Todo o período'})
+            </div>
+            <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                <thead>
+                    <tr style="background:#f8f9fa; position:sticky; top:0; z-index:10; border-bottom:2px solid #e5e7eb;">
+                        <th style="padding:12px 10px; text-align:left; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Código</th>
+                        <th style="padding:12px 10px; text-align:left; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Produto</th>
+                        <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Pedido x vezes</th>
+                        <th style="padding:12px 10px; text-align:center; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Quantidade Total</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Valor Compra</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Valor Venda</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Lucro Uni</th>
+                        <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Lucro (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+    `;
+    
+    const maxResultados = 100;
+    const exibirProdutos = produtos.slice(0, maxResultados);
+    
+    exibirProdutos.forEach((item) => {
+        const minCompra = item.valoresCompra.length > 0 ? Math.min(...item.valoresCompra) : 0;
+        const maxCompra = item.valoresCompra.length > 0 ? Math.max(...item.valoresCompra) : 0;
+        const minVenda = item.valoresVenda.length > 0 ? Math.min(...item.valoresVenda) : 0;
+        const maxVenda = item.valoresVenda.length > 0 ? Math.max(...item.valoresVenda) : 0;
+        const minLucro = item.lucros.length > 0 ? Math.min(...item.lucros) : 0;
+        const maxLucro = item.lucros.length > 0 ? Math.max(...item.lucros) : 0;
+        const minLucroPerc = item.lucrosPercentuais.length > 0 ? Math.min(...item.lucrosPercentuais) : 0;
+        const maxLucroPerc = item.lucrosPercentuais.length > 0 ? Math.max(...item.lucrosPercentuais) : 0;
+        
+        const compraStr = minCompra === maxCompra ? formatarMoedaBR(minCompra) : `${formatarMoedaBR(minCompra)} até ${formatarMoedaBR(maxCompra)}`;
+        const vendaStr = minVenda === maxVenda ? formatarMoedaBR(minVenda) : `${formatarMoedaBR(minVenda)} até ${formatarMoedaBR(maxVenda)}`;
+        const lucroUniStr = minLucro === maxLucro ? formatarMoedaBR(minLucro) : `${formatarMoedaBR(minLucro)} até ${formatarMoedaBR(maxLucro)}`;
+        const lucroPercStr = minLucroPerc === maxLucroPerc ? `${minLucroPerc.toFixed(1)}%` : `${minLucroPerc.toFixed(1)}% até ${maxLucroPerc.toFixed(1)}%`;
+        
+        html += `
+            <tr class="pedido-row" onclick="toggleDetalhesBusca('${item.codigo}')" style="cursor:pointer; transition:background 0.2s;">
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle;">
+                    <span class="expand-icon" id="icon-busca-${item.codigo}">▶</span> ${item.codigo}
+                </td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle;">${item.produto}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${item.vezes}x</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:center;">${item.quantidadeTotal}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${compraStr}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${vendaStr}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${lucroUniStr}</td>
+                <td style="padding:10px; border-bottom:1px solid #e9ecef; vertical-align:middle; text-align:right;">${lucroPercStr}</td>
+            </tr>
+            <tr id="detalhe-busca-${item.codigo}" class="parcelas-detail">
+                <td colspan="8">
+                    <div class="detail-card">
+                        <strong>📋 Pedidos do produto ${item.codigo} - ${item.produto}</strong>
+                        <div style="margin-top:10px; overflow-x:auto;">
+                            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                                <thead>
+                                    <tr style="background:#f1f3f5;">
+                                        <th style="padding:6px 8px; text-align:left;">Pedido</th>
+                                        <th style="padding:6px 8px; text-align:left;">Data</th>
+                                        <th style="padding:6px 8px; text-align:center;">Qtd</th>
+                                        <th style="padding:6px 8px; text-align:right;">Valor Compra Uni</th>
+                                        <th style="padding:6px 8px; text-align:right;">Valor Venda Uni</th>
+                                        <th style="padding:6px 8px; text-align:right;">Valor Compra Total</th>
+                                        <th style="padding:6px 8px; text-align:right;">Valor Venda Total</th>
+                                        <th style="padding:6px 8px; text-align:right;">Lucro Uni</th>
+                                        <th style="padding:6px 8px; text-align:right;">Lucro Total</th>
+                                        <th style="padding:6px 8px; text-align:right;">Lucro %</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            `;
+            
+            item.pedidos.forEach(ped => {
+                const valorCompraTotal = ped.valorCompra * ped.quantidade;
+                const valorVendaTotal = ped.valorVenda * ped.quantidade;
+                const lucroTotal = ped.lucroUni * ped.quantidade;
+                
+                html += `
+                    <tr>
+                        <td style="padding:6px 8px;">
+                            <a href="#" onclick="event.stopPropagation(); irParaPedido('${ped.pedido}', '${item.codigo}', '${item.produto}')" 
+                               style="color:#0b4f6c; text-decoration:underline; cursor:pointer; font-weight:bold;">
+                                ${ped.pedido}
+                            </a>
+                        </td>
+                        <td style="padding:6px 8px;">${ped.data}</td>
+                        <td style="padding:6px 8px; text-align:center;">${ped.quantidade}</td>
+                        <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(ped.valorCompra)}</td>
+                        <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(ped.valorVenda)}</td>
+                        <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(valorCompraTotal)}</td>
+                        <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(valorVendaTotal)}</td>
+                        <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(ped.lucroUni)}</td>
+                        <td style="padding:6px 8px; text-align:right;">${formatarMoedaBR(lucroTotal)}</td>
+                        <td style="padding:6px 8px; text-align:right;">${ped.lucroPercentual.toFixed(1)}%</td>
+                    </tr>
+                `;
+            });
+            
+            html += `
+                                </tbody>
+                            </table>
+                        </div>
+                        <small>Clique no número do pedido para ir ao pedido completo</small>
+                    </div>
+                </td>
+            </tr>
+        `;
+    });
+    
+    if (produtos.length > maxResultados) {
+        html += `
+            <tr>
+                <td colspan="8" style="padding:12px; text-align:center; color:#999; font-style:italic;">
+                    ... e mais ${produtos.length - maxResultados} resultados. Refine sua busca para ver mais.
+                </td>
+            </tr>
+        `;
+    }
+    
+    html += `
+                </tbody>
+            </table>
+        </div>
+    `;
+    
+    container.innerHTML = html;
+}
+
+// ============================================================
+// FUNÇÃO: TOGGLE DETALHES DA BUSCA
+// ============================================================
+
+function toggleDetalhesBusca(codigo) {
+    const row = document.getElementById(`detalhe-busca-${codigo}`);
+    if (!row) return;
+    
+    row.classList.toggle('show');
+    const icon = document.getElementById(`icon-busca-${codigo}`);
+    if (icon) icon.innerHTML = row.classList.contains('show') ? '▼' : '▶';
+}
+
+// ============================================================
+// FUNÇÃO: FILTRAR BUSCA POR PERÍODO
+// ============================================================
+
+function filtrarBuscaProdutos(periodo) {
+    console.log(`📅 Filtrando busca por período: ${periodo}`);
+    window.periodoBusca = periodo;
+    
+    const botoes = document.querySelectorAll('#semanaInfo .btn-submenu');
+    botoes.forEach(btn => btn.classList.remove('active'));
+    
+    const periodos = {
+        'todo': 'Todo o período',
+        'mes': 'Esse mês',
+        '3meses': 'Últimos 3 meses',
+        '5meses': 'Últimos 5 meses',
+        '8meses': 'Últimos 8 meses',
+        '12meses': 'Últimos 12 meses'
+    };
+    
+    botoes.forEach(btn => {
+        if (btn.textContent.trim() === periodos[periodo]) {
+            btn.classList.add('active');
+        }
+    });
+    
+    const termo = document.getElementById('inputBuscaProduto')?.value?.trim() || '';
+    if (termo !== '') {
+        const produtos = buscarProdutosPorTermo(termo, periodo);
+        renderizarResultadosBusca(produtos, termo, periodo);
+    }
+}
+
+// ============================================================
+// INICIALIZAR BUSCA
+// ============================================================
+
+function inicializarBuscaProdutos() {
+    if (typeof produtosData !== 'undefined' && produtosData.length > 0) {
+        adicionarBuscarProduto();
+        console.log('✅ Busca de produtos ativada!');
+    } else {
+        console.log('⏳ Aguardando carregamento de produtos...');
+        if (typeof carregarProdutos === 'function') {
+            carregarProdutos().then(() => {
+                adicionarBuscarProduto();
+                console.log('✅ Busca de produtos ativada após carregamento!');
+            });
+        } else {
+            // Tentar novamente em 2 segundos
+            setTimeout(() => {
+                if (typeof produtosData !== 'undefined' && produtosData.length > 0) {
+                    adicionarBuscarProduto();
+                    console.log('✅ Busca de produtos ativada!');
+                }
+            }, 2000);
+        }
+    }
+}
+
+// ============================================================
+// EXECUTAR
+// ============================================================
+
+inicializarBuscaProdutos();
+
+console.log('✅ FUNÇÃO "BUSCAR PRODUTO" INSTALADA!');
+console.log('   - Clique em "🔍 Buscar produto" no submenu de produtos');
+console.log('   - Digite o código ou nome do produto');
+console.log('   - Use o período para filtrar os resultados');
+console.log('   - Clique em um produto para ver os pedidos onde aparece');
+console.log('   - Clique no número do pedido para ir ao pedido completo');
 
 
 
