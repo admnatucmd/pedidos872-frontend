@@ -7769,16 +7769,15 @@ console.log('   - Clique no número do pedido para ir ao pedido completo');
 
 
 
-
 // ============================================================
-// CONFIGURAÇÃO COMPLETA: CAMPO DE BUSCA COM "X" + FECHAR AO MUDAR DE ABA
+// CONFIGURAÇÃO COMPLETA DA BUSCA DE PRODUTOS - VERSÃO FINAL
 // ============================================================
 
-function configurarBuscaCompleta() {
-    console.log('🔄 Configurando busca completa...');
+(function() {
+    console.log('🔧 INICIALIZANDO SISTEMA DE BUSCA DE PRODUTOS...');
     
     // ===== 1. ADICIONAR BOTÃO "X" DENTRO DO CAMPO =====
-    function adicionarBotaoX() {
+    function configurarBotaoX() {
         const input = document.getElementById('inputBuscaProduto');
         if (!input) {
             console.log('❌ Input não encontrado');
@@ -7786,31 +7785,21 @@ function configurarBuscaCompleta() {
         }
         
         const container = document.getElementById('containerBuscaProduto');
-        if (!container) return;
+        if (!container) {
+            console.log('❌ Container não encontrado');
+            return;
+        }
         
         let wrapper = container.querySelector('.input-wrapper');
         if (!wrapper) {
             wrapper = document.createElement('div');
             wrapper.className = 'input-wrapper';
-            wrapper.style.cssText = `
-                position: relative;
-                flex: 1;
-                min-width: 180px;
-                max-width: 400px;
-                display: inline-block;
-            `;
+            wrapper.style.cssText = 'position:relative;flex:1;min-width:180px;max-width:400px;display:inline-block;';
             
             input.parentNode.insertBefore(wrapper, input);
             wrapper.appendChild(input);
             
-            input.style.cssText = `
-                width: 100%;
-                padding: 6px 32px 6px 12px;
-                border: 1px solid #ccc;
-                border-radius: 6px;
-                font-size: 13px;
-                box-sizing: border-box;
-            `;
+            input.style.cssText = 'width:100%;padding:6px 32px 6px 12px;border:1px solid #ccc;border-radius:6px;font-size:13px;box-sizing:border-box;';
         }
         
         let btnClear = wrapper.querySelector('.btn-clear-input');
@@ -7818,35 +7807,14 @@ function configurarBuscaCompleta() {
             btnClear = document.createElement('button');
             btnClear.className = 'btn-clear-input';
             btnClear.textContent = '✕';
-            btnClear.style.cssText = `
-                position: absolute;
-                right: 8px;
-                top: 50%;
-                transform: translateY(-50%);
-                background: none;
-                border: none;
-                cursor: pointer;
-                font-size: 14px;
-                color: #999;
-                padding: 4px 6px;
-                border-radius: 4px;
-                display: none;
-                z-index: 1;
-            `;
-            
-            btnClear.addEventListener('mouseenter', function() {
-                this.style.color = '#333';
-            });
-            btnClear.addEventListener('mouseleave', function() {
-                this.style.color = '#999';
-            });
+            btnClear.style.cssText = 'position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;font-size:14px;color:#999;padding:4px 6px;border-radius:4px;display:none;z-index:1;';
             
             btnClear.addEventListener('click', function(e) {
                 e.stopPropagation();
                 input.value = '';
-                toggleClearButton();
                 input.focus();
-                console.log('🧹 Campo limpo pelo botão "X"');
+                this.style.display = 'none';
+                console.log('🧹 Campo limpo pelo X');
                 
                 const event = new Event('input', { bubbles: true });
                 input.dispatchEvent(event);
@@ -7856,12 +7824,11 @@ function configurarBuscaCompleta() {
         }
         
         function toggleClearButton() {
-            if (input.value.length > 0) {
-                btnClear.style.display = 'block';
-            } else {
-                btnClear.style.display = 'none';
-            }
+            btnClear.style.display = input.value.length > 0 ? 'block' : 'none';
         }
+        
+        input.removeEventListener('input', toggleClearButton);
+        input.removeEventListener('focus', toggleClearButton);
         
         input.addEventListener('input', toggleClearButton);
         input.addEventListener('focus', toggleClearButton);
@@ -7870,60 +7837,141 @@ function configurarBuscaCompleta() {
         });
         
         toggleClearButton();
-        console.log('✅ Botão "X" adicionado');
+        console.log('✅ Botão "X" configurado');
     }
     
-    // ===== 2. ESCONDER O BOTÃO "LIMPAR" =====
+    // ===== 2. ESCONDER BOTÃO "LIMPAR" =====
     function esconderBotaoLimpar() {
         const container = document.getElementById('containerBuscaProduto');
         if (!container) return;
         
         const btnLimpar = container.querySelector('.btn-limpar');
         if (btnLimpar) {
-            btnLimpar.style.cssText = `
-                opacity: 0;
-                pointer-events: none;
-                position: absolute;
-                width: 1px;
-                height: 1px;
-                padding: 0;
-                margin: -1px;
-                overflow: hidden;
-                clip: rect(0, 0, 0, 0);
-                border: 0;
-            `;
+            btnLimpar.style.cssText = 'display:none !important;opacity:0;pointer-events:none;position:absolute;width:0;height:0;padding:0;margin:0;overflow:hidden;border:0;';
             console.log('✅ Botão "Limpar" escondido');
         }
     }
     
-    // ===== 3. FUNÇÃO PARA FECHAR A BUSCA =====
-    function fecharBusca() {
-        const container = document.getElementById('containerBuscaProduto');
-        const btn = document.getElementById('btnBuscarProduto');
-        
-        if (container) {
-            container.style.display = 'none';
-            console.log('🔍 Busca fechada');
-        }
-        
-        if (btn) {
-            btn.classList.remove('active');
-            btn.textContent = '🔍 Buscar produto';
-            btn.style.background = '';
-        }
-        
-        const input = document.getElementById('inputBuscaProduto');
-        if (input) {
-            input.value = '';
-            const event = new Event('input', { bubbles: true });
-            input.dispatchEvent(event);
-        }
-        
-        window.modoBuscaAtivo = false;
+    // ===== 3. INTERCEPTAR fecharBusca =====
+    if (typeof window.fecharBusca === 'function') {
+        const fecharBuscaOriginal = window.fecharBusca;
+        window.fecharBusca = function(keepActive) {
+            console.log('🔍 fecharBusca chamado com keepActive=' + keepActive);
+            
+            const container = document.getElementById('containerBuscaProduto');
+            const btn = document.getElementById('btnBuscarProduto');
+            
+            if (container && !keepActive) {
+                container.style.display = 'none';
+                console.log('🔍 Busca fechada');
+            }
+            
+            if (btn && !keepActive) {
+                btn.classList.remove('active');
+                btn.textContent = '🔍 Buscar produto';
+                btn.style.background = '';
+            }
+            
+            if (!keepActive) {
+                const input = document.getElementById('inputBuscaProduto');
+                if (input) {
+                    input.value = '';
+                    const event = new Event('input', { bubbles: true });
+                    input.dispatchEvent(event);
+                }
+            }
+            
+            if (!keepActive) {
+                window.modoBuscaAtivo = false;
+            }
+        };
+        console.log('✅ fecharBusca interceptada');
     }
     
-    // ===== 4. INTERCEPTAR BOTÕES PRINCIPAIS =====
-    const botoes = [
+    // ===== 4. INTERCEPTAR mostrarBuscaProdutos =====
+    if (typeof window.mostrarBuscaProdutos === 'function') {
+        const originalMostrar = window.mostrarBuscaProdutos;
+        window.mostrarBuscaProdutos = function() {
+            console.log('🔍 Abrindo busca...');
+            
+            const input = document.getElementById('inputBuscaProduto');
+            const valorAtual = input ? input.value : '';
+            
+            originalMostrar.apply(this, arguments);
+            
+            setTimeout(function() {
+                const inputNovo = document.getElementById('inputBuscaProduto');
+                if (inputNovo && valorAtual) {
+                    inputNovo.value = valorAtual;
+                    const event = new Event('input', { bubbles: true });
+                    inputNovo.dispatchEvent(event);
+                }
+                
+                configurarBotaoX();
+                esconderBotaoLimpar();
+                
+                // Corrigir os botões de período
+                const semanaInfo = document.getElementById('semanaInfo');
+                if (semanaInfo) {
+                    const periodos = {
+                        'Todo o período': 'todo',
+                        'Esse mês': 'mes',
+                        'Últimos 3 meses': '3meses',
+                        'Últimos 5 meses': '5meses',
+                        'Últimos 8 meses': '8meses',
+                        'Últimos 12 meses': '12meses'
+                    };
+                    
+                    const botoes = semanaInfo.querySelectorAll('.btn-submenu');
+                    botoes.forEach(function(btn) {
+                        const texto = btn.textContent.trim();
+                        if (periodos[texto]) {
+                            btn.setAttribute('onclick', "filtrarBuscaProdutos('" + periodos[texto] + "')");
+                        }
+                    });
+                }
+            }, 100);
+        };
+        console.log('✅ mostrarBuscaProdutos interceptada');
+    }
+    
+    // ===== 5. INTERCEPTAR filtrarBuscaProdutos =====
+    if (typeof window.filtrarBuscaProdutos === 'function') {
+        const originalFiltrar = window.filtrarBuscaProdutos;
+        window.filtrarBuscaProdutos = function(periodo) {
+            console.log('📅 Filtrando por período: ' + periodo + ' - PRESERVANDO CAMPO');
+            
+            const input = document.getElementById('inputBuscaProduto');
+            const valorAtual = input ? input.value : '';
+            
+            const resultado = originalFiltrar.call(this, periodo);
+            
+            setTimeout(function() {
+                const container = document.getElementById('containerBuscaProduto');
+                if (container) {
+                    container.style.display = 'flex';
+                }
+                
+                const btn = document.getElementById('btnBuscarProduto');
+                if (btn) {
+                    btn.classList.add('active');
+                }
+                
+                const inputNovo = document.getElementById('inputBuscaProduto');
+                if (inputNovo && valorAtual) {
+                    inputNovo.value = valorAtual;
+                    const event = new Event('input', { bubbles: true });
+                    inputNovo.dispatchEvent(event);
+                }
+            }, 50);
+            
+            return resultado;
+        };
+        console.log('✅ filtrarBuscaProdutos interceptada com preservação');
+    }
+    
+    // ===== 6. INTERCEPTAR BOTÕES PRINCIPAIS =====
+    const botoesPrincipais = [
         'mostrarProdutosPorPedido',
         'mostrarProdutosMaisPedidos',
         'mostrarProdutosMaiorLucro',
@@ -7931,42 +7979,39 @@ function configurarBuscaCompleta() {
         'mostrarProdutosMaiorDiferenca'
     ];
     
-    botoes.forEach(function(nome) {
+    botoesPrincipais.forEach(function(nome) {
         if (typeof window[nome] === 'function') {
             const original = window[nome];
             window[nome] = function() {
-                console.log(`🔍 Mudando para: ${nome}`);
-                fecharBusca();
+                console.log('🔍 Mudando para: ' + nome + ' - FECHANDO E LIMPANDO BUSCA');
+                
+                const container = document.getElementById('containerBuscaProduto');
+                if (container) {
+                    container.style.display = 'none';
+                }
+                
+                const input = document.getElementById('inputBuscaProduto');
+                if (input) {
+                    input.value = '';
+                    const event = new Event('input', { bubbles: true });
+                    input.dispatchEvent(event);
+                }
+                
+                const btn = document.getElementById('btnBuscarProduto');
+                if (btn) {
+                    btn.classList.remove('active');
+                    btn.textContent = '🔍 Buscar produto';
+                }
+                
+                window.modoBuscaAtivo = false;
+                
                 return original.apply(this, arguments);
             };
-            console.log(`✅ Interceptado: ${nome}`);
+            console.log('✅ Interceptado: ' + nome);
         }
     });
     
-    // ===== 5. INTERCEPTAR BOTÃO VOLTAR =====
-    if (typeof window.voltarTabelaOriginal === 'function') {
-        const originalVoltar = window.voltarTabelaOriginal;
-        window.voltarTabelaOriginal = function() {
-            console.log('🔍 Voltando para tabela original');
-            fecharBusca();
-            return originalVoltar.apply(this, arguments);
-        };
-        console.log('✅ Interceptado: voltarTabelaOriginal');
-    }
-    
-    // ===== 6. INTERCEPTAR CLIQUE EM BOTÕES DO SUBMENU =====
-    document.addEventListener('click', function(e) {
-        const target = e.target.closest('.btn-submenu');
-        if (target && target.id !== 'btnBuscarProduto') {
-            const container = document.getElementById('containerBuscaProduto');
-            if (container && container.style.display === 'flex') {
-                console.log(`🔍 Clicou em "${target.textContent.trim()}" - fechando busca`);
-                fecharBusca();
-            }
-        }
-    });
-    
-    // ===== 7. INTERCEPTAR TOGGLE DO SUBMENU =====
+    // ===== 7. INTERCEPTAR toggleSubmenuProdutos =====
     if (typeof window.toggleSubmenuProdutos === 'function') {
         const originalToggle = window.toggleSubmenuProdutos;
         window.toggleSubmenuProdutos = function() {
@@ -7978,8 +8023,27 @@ function configurarBuscaCompleta() {
             if (estavaAberto) {
                 const submenuAgora = document.getElementById('submenuProdutos');
                 if (submenuAgora && submenuAgora.style.display !== 'flex') {
-                    console.log('🔍 Submenu fechado, fechando busca...');
-                    fecharBusca();
+                    console.log('🔍 Submenu fechado - FECHANDO BUSCA');
+                    
+                    const container = document.getElementById('containerBuscaProduto');
+                    if (container) {
+                        container.style.display = 'none';
+                    }
+                    
+                    const input = document.getElementById('inputBuscaProduto');
+                    if (input) {
+                        input.value = '';
+                        const event = new Event('input', { bubbles: true });
+                        input.dispatchEvent(event);
+                    }
+                    
+                    const btn = document.getElementById('btnBuscarProduto');
+                    if (btn) {
+                        btn.classList.remove('active');
+                        btn.textContent = '🔍 Buscar produto';
+                    }
+                    
+                    window.modoBuscaAtivo = false;
                 }
             }
             
@@ -7990,20 +8054,51 @@ function configurarBuscaCompleta() {
     
     // ===== 8. EXECUTAR =====
     setTimeout(function() {
-        adicionarBotaoX();
+        configurarBotaoX();
         esconderBotaoLimpar();
+        
+        // Corrigir botões existentes se já estiverem na página
+        const semanaInfo = document.getElementById('semanaInfo');
+        if (semanaInfo) {
+            const periodos = {
+                'Todo o período': 'todo',
+                'Esse mês': 'mes',
+                'Últimos 3 meses': '3meses',
+                'Últimos 5 meses': '5meses',
+                'Últimos 8 meses': '8meses',
+                'Últimos 12 meses': '12meses'
+            };
+            
+            const botoes = semanaInfo.querySelectorAll('.btn-submenu');
+            botoes.forEach(function(btn) {
+                const texto = btn.textContent.trim();
+                if (periodos[texto]) {
+                    btn.setAttribute('onclick', "filtrarBuscaProdutos('" + periodos[texto] + "')");
+                }
+            });
+        }
     }, 300);
     
-    console.log('✅ CONFIGURAÇÃO COMPLETA APLICADA!');
-    console.log('   - "X" aparece no campo quando há texto');
-    console.log('   - Clicar no "X" limpa o campo');
-    console.log('   - Botão "Limpar" escondido');
-    console.log('   - Mudar de aba fecha a busca');
-}
+    console.log('');
+    console.log('✅ SISTEMA DE BUSCA INICIALIZADO COM SUCESSO!');
+    console.log('');
+    console.log('📌 COMPORTAMENTO:');
+    console.log('   ✅ "X" aparece no campo quando há texto');
+    console.log('   ✅ Clicar no "X" limpa o campo');
+    console.log('   ✅ Botão "Limpar" está escondido');
+    console.log('   ✅ Períodos NÃO fecham a busca');
+    console.log('   ✅ Campo NÃO é limpo ao mudar período');
+    console.log('   ✅ Campo é limpo ao sair da busca');
+    console.log('');
+})();
 
-// ===== EXECUTAR =====
-configurarBuscaCompleta();
-
+console.log('✅ FUNÇÃO "BUSCAR PRODUTO" INSTALADA E CONFIGURADA!');
+console.log('   - Clique em "🔍 Buscar produto" no submenu de produtos');
+console.log('   - Digite o código ou nome do produto');
+console.log('   - Use o período para filtrar os resultados');
+console.log('   - O campo NÃO é limpo ao mudar o período');
+console.log('   - Clique no "X" para limpar o campo');
+console.log('   - Clique em outro botão para sair da busca');
 
 
 
