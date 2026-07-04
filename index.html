@@ -6480,7 +6480,7 @@ console.log('   - Será reaplicado ao mudar de aba, filtrar ou organizar');
 
 
 // ============================================================
-// FUNÇÃO: TORNAR NÚMEROS DE PEDIDO CLICÁVEIS (COM DESTAQUE DO PRODUTO)
+// FUNÇÃO 1: TORNAR NÚMEROS DE PEDIDO CLICÁVEIS COM DESTAQUE
 // ============================================================
 
 function tornarPedidosClicaveis() {
@@ -6490,31 +6490,24 @@ function tornarPedidosClicaveis() {
     let encontrados = 0;
     
     detailTables.forEach((tabela) => {
-        // Procurar todas as linhas de detalhes
         const rows = tabela.querySelectorAll('tbody tr');
         
         rows.forEach((row) => {
             const cells = row.querySelectorAll('td');
             if (cells.length === 0) return;
             
-            // A primeira célula é o número do pedido
             const celulaPedido = cells[0];
             const textoPedido = celulaPedido.textContent.trim();
             
-            // Verificar se é um número de pedido (9 dígitos)
             if (/^\d{9}$/.test(textoPedido) && !celulaPedido.querySelector('a')) {
                 const pedidoId = textoPedido;
                 
-                // Tentar encontrar o código do produto na mesma linha
-                // O código do produto pode estar em outra coluna ou no cabeçalho da tabela pai
                 let codigoProduto = '';
                 let nomeProduto = '';
                 
-                // Procurar o cabeçalho da tabela pai para identificar as colunas
                 const tabelaPai = row.closest('table');
                 const cabecalhos = tabelaPai.querySelectorAll('thead th');
                 
-                // Mapear índices das colunas
                 let idxCodigo = -1;
                 let idxProduto = -1;
                 
@@ -6524,7 +6517,6 @@ function tornarPedidosClicaveis() {
                     if (texto === 'Produto' || texto.includes('Produto')) idxProduto = index;
                 });
                 
-                // Se encontrou as colunas, pegar os valores
                 if (idxCodigo !== -1 && cells[idxCodigo]) {
                     codigoProduto = cells[idxCodigo].textContent.trim();
                 }
@@ -6532,9 +6524,7 @@ function tornarPedidosClicaveis() {
                     nomeProduto = cells[idxProduto].textContent.trim();
                 }
                 
-                // Se não encontrou, tentar pegar do contexto (linha anterior)
                 if (!codigoProduto) {
-                    // Procurar o card pai e a linha do produto principal
                     const card = row.closest('.detail-card');
                     if (card) {
                         const titulo = card.querySelector('strong');
@@ -6543,7 +6533,6 @@ function tornarPedidosClicaveis() {
                             if (match) {
                                 codigoProduto = match[1];
                             }
-                            // Tentar extrair o nome do produto
                             const matchNome = titulo.textContent.match(/-\s*(.+?)(?:\s*\(|$)/);
                             if (matchNome) {
                                 nomeProduto = matchNome[1].trim();
@@ -6552,7 +6541,6 @@ function tornarPedidosClicaveis() {
                     }
                 }
                 
-                // Criar o link
                 const link = document.createElement('a');
                 link.href = '#';
                 link.textContent = pedidoId;
@@ -6562,12 +6550,10 @@ function tornarPedidosClicaveis() {
                 link.style.fontWeight = 'bold';
                 link.title = `Ir para o pedido ${pedidoId} em "Produtos por pedido"`;
                 
-                // Armazenar dados no link
                 link.dataset.pedidoId = pedidoId;
                 link.dataset.codigoProduto = codigoProduto || '';
                 link.dataset.nomeProduto = nomeProduto || '';
                 
-                // Adicionar evento de clique
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -6578,7 +6564,6 @@ function tornarPedidosClicaveis() {
                     irParaPedido(pid, codigo, nome);
                 });
                 
-                // Substituir o texto pelo link
                 celulaPedido.innerHTML = '';
                 celulaPedido.appendChild(link);
                 encontrados++;
@@ -6590,20 +6575,18 @@ function tornarPedidosClicaveis() {
 }
 
 // ============================================================
-// FUNÇÃO: IR PARA O PEDIDO E DESTACAR O PRODUTO
+// FUNÇÃO 2: IR PARA O PEDIDO E DESTACAR O PRODUTO
 // ============================================================
 
 function irParaPedido(pedidoId, codigoProduto, nomeProduto) {
     console.log(`🔍 Buscando pedido: ${pedidoId} (produto: ${codigoProduto || nomeProduto})`);
     
-    // Armazenar o código do produto para usar depois
     window.produtoParaDestacar = {
         pedidoId: pedidoId,
         codigo: codigoProduto,
         nome: nomeProduto
     };
     
-    // 1. Abrir o submenu de produtos se estiver fechado
     const submenuProdutos = document.getElementById('submenuProdutos');
     
     if (!submenuProdutos || submenuProdutos.style.display !== 'flex') {
@@ -6617,7 +6600,6 @@ function irParaPedido(pedidoId, codigoProduto, nomeProduto) {
         return;
     }
     
-    // 2. Verificar se "Produtos por pedido" está ativo
     const botoesSubmenu = document.querySelectorAll('#submenuProdutos .btn-submenu');
     let botaoAtivo = false;
     
@@ -6641,7 +6623,6 @@ function irParaPedido(pedidoId, codigoProduto, nomeProduto) {
 }
 
 function irParaPedidoNaTabela(pedidoId, codigoProduto, nomeProduto) {
-    // Procurar a linha do pedido na tabela
     const linhas = document.querySelectorAll('#tableBody tr.pedido-row');
     let linhaEncontrada = null;
     
@@ -6656,34 +6637,26 @@ function irParaPedidoNaTabela(pedidoId, codigoProduto, nomeProduto) {
     });
     
     if (linhaEncontrada) {
-        // Rolar até a linha
         linhaEncontrada.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-        // Destacar a linha do pedido
         linhaEncontrada.style.transition = 'background 0.3s';
         linhaEncontrada.style.background = '#e3f2fd';
         
-        // Expandir os detalhes se estiver fechado
         const icon = linhaEncontrada.querySelector('.expand-icon');
         if (icon && icon.textContent === '▶') {
             linhaEncontrada.click();
         }
         
-        // Se temos um código de produto, esperar os detalhes carregarem e destacar o produto
         if (codigoProduto || nomeProduto) {
             console.log(`🔍 Aguardando detalhes carregarem para destacar o produto...`);
             
-            // Aguardar os detalhes carregarem
             let tentativas = 0;
             const maxTentativas = 20;
             
             const intervalo = setInterval(() => {
                 tentativas++;
                 
-                // Procurar o produto nos detalhes
                 const detailRow = document.getElementById(`detalhe-produtos-${pedidoId}`);
                 if (detailRow && detailRow.classList.contains('show')) {
-                    // Procurar o código ou nome do produto na tabela de detalhes
                     const tabelaDetalhes = detailRow.querySelector('table');
                     if (tabelaDetalhes) {
                         const linhasProdutos = tabelaDetalhes.querySelectorAll('tbody tr');
@@ -6693,7 +6666,6 @@ function irParaPedidoNaTabela(pedidoId, codigoProduto, nomeProduto) {
                             const cells = linhaProduto.querySelectorAll('td');
                             let encontrou = false;
                             
-                            // Procurar pelo código
                             if (codigoProduto && cells.length > 0) {
                                 const celulaCodigo = cells[0];
                                 if (celulaCodigo.textContent.trim() === codigoProduto) {
@@ -6701,7 +6673,6 @@ function irParaPedidoNaTabela(pedidoId, codigoProduto, nomeProduto) {
                                 }
                             }
                             
-                            // Se não encontrou pelo código, tentar pelo nome
                             if (!encontrou && nomeProduto && cells.length > 1) {
                                 const celulaNome = cells[1];
                                 if (celulaNome.textContent.trim().includes(nomeProduto)) {
@@ -6710,17 +6681,13 @@ function irParaPedidoNaTabela(pedidoId, codigoProduto, nomeProduto) {
                             }
                             
                             if (encontrou) {
-                                // Destacar a linha do produto
                                 linhaProduto.style.transition = 'background 0.3s';
                                 linhaProduto.style.background = '#fff3cd';
                                 linhaProduto.style.borderLeft = '4px solid #ffc107';
-                                
-                                // Rolar para o produto
                                 linhaProduto.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                
                                 produtoEncontrado = true;
                                 console.log(`✅ Produto ${codigoProduto || nomeProduto} encontrado e destacado!`);
-                                                            }
+                            }
                         });
                         
                         if (produtoEncontrado) {
@@ -6737,7 +6704,6 @@ function irParaPedidoNaTabela(pedidoId, codigoProduto, nomeProduto) {
             }, 300);
         }
         
-        // Remover destaque do pedido após 5 segundos
         setTimeout(() => {
             if (linhaEncontrada) {
                 linhaEncontrada.style.background = '';
@@ -6758,7 +6724,7 @@ function irParaPedidoNaTabela(pedidoId, codigoProduto, nomeProduto) {
 }
 
 // ============================================================
-// INTERCEPTAR TOGGLES DE DETALHES
+// FUNÇÃO 3: INTERCEPTAR TOGGLES DE DETALHES
 // ============================================================
 
 const toggles = [
@@ -6783,32 +6749,24 @@ toggles.forEach(function(nome) {
     }
 });
 
-
-
 // ============================================================
-// CORRIGIR: MANTER BOTÃO DE PERÍODO SELECIONADO
+// FUNÇÃO 4: MANTER BOTÃO DE PERÍODO SELECIONADO
 // ============================================================
 
 function corrigirBotoesPeriodo() {
     console.log('🔄 Corrigindo botões de período...');
     
-    // Interceptar a função filtrarProdutosPorPedido
     if (typeof window.filtrarProdutosPorPedido === 'function') {
         const original = window.filtrarProdutosPorPedido;
         
         window.filtrarProdutosPorPedido = function(periodo) {
             console.log(`🔍 Filtrando por período: ${periodo}`);
-            
-            // Chamar a função original
             original(periodo);
             
-            // Depois que a tabela carregar, reaplicar a classe active
             setTimeout(() => {
-                // Remover active de todos os botões
                 const botoes = document.querySelectorAll('#semanaInfo .btn-submenu');
                 botoes.forEach(btn => btn.classList.remove('active'));
                 
-                // Adicionar active no botão correto
                 const periodos = {
                     'todo': 'Todo o período',
                     'mes': 'Esse mês',
@@ -6829,7 +6787,6 @@ function corrigirBotoesPeriodo() {
         console.log('✅ filtrarProdutosPorPedido interceptado!');
     }
     
-    // Também corrigir para os filtros de outras abas
     const filtros = [
         'filtrarMaisPedidos',
         'filtrarMaiorLucro',
@@ -6843,7 +6800,6 @@ function corrigirBotoesPeriodo() {
             
             window[nome] = function(periodo) {
                 console.log(`🔍 Filtrando ${nome}: ${periodo}`);
-                
                 original(periodo);
                 
                 setTimeout(() => {
@@ -6872,22 +6828,16 @@ function corrigirBotoesPeriodo() {
     });
     
     console.log('✅ CORREÇÃO APLICADA!');
-    console.log('   - Agora os botões de período vão manter a seleção');
 }
 
-
-
-
 // ============================================================
-// CORRIGIR: DETALHES DOS PRODUTOS RESPEITAM O PERÍODO
+// FUNÇÃO 5: DETALHES DOS PRODUTOS RESPEITAM O PERÍODO
 // ============================================================
 
 function corrigirDetalhesComPeriodo() {
     console.log('🔄 Corrigindo detalhes para respeitar o período...');
     
-    // ===== 1. FUNÇÃO PARA OBTER O PERÍODO ATIVO =====
     function getPeriodoAtivo() {
-        // Verificar qual botão de período está ativo
         const botoes = document.querySelectorAll('#semanaInfo .btn-submenu');
         let periodoAtivo = 'todo';
         
@@ -6906,40 +6856,6 @@ function corrigirDetalhesComPeriodo() {
         return periodoAtivo;
     }
     
-    // ===== 2. FUNÇÃO PARA FILTRAR DADOS POR PERÍODO =====
-    function filtrarPorPeriodo(dados, periodo) {
-        if (periodo === 'todo' || !dados || dados.length === 0) {
-            return dados;
-        }
-        
-        const agora = new Date();
-        let dataLimite = null;
-        
-        if (periodo === 'mes') {
-            dataLimite = new Date(agora.getFullYear(), agora.getMonth(), 1);
-        } else if (periodo === '3meses') {
-            dataLimite = new Date(agora);
-            dataLimite.setMonth(agora.getMonth() - 3);
-        } else if (periodo === '5meses') {
-            dataLimite = new Date(agora);
-            dataLimite.setMonth(agora.getMonth() - 5);
-        } else if (periodo === '8meses') {
-            dataLimite = new Date(agora);
-            dataLimite.setMonth(agora.getMonth() - 8);
-        } else if (periodo === '12meses') {
-            dataLimite = new Date(agora);
-            dataLimite.setMonth(agora.getMonth() - 12);
-        }
-        
-        if (!dataLimite) return dados;
-        
-        return dados.filter(item => {
-            const dataPedido = new Date(item.data.split('/').reverse().join('/'));
-            return dataPedido >= dataLimite;
-        });
-    }
-    
-    // ===== 3. INTERCEPTAR OS TOGGLES DE DETALHES =====
     const toggles = [
         'toggleDetalhesProdutosMaisPedidos',
         'toggleDetalhesProdutosMaiorLucro',
@@ -6953,23 +6869,14 @@ function corrigirDetalhesComPeriodo() {
             
             window[nome] = function(codigo) {
                 console.log(`🔍 Executando ${nome} para produto: ${codigo}`);
-                
-                // Chamar a função original
                 original(codigo);
                 
-                // Depois que os detalhes carregarem, filtrar pelo período
                 setTimeout(() => {
                     const periodo = getPeriodoAtivo();
                     console.log(`📅 Período ativo: ${periodo}`);
                     
-                    if (periodo === 'todo') {
-                        console.log('ℹ️ Período "Todo", sem filtro');
-                        return;
-                    }
+                    if (periodo === 'todo') return;
                     
-                    // Procurar a tabela de detalhes do produto
-                    const detailRow = document.getElementById(`detalhe-produto-${nome.replace('toggleDetalhes', '').toLowerCase()}-${codigo}`);
-                    // Ou tentar encontrar de forma genérica
                     const detailCards = document.querySelectorAll('.detail-card');
                     
                     detailCards.forEach((card) => {
@@ -6979,7 +6886,6 @@ function corrigirDetalhesComPeriodo() {
                             let linhasParaRemover = [];
                             
                             linhas.forEach((linha) => {
-                                // Pegar a data (geralmente na segunda coluna)
                                 const cells = linha.querySelectorAll('td');
                                 if (cells.length > 1) {
                                     const dataTexto = cells[1].textContent.trim();
@@ -7013,10 +6919,8 @@ function corrigirDetalhesComPeriodo() {
                                 }
                             });
                             
-                            // Remover as linhas fora do período
                             linhasParaRemover.forEach((linha) => {
                                 linha.style.display = 'none';
-                                console.log(`🗑️ Linha removida (fora do período)`);
                             });
                         });
                     });
@@ -7029,16 +6933,20 @@ function corrigirDetalhesComPeriodo() {
     });
     
     console.log('✅ CORREÇÃO APLICADA!');
-    console.log('   - Os detalhes agora respeitam o período selecionado');
 }
 
-// Executar a correção
+// ============================================================
+// EXECUTAR TUDO
+// ============================================================
+
+setTimeout(tornarPedidosClicaveis, 500);
+corrigirBotoesPeriodo();
 corrigirDetalhesComPeriodo();
 
-
-
-
-
+console.log('✅ TODAS AS FUNÇÕES ATIVADAS!');
+console.log('   - Clique em números de pedido nos detalhes');
+console.log('   - Período mantém seleção');
+console.log('   - Detalhes respeitam o período');
 
 
 
