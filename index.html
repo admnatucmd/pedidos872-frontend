@@ -8844,6 +8844,134 @@ setTimeout(function() {
 
 
 
+// ============================================================
+// CORREÇÃO: FECHAR SUBMENU DE PRODUTOS AO CLICAR EM OUTROS BOTÕES
+// ============================================================
+
+(function() {
+    console.log('🔧 CORRIGINDO FECHAMENTO DO SUBMENU DE PRODUTOS...');
+
+    // ===== 1. SALVAR FUNÇÕES ORIGINAIS =====
+    var originalMostrarPedidosPorMes = window.mostrarPedidosPorMes;
+    var originalMostrarPagosPorMes = window.mostrarPagosPorMes;
+    var originalToggleSubmenuBoletos = window.toggleSubmenuBoletos;
+    var originalVoltarTabelaOriginal = window.voltarTabelaOriginal;
+
+    // ===== 2. FUNÇÃO PARA FECHAR SUBMENU DE PRODUTOS =====
+    function fecharSubmenuProdutos() {
+        var submenuProdutos = document.getElementById('submenuProdutos');
+        var btnProdutos = document.getElementById('btnProdutos');
+        
+        if (submenuProdutos) {
+            submenuProdutos.style.display = 'none';
+        }
+        if (btnProdutos) {
+            btnProdutos.classList.remove('active');
+        }
+        
+        document.querySelectorAll('#submenuProdutos .btn-submenu').forEach(function(b) {
+            b.classList.remove('active');
+        });
+        
+        // ===== RESTAURAR A TABELA ORIGINAL =====
+        var tableWrapper = document.getElementById('tableWrapper');
+        var dataTable = document.getElementById('dataTable');
+        var statsContainer = document.getElementById('statsContainer');
+        var mesContainer = document.getElementById('mesContainer');
+        
+        // Se não houver dataTable, recriar
+        if (!dataTable && tableWrapper) {
+            tableWrapper.innerHTML = `
+                <table id="dataTable">
+                    <thead>
+                        <tr>
+                            <th>Pedido</th>
+                            <th>Data</th>
+                            <th>NF</th>
+                            <th>Valor Total</th>
+                            <th>Produtos</th>
+                            <th>Royalties</th>
+                            <th>Propaganda</th>
+                            <th>Parcelas</th>
+                            <th>Valor Pendente</th>
+                            <th>Situação</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            `;
+        }
+        
+        if (dataTable) dataTable.style.display = 'table';
+        if (statsContainer) statsContainer.classList.remove('stats-hidden');
+        if (mesContainer) mesContainer.style.display = 'none';
+        
+        // Limpar active dos botões
+        document.querySelectorAll('.btn-actions .btn').forEach(function(b) {
+            if (b.id !== 'btnProdutos') {
+                b.classList.remove('active');
+            }
+        });
+    }
+
+    // ===== 3. NOVA FUNÇÃO mostrarPagosPorMes =====
+    window.mostrarPagosPorMes = function() {
+        fecharSubmenuProdutos();
+        if (typeof originalMostrarPagosPorMes === 'function') {
+            return originalMostrarPagosPorMes.apply(this, arguments);
+        }
+    };
+
+    // ===== 4. NOVA FUNÇÃO mostrarPedidosPorMes =====
+    window.mostrarPedidosPorMes = function() {
+        fecharSubmenuProdutos();
+        if (typeof originalMostrarPedidosPorMes === 'function') {
+            return originalMostrarPedidosPorMes.apply(this, arguments);
+        }
+    };
+
+    // ===== 5. NOVA FUNÇÃO toggleSubmenuBoletos =====
+    window.toggleSubmenuBoletos = function() {
+        fecharSubmenuProdutos();
+        if (typeof originalToggleSubmenuBoletos === 'function') {
+            return originalToggleSubmenuBoletos.apply(this, arguments);
+        }
+    };
+
+    // ===== 6. NOVA FUNÇÃO voltarTabelaOriginal =====
+    window.voltarTabelaOriginal = function() {
+        fecharSubmenuProdutos();
+        if (typeof originalVoltarTabelaOriginal === 'function') {
+            return originalVoltarTabelaOriginal.apply(this, arguments);
+        }
+    };
+
+    // ===== 7. INTERCEPTAR CLICKS NOS BOTÕES DO MENU PRINCIPAL =====
+    document.addEventListener('click', function(e) {
+        var target = e.target.closest('.btn-actions .btn');
+        if (!target) return;
+        
+        var id = target.id || '';
+        var texto = target.textContent.trim();
+        
+        if (id === 'btnProdutos' || texto === 'Produtos') {
+            return;
+        }
+        
+        var submenuProdutos = document.getElementById('submenuProdutos');
+        if (submenuProdutos && submenuProdutos.style.display === 'flex') {
+            fecharSubmenuProdutos();
+        }
+    }, true);
+
+    console.log('✅ Correção aplicada: submenu de produtos fecha ao clicar em outros botões');
+})();
+
+
+
+
+
+
 
 
 // Inicializar
