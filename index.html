@@ -8103,7 +8103,397 @@ console.log('   - Clique em outro botão para sair da busca');
 
 
 
+// ============================================================
+// SISTEMA DE NAVEGAÇÃO ENTRE PEDIDOS E PRODUTOS
+// ============================================================
 
+(function() {
+    console.log('🔧 INICIALIZANDO SISTEMA DE NAVEGAÇÃO...');
+
+    // ============================================================
+    // 1. CORREÇÃO: irParaPedido - Abrir na tabela de pedidos (NÃO em produtos)
+    // ============================================================
+    
+    const irParaPedidoOriginal = window.irParaPedido;
+
+    if (typeof irParaPedidoOriginal === 'function') {
+        window.irParaPedido = function(pedidoId) {
+            console.log('🔍 irParaPedido chamado para:', pedidoId);
+            
+            // ===== 1. VOLTAR PARA A TABELA ORIGINAL =====
+            if (typeof window.voltarTabelaOriginal === 'function') {
+                window.voltarTabelaOriginal();
+            } else {
+                // Fallback manual
+                const mesContainer = document.getElementById('mesContainer');
+                const semanaInfo = document.getElementById('semanaInfo');
+                const submenuBoletos = document.getElementById('submenuBoletos');
+                const submenuProdutos = document.getElementById('submenuProdutos');
+                const dataTable = document.getElementById('dataTable');
+                const statsContainer = document.getElementById('statsContainer');
+                const wrapper = document.getElementById('tableWrapper');
+                
+                if (mesContainer) mesContainer.style.display = 'none';
+                if (semanaInfo) semanaInfo.style.display = 'none';
+                if (submenuBoletos) submenuBoletos.style.display = 'none';
+                if (submenuProdutos) submenuProdutos.style.display = 'none';
+                
+                document.querySelectorAll('.btn-actions .btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
+                
+                if (wrapper) {
+                    wrapper.innerHTML = `
+                        <table id="dataTable">
+                            <thead>
+                                <tr>
+                                    <th>Pedido</th>
+                                    <th>Data</th>
+                                    <th>NF</th>
+                                    <th>Valor Total</th>
+                                    <th>Produtos</th>
+                                    <th>Royalties</th>
+                                    <th>Propaganda</th>
+                                    <th>Parcelas</th>
+                                    <th>Valor Pendente</th>
+                                    <th>Situação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody"></tbody>
+                        </table>
+                    `;
+                    if (dataTable) dataTable.style.display = 'table';
+                    if (statsContainer) statsContainer.classList.remove('stats-hidden');
+                }
+                
+                if (typeof window.renderizarTabela === 'function') {
+                    window.renderizarTabela();
+                }
+            }
+            
+            // ===== 2. PROCURAR E DESTACAR O PEDIDO NA TABELA =====
+            setTimeout(function() {
+                console.log('🔍 Procurando pedido:', pedidoId);
+                
+                var rows = document.querySelectorAll('.pedido-row');
+                var encontrado = false;
+                
+                for (var i = 0; i < rows.length; i++) {
+                    var row = rows[i];
+                    var cell = row.querySelector('td:first-child');
+                    if (cell) {
+                        var texto = cell.textContent.replace('▶', '').replace('▼', '').trim();
+                        if (texto === String(pedidoId)) {
+                            encontrado = true;
+                            console.log('✅ Pedido encontrado!');
+                            
+                            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            row.style.transition = 'background 0.3s';
+                            row.style.background = '#e3f2fd';
+                            
+                            var detailId = 'detalhe-' + pedidoId;
+                            var detailRow = document.getElementById(detailId);
+                            if (detailRow) {
+                                detailRow.classList.add('show');
+                                var icon = row.querySelector('.expand-icon');
+                                if (icon) icon.innerHTML = '▼';
+                            }
+                            
+                            setTimeout(function() {
+                                row.style.background = '';
+                            }, 5000);
+                            
+                            break;
+                        }
+                    }
+                }
+                
+                if (!encontrado) {
+                    console.log('⚠️ Pedido não encontrado na tabela');
+                    
+                    if (typeof window.carregarDados === 'function') {
+                        console.log('🔄 Recarregando dados...');
+                        window.carregarDados().then(function() {
+                            setTimeout(function() {
+                                var novasRows = document.querySelectorAll('.pedido-row');
+                                for (var j = 0; j < novasRows.length; j++) {
+                                    var row = novasRows[j];
+                                    var cell = row.querySelector('td:first-child');
+                                    if (cell) {
+                                        var texto = cell.textContent.replace('▶', '').replace('▼', '').trim();
+                                        if (texto === String(pedidoId)) {
+                                            console.log('✅ Pedido encontrado após recarga!');
+                                            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                            row.style.transition = 'background 0.3s';
+                                            row.style.background = '#e3f2fd';
+                                            break;
+                                        }
+                                    }
+                                }
+                            }, 1000);
+                        });
+                    }
+                }
+            }, 500);
+        };
+
+        console.log('✅ irParaPedido substituída');
+    }
+
+    // ============================================================
+    // 2. FUNÇÃO: irParaProdutosDoPedido - Abrir produtos do pedido
+    // ============================================================
+    
+    window.irParaProdutosDoPedido = function(pedidoId) {
+        console.log('🔍 Abrindo produtos do pedido:', pedidoId);
+        
+        var submenuProdutos = document.getElementById('submenuProdutos');
+        var btnProdutos = document.getElementById('btnProdutos');
+        
+        if (!submenuProdutos || !btnProdutos) {
+            console.error('❌ Elementos de produtos não encontrados');
+            return;
+        }
+        
+        // Fechar outros submenus
+        var submenuBoletos = document.getElementById('submenuBoletos');
+        var btnBoletosPagar = document.getElementById('btnBoletosPagar');
+        if (submenuBoletos) submenuBoletos.style.display = 'none';
+        if (btnBoletosPagar) btnBoletosPagar.classList.remove('active');
+        
+        // Mostrar submenu de produtos
+        document.querySelectorAll('.btn-actions .btn').forEach(function(b) {
+            b.classList.remove('active');
+        });
+        btnProdutos.classList.add('active');
+        submenuProdutos.style.display = 'flex';
+        
+        // Esconder outros elementos
+        var dataTable = document.getElementById('dataTable');
+        var mesContainer = document.getElementById('mesContainer');
+        var semanaInfo = document.getElementById('semanaInfo');
+        var statsContainer = document.getElementById('statsContainer');
+        var tableWrapper = document.getElementById('tableWrapper');
+        
+        if (dataTable) dataTable.style.display = 'none';
+        if (mesContainer) mesContainer.style.display = 'none';
+        if (statsContainer) statsContainer.classList.add('stats-hidden');
+        if (tableWrapper) tableWrapper.innerHTML = '';
+        
+        // Chamar mostrarProdutosPorPedido
+        if (typeof window.mostrarProdutosPorPedido === 'function') {
+            window.mostrarProdutosPorPedido();
+            
+            var tentativas = 0;
+            var maxTentativas = 30;
+            
+            var intervalo = setInterval(function() {
+                tentativas++;
+                
+                var rows = document.querySelectorAll('#tableBody tr.pedido-row');
+                var encontrado = false;
+                
+                for (var i = 0; i < rows.length; i++) {
+                    var row = rows[i];
+                    var cell = row.querySelector('td:first-child');
+                    if (cell) {
+                        var texto = cell.textContent.replace('▶', '').replace('▼', '').trim();
+                        if (texto === String(pedidoId)) {
+                            encontrado = true;
+                            console.log('✅ Pedido encontrado nos produtos!');
+                            
+                            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            row.style.transition = 'background 0.3s';
+                            row.style.background = '#e3f2fd';
+                            
+                            var detailId = 'detalhe-produtos-' + pedidoId;
+                            var detailRow = document.getElementById(detailId);
+                            if (detailRow) {
+                                detailRow.classList.add('show');
+                                var icon = row.querySelector('.expand-icon');
+                                if (icon) icon.innerHTML = '▼';
+                                
+                                if (typeof window.carregarProdutosDetalhados === 'function') {
+                                    window.carregarProdutosDetalhados(pedidoId);
+                                }
+                            }
+                            
+                            setTimeout(function() {
+                                row.style.background = '';
+                            }, 5000);
+                            
+                            clearInterval(intervalo);
+                            return;
+                        }
+                    }
+                }
+                
+                if (!encontrado && tentativas >= maxTentativas) {
+                    console.log('⚠️ Pedido não encontrado nos produtos');
+                    clearInterval(intervalo);
+                }
+            }, 300);
+        } else {
+            console.error('❌ mostrarProdutosPorPedido não encontrada');
+        }
+    };
+
+    console.log('✅ irParaProdutosDoPedido criada');
+
+    // ============================================================
+    // 3. ADICIONAR BOTÃO "Ver produtos" NA LISTA INICIAL
+    // ============================================================
+    
+    function adicionarBotoesProdutos() {
+        console.log('🔄 Adicionando botões "Ver produtos"...');
+        
+        var rows = document.querySelectorAll('.pedido-row');
+        var adicionados = 0;
+        
+        rows.forEach(function(row) {
+            if (row.querySelector('.btn-produtos-pedido')) {
+                return;
+            }
+            
+            var cell = row.querySelector('td:first-child');
+            if (!cell) return;
+            
+            var pedidoId = cell.textContent.replace('▶', '').replace('▼', '').trim();
+            if (!pedidoId) return;
+            
+            var cells = row.querySelectorAll('td');
+            var lastCell = cells[cells.length - 1];
+            
+            if (lastCell) {
+                var btn = document.createElement('button');
+                btn.className = 'btn-produtos-pedido';
+                btn.textContent = 'Ver produtos';
+                btn.style.cssText = `
+                    background: #e8f4f8;
+                    color: #0b4f6c;
+                    border: 1px solid #d0e4ed;
+                    padding: 3px 10px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-size: 10px;
+                    font-weight: 500;
+                    transition: all 0.2s;
+                    margin-left: 8px;
+                    white-space: nowrap;
+                    letter-spacing: 0.3px;
+                `;
+                btn.addEventListener('mouseenter', function() {
+                    this.style.background = '#d4e8f0';
+                    this.style.borderColor = '#a8c8d8';
+                });
+                btn.addEventListener('mouseleave', function() {
+                    this.style.background = '#e8f4f8';
+                    this.style.borderColor = '#d0e4ed';
+                });
+                btn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    window.irParaProdutosDoPedido(pedidoId);
+                });
+                
+                lastCell.appendChild(btn);
+                adicionados++;
+            }
+        });
+        
+        if (adicionados > 0) {
+            console.log('✅ ' + adicionados + ' botões adicionados');
+        }
+    }
+
+    // ============================================================
+    // 4. INTERCEPTAR FUNÇÕES PARA ADICIONAR BOTÕES
+    // ============================================================
+    
+    // renderizarTabela
+    if (typeof window.renderizarTabela === 'function') {
+        var originalRenderizar = window.renderizarTabela;
+        window.renderizarTabela = function() {
+            originalRenderizar.apply(this, arguments);
+            setTimeout(function() {
+                adicionarBotoesProdutos();
+            }, 300);
+        };
+        console.log('✅ renderizarTabela interceptada');
+    }
+
+    // voltarTabelaOriginal
+    if (typeof window.voltarTabelaOriginal === 'function') {
+        var originalVoltar = window.voltarTabelaOriginal;
+        window.voltarTabelaOriginal = function() {
+            var resultado = originalVoltar.apply(this, arguments);
+            setTimeout(function() {
+                adicionarBotoesProdutos();
+            }, 300);
+            return resultado;
+        };
+        console.log('✅ voltarTabelaOriginal interceptada');
+    }
+
+    // carregarDados
+    if (typeof window.carregarDados === 'function') {
+        var originalCarregar = window.carregarDados;
+        window.carregarDados = function() {
+            var resultado = originalCarregar.apply(this, arguments);
+            if (resultado && typeof resultado.then === 'function') {
+                resultado.then(function() {
+                    setTimeout(function() {
+                        adicionarBotoesProdutos();
+                    }, 500);
+                });
+            }
+            return resultado;
+        };
+        console.log('✅ carregarDados interceptada');
+    }
+
+    // ============================================================
+    // 5. OBSERVAR MUDANÇAS NA TABELA
+    // ============================================================
+    
+    var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+                var tableBody = document.getElementById('tableBody');
+                if (tableBody && tableBody.children.length > 0) {
+                    var hasButtons = tableBody.querySelector('.btn-produtos-pedido');
+                    if (!hasButtons) {
+                        setTimeout(function() {
+                            adicionarBotoesProdutos();
+                        }, 200);
+                    }
+                }
+            }
+        });
+    });
+
+    var tableBody = document.getElementById('tableBody');
+    if (tableBody) {
+        observer.observe(tableBody, { childList: true, subtree: true });
+        console.log('👁️ Monitorando mudanças na tabela');
+    }
+
+    // ============================================================
+    // 6. ADICIONAR BOTÕES INICIALMENTE
+    // ============================================================
+    
+    setTimeout(function() {
+        adicionarBotoesProdutos();
+    }, 500);
+
+    console.log('');
+    console.log('✅ SISTEMA DE NAVEGAÇÃO INICIALIZADO COM SUCESSO!');
+    console.log('');
+    console.log('📌 FUNCIONALIDADES:');
+    console.log('   ✅ "Ver pedido completo" → volta para a tabela de pedidos');
+    console.log('   ✅ "Ver produtos" → abre a aba de produtos com o pedido destacado');
+    console.log('   ✅ Botão minimalista: fundo azul clarinho, sem ícone');
+    console.log('');
+
+})();
 
 
 
