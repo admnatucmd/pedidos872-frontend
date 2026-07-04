@@ -9359,7 +9359,173 @@ setTimeout(function() {
 
 
 
+// ============================================================
+// CORREÇÃO: APLICAR STICKY EM TODOS OS DETALHES
+// ============================================================
 
+(function() {
+    console.log('🔧 CORRIGINDO STICKY PARA TODOS OS DETALHES...');
+
+    // ===== 1. FUNÇÃO PARA APLICAR STICKY EM TODOS OS DETALHES =====
+    function aplicarStickyEmTodosDetalhes() {
+        console.log('🔄 Aplicando sticky em todos os detalhes abertos...');
+        
+        var detailRows = document.querySelectorAll('.parcelas-detail.show');
+        var aplicados = 0;
+        
+        detailRows.forEach(function(row, index) {
+            var tabelas = row.querySelectorAll('table');
+            
+            tabelas.forEach(function(tabela) {
+                var ths = tabela.querySelectorAll('thead th');
+                if (ths.length === 0) return;
+                
+                var isProdutoTable = false;
+                var temCodigo = false;
+                var temProduto = false;
+                var temQtd = false;
+                
+                ths.forEach(function(th) {
+                    var texto = th.textContent.trim();
+                    if (texto === 'Código' || texto.includes('Código')) temCodigo = true;
+                    if (texto === 'Produto' || texto.includes('Produto')) temProduto = true;
+                    if (texto === 'Qtd' || texto.includes('Qtd')) temQtd = true;
+                });
+                
+                if (temCodigo && temProduto && temQtd) {
+                    isProdutoTable = true;
+                }
+                
+                if (isProdutoTable) {
+                    var parent = tabela.parentElement;
+                    while (parent && parent !== document.body) {
+                        parent.style.overflow = 'visible';
+                        parent.style.overflowX = 'visible';
+                        parent.style.overflowY = 'visible';
+                        parent = parent.parentElement;
+                    }
+                    
+                    ths.forEach(function(th) {
+                        var paddingLeft = th.style.paddingLeft || '6px';
+                        var align = th.style.textAlign || 'left';
+                        
+                        th.style.cssText = `
+                            position: sticky !important;
+                            top: 42px !important;
+                            z-index: 9998 !important;
+                            background: #3d9a8c !important;
+                            color: #ffffff !important;
+                            border-bottom: 1px solid #2c6f96 !important;
+                            font-weight: 600 !important;
+                            padding: 6px 8px !important;
+                            text-align: ${align} !important;
+                        `;
+                    });
+                    
+                    var thead = tabela.querySelector('thead');
+                    if (thead) thead.style.position = 'static';
+                    
+                    var tr = tabela.querySelector('thead tr');
+                    if (tr) tr.style.position = 'static';
+                    
+                    aplicados++;
+                    console.log('✅ Sticky aplicado no detalhe ' + (index + 1));
+                }
+            });
+        });
+        
+        if (aplicados > 0) {
+            console.log('✅ Sticky aplicado em ' + aplicados + ' detalhes');
+        }
+        return aplicados;
+    }
+
+    // ===== 2. INTERCEPTAR toggleDetalhesProdutos =====
+    if (typeof window.toggleDetalhesProdutos === 'function') {
+        var originalToggle = window.toggleDetalhesProdutos;
+        window.toggleDetalhesProdutos = function(pedidoId) {
+            var resultado = originalToggle.apply(this, arguments);
+            setTimeout(function() {
+                aplicarStickyEmTodosDetalhes();
+            }, 500);
+            setTimeout(function() {
+                aplicarStickyEmTodosDetalhes();
+            }, 1000);
+            return resultado;
+        };
+        console.log('✅ toggleDetalhesProdutos interceptada');
+    }
+
+    // ===== 3. INTERCEPTAR carregarProdutosDetalhados =====
+    if (typeof window.carregarProdutosDetalhados === 'function') {
+        var originalCarregar = window.carregarProdutosDetalhados;
+        window.carregarProdutosDetalhados = function(pedidoId) {
+            var resultado = originalCarregar.apply(this, arguments);
+            setTimeout(function() {
+                aplicarStickyEmTodosDetalhes();
+            }, 800);
+            setTimeout(function() {
+                aplicarStickyEmTodosDetalhes();
+            }, 1500);
+            return resultado;
+        };
+        console.log('✅ carregarProdutosDetalhados interceptada');
+    }
+
+    // ===== 4. OBSERVAR MUDANÇAS NOS DETALHES =====
+    var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'childList') {
+                var detailRows = document.querySelectorAll('.parcelas-detail');
+                var precisaAplicar = false;
+                
+                detailRows.forEach(function(row) {
+                    if (row.classList.contains('show')) {
+                        var tabelas = row.querySelectorAll('table');
+                        tabelas.forEach(function(tabela) {
+                            var ths = tabela.querySelectorAll('thead th');
+                            if (ths.length > 0) {
+                                var temSticky = false;
+                                ths.forEach(function(th) {
+                                    if (th.style.position === 'sticky' || th.style.position === 'sticky !important') {
+                                        temSticky = true;
+                                    }
+                                });
+                                if (!temSticky) {
+                                    precisaAplicar = true;
+                                }
+                            }
+                        });
+                    }
+                });
+                
+                if (precisaAplicar) {
+                    setTimeout(function() {
+                        aplicarStickyEmTodosDetalhes();
+                    }, 300);
+                }
+            }
+        });
+    });
+
+    var tableWrapper = document.getElementById('tableWrapper');
+    if (tableWrapper) {
+        observer.observe(tableWrapper, { childList: true, subtree: true });
+        console.log('👁️ Monitorando mudanças nos detalhes');
+    }
+
+    // ===== 5. APLICAR STICKY NOS DETALHES JÁ ABERTOS =====
+    setTimeout(function() {
+        aplicarStickyEmTodosDetalhes();
+    }, 500);
+
+    console.log('');
+    console.log('✅ CORREÇÃO DE STICKY APLICADA!');
+    console.log('   ✅ Todos os detalhes abertos terão sticky');
+    console.log('   ✅ Funciona para "Produtos por pedido"');
+    console.log('');
+
+})();
 
 
 
