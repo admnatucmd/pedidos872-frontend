@@ -4214,6 +4214,238 @@ console.log('   - Busca de produtos');
 console.log('   - Botões de organização nos detalhes');
 console.log('   - Sticky em todos os detalhes');
 console.log('   - Links de pedidos clicáveis');
+
+
+
+// ===== FUNÇÕES DE DESTAQUE =====
+
+function destacarCelulasMaisPedidos(colunaIndex) {
+    console.log('🔄 Destacando coluna ' + colunaIndex + ' do Mais Pedidos...');
+    var todasCelulas = document.querySelectorAll('#tableWrapper td');
+    todasCelulas.forEach(function(cell) {
+        cell.style.fontWeight = '';
+        cell.style.color = '';
+        cell.style.background = '';
+    });
+    var cells = document.querySelectorAll('#tableWrapper td:nth-child(' + (colunaIndex + 1) + ')');
+    var total = cells.length;
+    cells.forEach(function(cell) {
+        cell.style.fontWeight = 'bold';
+        cell.style.color = '#0b4f6c';
+    });
+    console.log('✅ ' + total + ' células da coluna ' + colunaIndex + ' destacadas (sem background)');
+}
+
+function destacarCelulasMaiorLucro(colunaIndex) {
+    console.log('🔄 Destacando coluna ' + colunaIndex + ' do Maior Lucro...');
+    var todasCelulas = document.querySelectorAll('#tableWrapper td');
+    todasCelulas.forEach(function(cell) {
+        cell.style.fontWeight = '';
+        cell.style.color = '';
+        cell.style.background = '';
+    });
+    var cells = document.querySelectorAll('#tableWrapper td:nth-child(' + (colunaIndex + 1) + ')');
+    var total = cells.length;
+    cells.forEach(function(cell) {
+        cell.style.fontWeight = 'bold';
+        cell.style.color = '#0b4f6c';
+    });
+    console.log('✅ ' + total + ' células da coluna ' + colunaIndex + ' destacadas (sem background)');
+}
+
+function destacarCelulasMenosPedidos(colunaIndex) {
+    console.log('🔄 Destacando coluna ' + colunaIndex + ' do Menos Pedidos...');
+    var todasCelulas = document.querySelectorAll('#tableWrapper td');
+    todasCelulas.forEach(function(cell) {
+        cell.style.fontWeight = '';
+        cell.style.color = '';
+        cell.style.background = '';
+    });
+    var cells = document.querySelectorAll('#tableWrapper td:nth-child(' + (colunaIndex + 1) + ')');
+    var total = cells.length;
+    cells.forEach(function(cell) {
+        cell.style.fontWeight = 'bold';
+        cell.style.color = '#0b4f6c';
+    });
+    console.log('✅ ' + total + ' células da coluna ' + colunaIndex + ' destacadas (sem background)');
+}
+
+
+function corrigirBotoesPeriodo() {
+    console.log('🔄 Corrigindo botões de período...');
+    if (typeof window.filtrarProdutosPorPedido === 'function') {
+        var original = window.filtrarProdutosPorPedido;
+        window.filtrarProdutosPorPedido = function(periodo) {
+            console.log('🔍 Filtrando por período: ' + periodo);
+            original(periodo);
+            setTimeout(function() {
+                var botoes = document.querySelectorAll('#semanaInfo .btn-submenu');
+                botoes.forEach(function(btn) { btn.classList.remove('active'); });
+                var periodos = {
+                    'todo': 'Todo o período',
+                    'mes': 'Esse mês',
+                    '3meses': 'Últimos 3 meses',
+                    '5meses': 'Últimos 5 meses',
+                    '8meses': 'Últimos 8 meses',
+                    '12meses': 'Últimos 12 meses'
+                };
+                botoes.forEach(function(btn) {
+                    if (btn.textContent.trim() === periodos[periodo]) {
+                        btn.classList.add('active');
+                        console.log('✅ Botão "' + periodos[periodo] + '" selecionado');
+                    }
+                });
+            }, 500);
+        };
+        console.log('✅ filtrarProdutosPorPedido interceptado!');
+    }
+    var filtros = ['filtrarMaisPedidos', 'filtrarMaiorLucro', 'filtrarMenosPedidos', 'filtrarMaiorDiferenca'];
+    filtros.forEach(function(nome) {
+        if (typeof window[nome] === 'function') {
+            var original = window[nome];
+            window[nome] = function(periodo) {
+                console.log('🔍 Filtrando ' + nome + ': ' + periodo);
+                original(periodo);
+                setTimeout(function() {
+                    var botoes = document.querySelectorAll('#semanaInfo .btn-submenu');
+                    botoes.forEach(function(btn) { btn.classList.remove('active'); });
+                    var periodos = {
+                        'todo': 'Todo o período',
+                        'mes': 'Esse mês',
+                        '3meses': 'Últimos 3 meses',
+                        '5meses': 'Últimos 5 meses',
+                        '8meses': 'Últimos 8 meses',
+                        '12meses': 'Últimos 12 meses'
+                    };
+                    botoes.forEach(function(btn) {
+                        if (btn.textContent.trim() === periodos[periodo]) {
+                            btn.classList.add('active');
+                            console.log('✅ Botão "' + periodos[periodo] + '" selecionado');
+                        }
+                    });
+                }, 500);
+            };
+            console.log('✅ ' + nome + ' interceptado!');
+        }
+    });
+    console.log('✅ CORREÇÃO APLICADA!');
+}
+
+
+
+function inicializarSistemaNavegacao() {
+    console.log('🔧 Inicializando sistema de navegação...');
+    setTimeout(function() {
+        tornarPedidosClicaveis();
+        corrigirBotoesPeriodo();
+    }, 500);
+}
+
+
+
+// ===== INTERCEPTAR organizeMaisPedidos =====
+if (typeof window.organizarMaisPedidos === 'function') {
+    var originalOrganizar = window.organizarMaisPedidos;
+    window.organizarMaisPedidos = function(tipo) {
+        console.log('🔄 organizarMaisPedidos chamada com tipo:', tipo);
+        originalOrganizar.apply(this, arguments);
+        setTimeout(function() {
+            if (tipo === 'vezes') {
+                destacarCelulasMaisPedidos(2);
+            } else if (tipo === 'quantidade') {
+                destacarCelulasMaisPedidos(3);
+            }
+        }, 300);
+        setTimeout(function() {
+            if (tipo === 'vezes') {
+                destacarCelulasMaisPedidos(2);
+            } else if (tipo === 'quantidade') {
+                destacarCelulasMaisPedidos(3);
+            }
+        }, 800);
+    };
+    console.log('✅ organizarMaisPedidos interceptada');
+}
+
+// ===== INTERCEPTAR organizarMaiorLucro =====
+if (typeof window.organizarMaiorLucro === 'function') {
+    var originalOrganizarLucro = window.organizarMaiorLucro;
+    window.organizarMaiorLucro = function(tipo) {
+        console.log('🔄 organizarMaiorLucro chamada com tipo:', tipo);
+        originalOrganizarLucro.apply(this, arguments);
+        setTimeout(function() {
+            if (tipo === 'valor') {
+                destacarCelulasMaiorLucro(4);
+            } else if (tipo === 'percentual') {
+                destacarCelulasMaiorLucro(5);
+            }
+        }, 300);
+        setTimeout(function() {
+            if (tipo === 'valor') {
+                destacarCelulasMaiorLucro(4);
+            } else if (tipo === 'percentual') {
+                destacarCelulasMaiorLucro(5);
+            }
+        }, 800);
+    };
+    console.log('✅ organizarMaiorLucro interceptada');
+}
+
+// ===== INTERCEPTAR organizarMenosPedidos =====
+if (typeof window.organizarMenosPedidos === 'function') {
+    var originalOrganizarMenos = window.organizarMenosPedidos;
+    window.organizarMenosPedidos = function(tipo) {
+        console.log('🔄 organizarMenosPedidos chamada com tipo:', tipo);
+        originalOrganizarMenos.apply(this, arguments);
+        setTimeout(function() {
+            if (tipo === 'vezes') {
+                destacarCelulasMenosPedidos(6);
+            } else if (tipo === 'quantidade') {
+                destacarCelulasMenosPedidos(7);
+            }
+        }, 300);
+        setTimeout(function() {
+            if (tipo === 'vezes') {
+                destacarCelulasMenosPedidos(6);
+            } else if (tipo === 'quantidade') {
+                destacarCelulasMenosPedidos(7);
+            }
+        }, 800);
+    };
+    console.log('✅ organizarMenosPedidos interceptada');
+}
+
+
+
+// ============================================================
+// INICIALIZAR TUDO
+// ============================================================
+
+setTimeout(function() {
+    inicializarSistemaNavegacao();
+    aplicarStickyEmTodosDetalhes();
+    setTimeout(adicionarBotoesATodosDetalhes, 800);
+}, 500);
+
+console.log('✅ TODAS AS FUNÇÕES ATIVADAS!');
+console.log('   - Sistema de navegação entre pedidos e produtos');
+console.log('   - Busca de produtos');
+console.log('   - Botões de organização nos detalhes');
+console.log('   - Sticky em todos os detalhes');
+console.log('   - Links de pedidos clicáveis');
+
+
+
+
+
+
+
+
+
+
+
+
+
 </script>
 
 </body>
