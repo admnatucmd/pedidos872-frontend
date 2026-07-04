@@ -6479,6 +6479,565 @@ console.log('   - Será reaplicado ao mudar de aba, filtrar ou organizar');
 
 
 
+// ============================================================
+// FUNÇÃO: TORNAR NÚMEROS DE PEDIDO CLICÁVEIS (COM DESTAQUE DO PRODUTO)
+// ============================================================
+
+function tornarPedidosClicaveis() {
+    console.log('🔄 Tornando pedidos clicáveis nos detalhes...');
+    
+    const detailTables = document.querySelectorAll('.detail-card table');
+    let encontrados = 0;
+    
+    detailTables.forEach((tabela) => {
+        // Procurar todas as linhas de detalhes
+        const rows = tabela.querySelectorAll('tbody tr');
+        
+        rows.forEach((row) => {
+            const cells = row.querySelectorAll('td');
+            if (cells.length === 0) return;
+            
+            // A primeira célula é o número do pedido
+            const celulaPedido = cells[0];
+            const textoPedido = celulaPedido.textContent.trim();
+            
+            // Verificar se é um número de pedido (9 dígitos)
+            if (/^\d{9}$/.test(textoPedido) && !celulaPedido.querySelector('a')) {
+                const pedidoId = textoPedido;
+                
+                // Tentar encontrar o código do produto na mesma linha
+                // O código do produto pode estar em outra coluna ou no cabeçalho da tabela pai
+                let codigoProduto = '';
+                let nomeProduto = '';
+                
+                // Procurar o cabeçalho da tabela pai para identificar as colunas
+                const tabelaPai = row.closest('table');
+                const cabecalhos = tabelaPai.querySelectorAll('thead th');
+                
+                // Mapear índices das colunas
+                let idxCodigo = -1;
+                let idxProduto = -1;
+                
+                cabecalhos.forEach((th, index) => {
+                    const texto = th.textContent.trim();
+                    if (texto === 'Código' || texto === 'Cód') idxCodigo = index;
+                    if (texto === 'Produto' || texto.includes('Produto')) idxProduto = index;
+                });
+                
+                // Se encontrou as colunas, pegar os valores
+                if (idxCodigo !== -1 && cells[idxCodigo]) {
+                    codigoProduto = cells[idxCodigo].textContent.trim();
+                }
+                if (idxProduto !== -1 && cells[idxProduto]) {
+                    nomeProduto = cells[idxProduto].textContent.trim();
+                }
+                
+                // Se não encontrou, tentar pegar do contexto (linha anterior)
+                if (!codigoProduto) {
+                    // Procurar o card pai e a linha do produto principal
+                    const card = row.closest('.detail-card');
+                    if (card) {
+                        const titulo = card.querySelector('strong');
+                        if (titulo) {
+                            const match = titulo.textContent.match(/produto\s*(\d+)/i);
+                            if (match) {
+                                codigoProduto = match[1];
+                            }
+                            // Tentar extrair o nome do produto
+                            const matchNome = titulo.textContent.match(/-\s*(.+?)(?:\s*\(|$)/);
+                            if (matchNome) {
+                                nomeProduto = matchNome[1].trim();
+                            }
+                        }
+                    }
+                }
+                
+                // Criar o link
+                const link = document.createElement('a');
+                link.href = '#';
+                link.textContent = pedidoId;
+                link.style.color = '#0b4f6c';
+                link.style.textDecoration = 'underline';
+                link.style.cursor = 'pointer';
+                link.style.fontWeight = 'bold';
+                link.title = `Ir para o pedido ${pedidoId} em "Produtos por pedido"`;
+                
+                // Armazenar dados no link
+                link.dataset.pedidoId = pedidoId;
+                link.dataset.codigoProduto = codigoProduto || '';
+                link.dataset.nomeProduto = nomeProduto || '';
+                
+                // Adicionar evento de clique
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    const pid = this.dataset.pedidoId;
+                    const codigo = this.dataset.codigoProduto;
+                    const nome = this.dataset.nomeProduto;
+                    console.log(`🔍 Navegando para o pedido: ${pid} (produto: ${codigo || nome})`);
+                    irParaPedido(pid, codigo, nome);
+                });
+                
+                // Substituir o texto pelo link
+                celulaPedido.innerHTML = '';
+                celulaPedido.appendChild(link);
+                encontrados++;
+            }
+        });
+    });
+    
+    console.log(`✅ ${encontrados} pedidos nos detalhes tornados clicáveis!`);
+}
+
+// ============================================================
+// FUNÇÃO: IR PARA O PEDIDO E DESTACAR O PRODUTO
+// ============================================================
+
+function irParaPedido(pedidoId, codigoProduto, nomeProduto) {
+    console.log(`🔍 Buscando pedido: ${pedidoId} (produto: ${codigoProduto || nomeProduto})`);
+    
+    // Armazenar o código do produto para usar depois
+    window.produtoParaDestacar = {
+        pedidoId: pedidoId,
+        codigo: codigoProduto,
+        nome: nomeProduto
+    };
+    
+    // 1. Abrir o submenu de produtos se estiver fechado
+    const submenuProdutos = document.getElementById('submenuProdutos');
+    
+    if (!submenuProdutos || submenuProdutos.style.display !== 'flex') {
+        const btnProdutos = document.getElementById('btnProdutos');
+        if (btnProdutos) {
+            btnProdutos.click();
+            setTimeout(() => {
+                abrirProdutosPorPedidoEIrParaPedido(pedidoId, codigoProduto, nomeProduto);
+            }, 400);
+        }
+        return;
+    }
+    
+    // 2. Verificar se "Produtos por pedido" está ativo
+    const botoesSubmenu = document.querySelectorAll('#submenuProdutos .btn-submenu');
+    let botaoAtivo = false;
+    
+    botoesSubmenu.forEach((btn, index) => {
+        if (btn.classList.contains('active') && index === 0) {
+            botaoAtivo = true;
+        }
+    });
+    
+    if (!botaoAtivo) {
+        if (botoesSubmenu.length > 0) {
+            console.log('🔄 Abrindo "Produtos por pedido"...');
+            botoesSubmenu[0].click();
+            setTimeout(() => {
+                irParaPedidoNaTabela(pedidoId, codigoProduto, nomeProduto);
+            }, 600);
+        }
+    } else {
+        irParaPedidoNaTabela(pedidoId, codigoProduto, nomeProduto);
+    }
+}
+
+function irParaPedidoNaTabela(pedidoId, codigoProduto, nomeProduto) {
+    // Procurar a linha do pedido na tabela
+    const linhas = document.querySelectorAll('#tableBody tr.pedido-row');
+    let linhaEncontrada = null;
+    
+    linhas.forEach((row) => {
+        const cell = row.querySelector('td:first-child');
+        if (cell) {
+            const texto = cell.textContent.replace('▶', '').replace('▼', '').trim();
+            if (texto === pedidoId) {
+                linhaEncontrada = row;
+            }
+        }
+    });
+    
+    if (linhaEncontrada) {
+        // Rolar até a linha
+        linhaEncontrada.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
+        // Destacar a linha do pedido
+        linhaEncontrada.style.transition = 'background 0.3s';
+        linhaEncontrada.style.background = '#e3f2fd';
+        
+        // Expandir os detalhes se estiver fechado
+        const icon = linhaEncontrada.querySelector('.expand-icon');
+        if (icon && icon.textContent === '▶') {
+            linhaEncontrada.click();
+        }
+        
+        // Se temos um código de produto, esperar os detalhes carregarem e destacar o produto
+        if (codigoProduto || nomeProduto) {
+            console.log(`🔍 Aguardando detalhes carregarem para destacar o produto...`);
+            
+            // Aguardar os detalhes carregarem
+            let tentativas = 0;
+            const maxTentativas = 20;
+            
+            const intervalo = setInterval(() => {
+                tentativas++;
+                
+                // Procurar o produto nos detalhes
+                const detailRow = document.getElementById(`detalhe-produtos-${pedidoId}`);
+                if (detailRow && detailRow.classList.contains('show')) {
+                    // Procurar o código ou nome do produto na tabela de detalhes
+                    const tabelaDetalhes = detailRow.querySelector('table');
+                    if (tabelaDetalhes) {
+                        const linhasProdutos = tabelaDetalhes.querySelectorAll('tbody tr');
+                        let produtoEncontrado = false;
+                        
+                        linhasProdutos.forEach((linhaProduto) => {
+                            const cells = linhaProduto.querySelectorAll('td');
+                            let encontrou = false;
+                            
+                            // Procurar pelo código
+                            if (codigoProduto && cells.length > 0) {
+                                const celulaCodigo = cells[0];
+                                if (celulaCodigo.textContent.trim() === codigoProduto) {
+                                    encontrou = true;
+                                }
+                            }
+                            
+                            // Se não encontrou pelo código, tentar pelo nome
+                            if (!encontrou && nomeProduto && cells.length > 1) {
+                                const celulaNome = cells[1];
+                                if (celulaNome.textContent.trim().includes(nomeProduto)) {
+                                    encontrou = true;
+                                }
+                            }
+                            
+                            if (encontrou) {
+                                // Destacar a linha do produto
+                                linhaProduto.style.transition = 'background 0.3s';
+                                linhaProduto.style.background = '#fff3cd';
+                                linhaProduto.style.borderLeft = '4px solid #ffc107';
+                                
+                                // Rolar para o produto
+                                linhaProduto.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                
+                                produtoEncontrado = true;
+                                console.log(`✅ Produto ${codigoProduto || nomeProduto} encontrado e destacado!`);
+                                                            }
+                        });
+                        
+                        if (produtoEncontrado) {
+                            clearInterval(intervalo);
+                            return;
+                        }
+                    }
+                }
+                
+                if (tentativas >= maxTentativas) {
+                    console.log(`⚠️ Produto ${codigoProduto || nomeProduto} não encontrado nos detalhes`);
+                    clearInterval(intervalo);
+                }
+            }, 300);
+        }
+        
+        // Remover destaque do pedido após 5 segundos
+        setTimeout(() => {
+            if (linhaEncontrada) {
+                linhaEncontrada.style.background = '';
+            }
+        }, 5000);
+        
+        console.log(`✅ Pedido ${pedidoId} encontrado e destacado!`);
+    } else {
+        console.log(`⚠️ Pedido ${pedidoId} não encontrado na tabela atual. Tentando recarregar...`);
+        const botoesSubmenu = document.querySelectorAll('#submenuProdutos .btn-submenu');
+        if (botoesSubmenu.length > 0) {
+            botoesSubmenu[0].click();
+            setTimeout(() => {
+                irParaPedidoNaTabela(pedidoId, codigoProduto, nomeProduto);
+            }, 1000);
+        }
+    }
+}
+
+// ============================================================
+// INTERCEPTAR TOGGLES DE DETALHES
+// ============================================================
+
+const toggles = [
+    'toggleDetalhesProdutosMaisPedidos',
+    'toggleDetalhesProdutosMaiorLucro',
+    'toggleDetalhesProdutosMenosPedidos',
+    'toggleDetalhesProdutosMaiorDiferenca'
+];
+
+toggles.forEach(function(nome) {
+    if (typeof window[nome] === 'function') {
+        const original = window[nome];
+        window[nome] = function() {
+            console.log(`🔍 Executando toggle: ${nome}`);
+            const resultado = original.apply(this, arguments);
+            setTimeout(function() {
+                tornarPedidosClicaveis();
+            }, 400);
+            return resultado;
+        };
+        console.log(`✅ Interceptado: ${nome}`);
+    }
+});
+
+
+
+// ============================================================
+// CORRIGIR: MANTER BOTÃO DE PERÍODO SELECIONADO
+// ============================================================
+
+function corrigirBotoesPeriodo() {
+    console.log('🔄 Corrigindo botões de período...');
+    
+    // Interceptar a função filtrarProdutosPorPedido
+    if (typeof window.filtrarProdutosPorPedido === 'function') {
+        const original = window.filtrarProdutosPorPedido;
+        
+        window.filtrarProdutosPorPedido = function(periodo) {
+            console.log(`🔍 Filtrando por período: ${periodo}`);
+            
+            // Chamar a função original
+            original(periodo);
+            
+            // Depois que a tabela carregar, reaplicar a classe active
+            setTimeout(() => {
+                // Remover active de todos os botões
+                const botoes = document.querySelectorAll('#semanaInfo .btn-submenu');
+                botoes.forEach(btn => btn.classList.remove('active'));
+                
+                // Adicionar active no botão correto
+                const periodos = {
+                    'todo': 'Todo o período',
+                    'mes': 'Esse mês',
+                    '3meses': 'Últimos 3 meses',
+                    '5meses': 'Últimos 5 meses',
+                    '8meses': 'Últimos 8 meses',
+                    '12meses': 'Últimos 12 meses'
+                };
+                
+                botoes.forEach(btn => {
+                    if (btn.textContent.trim() === periodos[periodo]) {
+                        btn.classList.add('active');
+                        console.log(`✅ Botão "${periodos[periodo]}" selecionado`);
+                    }
+                });
+            }, 500);
+        };
+        console.log('✅ filtrarProdutosPorPedido interceptado!');
+    }
+    
+    // Também corrigir para os filtros de outras abas
+    const filtros = [
+        'filtrarMaisPedidos',
+        'filtrarMaiorLucro',
+        'filtrarMenosPedidos',
+        'filtrarMaiorDiferenca'
+    ];
+    
+    filtros.forEach(function(nome) {
+        if (typeof window[nome] === 'function') {
+            const original = window[nome];
+            
+            window[nome] = function(periodo) {
+                console.log(`🔍 Filtrando ${nome}: ${periodo}`);
+                
+                original(periodo);
+                
+                setTimeout(() => {
+                    const botoes = document.querySelectorAll('#semanaInfo .btn-submenu');
+                    botoes.forEach(btn => btn.classList.remove('active'));
+                    
+                    const periodos = {
+                        'todo': 'Todo o período',
+                        'mes': 'Esse mês',
+                        '3meses': 'Últimos 3 meses',
+                        '5meses': 'Últimos 5 meses',
+                        '8meses': 'Últimos 8 meses',
+                        '12meses': 'Últimos 12 meses'
+                    };
+                    
+                    botoes.forEach(btn => {
+                        if (btn.textContent.trim() === periodos[periodo]) {
+                            btn.classList.add('active');
+                            console.log(`✅ Botão "${periodos[periodo]}" selecionado`);
+                        }
+                    });
+                }, 500);
+            };
+            console.log(`✅ ${nome} interceptado!`);
+        }
+    });
+    
+    console.log('✅ CORREÇÃO APLICADA!');
+    console.log('   - Agora os botões de período vão manter a seleção');
+}
+
+
+
+
+// ============================================================
+// CORRIGIR: DETALHES DOS PRODUTOS RESPEITAM O PERÍODO
+// ============================================================
+
+function corrigirDetalhesComPeriodo() {
+    console.log('🔄 Corrigindo detalhes para respeitar o período...');
+    
+    // ===== 1. FUNÇÃO PARA OBTER O PERÍODO ATIVO =====
+    function getPeriodoAtivo() {
+        // Verificar qual botão de período está ativo
+        const botoes = document.querySelectorAll('#semanaInfo .btn-submenu');
+        let periodoAtivo = 'todo';
+        
+        botoes.forEach(btn => {
+            if (btn.classList.contains('active')) {
+                const texto = btn.textContent.trim();
+                if (texto === 'Todo o período') periodoAtivo = 'todo';
+                else if (texto === 'Esse mês') periodoAtivo = 'mes';
+                else if (texto === 'Últimos 3 meses') periodoAtivo = '3meses';
+                else if (texto === 'Últimos 5 meses') periodoAtivo = '5meses';
+                else if (texto === 'Últimos 8 meses') periodoAtivo = '8meses';
+                else if (texto === 'Últimos 12 meses') periodoAtivo = '12meses';
+            }
+        });
+        
+        return periodoAtivo;
+    }
+    
+    // ===== 2. FUNÇÃO PARA FILTRAR DADOS POR PERÍODO =====
+    function filtrarPorPeriodo(dados, periodo) {
+        if (periodo === 'todo' || !dados || dados.length === 0) {
+            return dados;
+        }
+        
+        const agora = new Date();
+        let dataLimite = null;
+        
+        if (periodo === 'mes') {
+            dataLimite = new Date(agora.getFullYear(), agora.getMonth(), 1);
+        } else if (periodo === '3meses') {
+            dataLimite = new Date(agora);
+            dataLimite.setMonth(agora.getMonth() - 3);
+        } else if (periodo === '5meses') {
+            dataLimite = new Date(agora);
+            dataLimite.setMonth(agora.getMonth() - 5);
+        } else if (periodo === '8meses') {
+            dataLimite = new Date(agora);
+            dataLimite.setMonth(agora.getMonth() - 8);
+        } else if (periodo === '12meses') {
+            dataLimite = new Date(agora);
+            dataLimite.setMonth(agora.getMonth() - 12);
+        }
+        
+        if (!dataLimite) return dados;
+        
+        return dados.filter(item => {
+            const dataPedido = new Date(item.data.split('/').reverse().join('/'));
+            return dataPedido >= dataLimite;
+        });
+    }
+    
+    // ===== 3. INTERCEPTAR OS TOGGLES DE DETALHES =====
+    const toggles = [
+        'toggleDetalhesProdutosMaisPedidos',
+        'toggleDetalhesProdutosMaiorLucro',
+        'toggleDetalhesProdutosMenosPedidos',
+        'toggleDetalhesProdutosMaiorDiferenca'
+    ];
+    
+    toggles.forEach(function(nome) {
+        if (typeof window[nome] === 'function') {
+            const original = window[nome];
+            
+            window[nome] = function(codigo) {
+                console.log(`🔍 Executando ${nome} para produto: ${codigo}`);
+                
+                // Chamar a função original
+                original(codigo);
+                
+                // Depois que os detalhes carregarem, filtrar pelo período
+                setTimeout(() => {
+                    const periodo = getPeriodoAtivo();
+                    console.log(`📅 Período ativo: ${periodo}`);
+                    
+                    if (periodo === 'todo') {
+                        console.log('ℹ️ Período "Todo", sem filtro');
+                        return;
+                    }
+                    
+                    // Procurar a tabela de detalhes do produto
+                    const detailRow = document.getElementById(`detalhe-produto-${nome.replace('toggleDetalhes', '').toLowerCase()}-${codigo}`);
+                    // Ou tentar encontrar de forma genérica
+                    const detailCards = document.querySelectorAll('.detail-card');
+                    
+                    detailCards.forEach((card) => {
+                        const tabelas = card.querySelectorAll('table');
+                        tabelas.forEach((tabela) => {
+                            const linhas = tabela.querySelectorAll('tbody tr');
+                            let linhasParaRemover = [];
+                            
+                            linhas.forEach((linha) => {
+                                // Pegar a data (geralmente na segunda coluna)
+                                const cells = linha.querySelectorAll('td');
+                                if (cells.length > 1) {
+                                    const dataTexto = cells[1].textContent.trim();
+                                    const partes = dataTexto.split('/');
+                                    if (partes.length === 3) {
+                                        const dataPedido = new Date(partes[2], partes[1] - 1, partes[0]);
+                                        
+                                        const agora = new Date();
+                                        let dataLimite = null;
+                                        
+                                        if (periodo === 'mes') {
+                                            dataLimite = new Date(agora.getFullYear(), agora.getMonth(), 1);
+                                        } else if (periodo === '3meses') {
+                                            dataLimite = new Date(agora);
+                                            dataLimite.setMonth(agora.getMonth() - 3);
+                                        } else if (periodo === '5meses') {
+                                            dataLimite = new Date(agora);
+                                            dataLimite.setMonth(agora.getMonth() - 5);
+                                        } else if (periodo === '8meses') {
+                                            dataLimite = new Date(agora);
+                                            dataLimite.setMonth(agora.getMonth() - 8);
+                                        } else if (periodo === '12meses') {
+                                            dataLimite = new Date(agora);
+                                            dataLimite.setMonth(agora.getMonth() - 12);
+                                        }
+                                        
+                                        if (dataLimite && dataPedido < dataLimite) {
+                                            linhasParaRemover.push(linha);
+                                        }
+                                    }
+                                }
+                            });
+                            
+                            // Remover as linhas fora do período
+                            linhasParaRemover.forEach((linha) => {
+                                linha.style.display = 'none';
+                                console.log(`🗑️ Linha removida (fora do período)`);
+                            });
+                        });
+                    });
+                    
+                    console.log(`✅ Detalhes filtrados para o período: ${periodo}`);
+                }, 500);
+            };
+            console.log(`✅ Interceptado: ${nome}`);
+        }
+    });
+    
+    console.log('✅ CORREÇÃO APLICADA!');
+    console.log('   - Os detalhes agora respeitam o período selecionado');
+}
+
+// Executar a correção
+corrigirDetalhesComPeriodo();
+
+
+
+
 
 
 
