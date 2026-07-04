@@ -2905,30 +2905,31 @@ function aplicarEstiloCompactoProdutos() {
     console.log('✅ Estilo compacto aplicado na tabela de produtos!');
 }
 
-// ============================================================
-// FUNÇÕES DE PRODUTOS (CARREGAR E PROCESSAR)
-// ============================================================
-
-function limparValorProduto(valor) {
-    if (!valor || valor === '') return 0;
-    const str = String(valor).replace('R$', '').replace(/\./g, '').replace(',', '.').trim();
-    return parseFloat(str) || 0;
-}
-
 async function carregarProdutos() {
-    console.log('🔄 Carregando produtos da planilha...');
     try {
-        const response = await fetch(API_BASE_URL + '/api/sheet-data?sheet=Produtos', {
+        // ===== USA A ROTA /api/sheet-data COM PARÂMETRO sheet=Produtos =====
+        const response = await fetch(`${API_BASE_URL}/api/sheet-data?sheet=Produtos`, {
             method: 'GET',
             credentials: 'include',
-            headers: { 'Content-Type': 'application/json' }
+            headers: {
+                'Content-Type': 'application/json'
+            }
         });
-        if (!response.ok) throw new Error('HTTP ' + response.status);
-        const result = await response.json();
-        if (!result.success) throw new Error(result.error || 'Erro ao buscar produtos');
         
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText}`);
+        }
+        
+        const result = await response.json();
+        
+        if (!result.success) {
+            throw new Error(result.error || 'Erro ao buscar produtos');
+        }
+        
+        // ===== PROCESSAR DADOS =====
         processarDadosProdutos(result.data);
-        console.log('✅ Produtos carregados:', produtosData.length, 'pedidos');
+        
         return true;
     } catch (error) {
         console.error('❌ Erro ao carregar produtos:', error);
@@ -2936,6 +2937,7 @@ async function carregarProdutos() {
         return false;
     }
 }
+
 
 function processarDadosProdutos(data) {
     console.log('🔄 Processando dados de produtos...');
