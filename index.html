@@ -8102,110 +8102,21 @@ console.log('   - Clique em outro botão para sair da busca');
 
 
 // ============================================================
-// FUNÇÃO: MOSTRAR BOLETOS DA PRÓXIMA SEMANA
+// CORREÇÃO: BOTÕES DO SUBMENU DE BOLETOS
 // ============================================================
-
-function getProximaSemana() {
-    const hoje = new Date();
-    const diaSemana = hoje.getDay();
-    
-    let diasAteSabado = (6 - diaSemana + 7) % 7;
-    if (diasAteSabado === 0) diasAteSabado = 7;
-    
-    const sabado = new Date(hoje);
-    sabado.setDate(hoje.getDate() + diasAteSabado);
-    
-    const sexta = new Date(sabado);
-    sexta.setDate(sabado.getDate() + 6);
-    
-    return { sabado, sexta };
-}
-
-function mostrarBoletosProximaSemana() {
-    console.log('📅 Mostrando boletos da próxima semana...');
-    
-    document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
-    const botoes = document.querySelectorAll('.btn-submenu');
-    if (botoes.length >= 5) {
-        botoes[4].classList.add('active');
-    }
-    
-    document.getElementById('submenuBoletos').style.display = 'flex';
-    document.getElementById('dataTable').style.display = 'none';
-    document.getElementById('mesContainer').style.display = 'none';
-    document.getElementById('semanaInfo').style.display = 'block';
-    document.getElementById('statsContainer').classList.add('stats-hidden');
-    
-    const { sabado, sexta } = getProximaSemana();
-    document.getElementById('semanaInfo').innerHTML = 
-        `📅 Próxima semana: ${sabado.toLocaleDateString('pt-BR')} a ${sexta.toLocaleDateString('pt-BR')}`;
-    
-    let boletosProximaSemana = [];
-    
-    pedidosData.forEach(p => {
-        const processarParcelas = (parcelas, tipo) => {
-            parcelas.forEach(parc => {
-                if (parc.status !== 'Pagos') {
-                    const dataVenc = dataParaComparacao(parc.vencimento);
-                    if (dataVenc >= sabado && dataVenc <= sexta) {
-                        boletosProximaSemana.push({ pedido: p, parcela: parc, tipo: tipo });
-                    }
-                }
-            });
-        };
-        processarParcelas(p.parcelasProduto, 'produto');
-        processarParcelas(p.parcelasRoyalties, 'royalties');
-        processarParcelas(p.parcelasPropaganda, 'propaganda');
-    });
-    
-    boletosProximaSemana.sort((a, b) => 
-        dataParaComparacao(a.parcela.vencimento) - dataParaComparacao(b.parcela.vencimento)
-    );
-    
-    const titulo = `📅 ${boletosProximaSemana.length} boletos para a próxima semana`;
-    document.getElementById('mesContainer').innerHTML = renderizarBoletos(boletosProximaSemana, titulo);
-    document.getElementById('mesContainer').style.display = 'block';
-}
-
-// ===== ADICIONAR BOTÃO NO SUBMENU =====
-function adicionarBotaoProximaSemana() {
-    const submenu = document.getElementById('submenuBoletos');
-    if (!submenu) return;
-    
-    if (document.getElementById('btnProximaSemana')) return;
-    
-    const btn = document.createElement('button');
-    btn.id = 'btnProximaSemana';
-    btn.className = 'btn-submenu';
-    btn.textContent = '📅 Próxima semana';
-    btn.onclick = mostrarBoletosProximaSemana;
-    
-    const botoes = submenu.querySelectorAll('.btn-submenu');
-    if (botoes.length >= 3) {
-        botoes[2].parentNode.insertBefore(btn, botoes[2].nextSibling);
-    } else {
-        submenu.appendChild(btn);
-    }
-}
-
-// ===== INTERCEPTAR toggleSubmenuBoletos =====
-if (typeof window.toggleSubmenuBoletos === 'function') {
-    const originalToggle = window.toggleSubmenuBoletos;
-    window.toggleSubmenuBoletos = function() {
-        const resultado = originalToggle.apply(this, arguments);
-        setTimeout(adicionarBotaoProximaSemana, 100);
-        return resultado;
-    };
-}
-
-// ===== ADICIONAR BOTÃO INICIALMENTE =====
-setTimeout(adicionarBotaoProximaSemana, 500);
-
 
 function limparActiveBoletos() {
     document.querySelectorAll('#submenuBoletos .btn-submenu').forEach(function(b) {
         b.classList.remove('active');
     });
+}
+
+function ativarBotaoBoleto(id) {
+    limparActiveBoletos();
+    const btn = document.getElementById(id);
+    if (btn) {
+        btn.classList.add('active');
+    }
 }
 
 // ===== RECRIAR SUBMENU COM A ORDEM CORRETA =====
@@ -8318,7 +8229,6 @@ if (typeof window.toggleSubmenuBoletos === 'function') {
 // ===== INICIALIZAR =====
 recriarSubmenuBoletos();
 corrigirBotoesBoletos();
-
 
 // Inicializar
 // (A função carregarDados será chamada após o login)
