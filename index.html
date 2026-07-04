@@ -269,6 +269,30 @@
         }
 
 	* { font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+
+	/* ===== FUNDO VERDE LEVE PARA O SEMANAINFO ===== */
+#semanaInfo {
+    background: #e8f5e9 !important;
+    padding: 12px 16px !important;
+    border-radius: 8px !important;
+    margin-bottom: 12px !important;
+    border: 1px solid #c8e6c9 !important;
+}
+
+/* ===== FUNDO DOS SUBMENUS ===== */
+.submenu-container {
+    background: #f8f9fa !important;
+    border-bottom: 1px solid #e0e0e0 !important;
+}
+
+
+
+
+
+
+
+
     </style>
 </head>
 <body>
@@ -3492,19 +3516,20 @@ function mostrarProdutosPorPedido() {
     if (mesContainer) mesContainer.style.display = 'none';
     if (statsContainer) statsContainer.classList.add('stats-hidden');
     
-    if (semanaInfo) {
-        semanaInfo.style.display = 'block';
-        semanaInfo.innerHTML = `
-            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0;">
-                <button class="btn-submenu active" onclick="filtrarProdutosPorPedido('todo')">Todo o período</button>
-                <button class="btn-submenu" onclick="filtrarProdutosPorPedido('mes')">Esse mês</button>
-                <button class="btn-submenu" onclick="filtrarProdutosPorPedido('3meses')">Últimos 3 meses</button>
-                <button class="btn-submenu" onclick="filtrarProdutosPorPedido('5meses')">Últimos 5 meses</button>
-                <button class="btn-submenu" onclick="filtrarProdutosPorPedido('8meses')">Últimos 8 meses</button>
-                <button class="btn-submenu" onclick="filtrarProdutosPorPedido('12meses')">Últimos 12 meses</button>
-            </div>
-        `;
-    }
+if (semanaInfo) {
+    semanaInfo.style.display = 'block';
+    semanaInfo.innerHTML = `
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0;">
+            <span style="font-weight:600; color:#0b4f6c; font-size:13px;">Período:</span>
+            <button class="btn-submenu active" onclick="filtrarProdutosPorPedido('todo')">Todo o período</button>
+            <button class="btn-submenu" onclick="filtrarProdutosPorPedido('mes')">Esse mês</button>
+            <button class="btn-submenu" onclick="filtrarProdutosPorPedido('3meses')">Últimos 3 meses</button>
+            <button class="btn-submenu" onclick="filtrarProdutosPorPedido('5meses')">Últimos 5 meses</button>
+            <button class="btn-submenu" onclick="filtrarProdutosPorPedido('8meses')">Últimos 8 meses</button>
+            <button class="btn-submenu" onclick="filtrarProdutosPorPedido('12meses')">Últimos 12 meses</button>
+        </div>
+    `;
+}
     
     if (tableWrapper) {
         tableWrapper.innerHTML = `
@@ -3602,24 +3627,24 @@ function mostrarProdutosMaisPedidos() {
     if (tableWrapper) tableWrapper.innerHTML = '';
     
     if (semanaInfo) {
-        semanaInfo.style.display = 'block';
-        semanaInfo.innerHTML = `
-            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0; border-bottom:1px solid #e5e7eb; padding-bottom:8px; margin-bottom:8px;">
-                <span style="font-weight:600; color:#0b4f6c; font-size:13px;">📊 Organizar por:</span>
-                <button class="btn-submenu active" onclick="organizarMaisPedidos('vezes')" id="btn-organizar-vezes">Mais pedido</button>
-                <button class="btn-submenu" onclick="organizarMaisPedidos('quantidade')" id="btn-organizar-quantidade">Quantidade total pedida</button>
-            </div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0;">
-                <span style="font-weight:600; color:#0b4f6c; font-size:13px;">📈 Período:</span>
-                <button class="btn-submenu active" onclick="filtrarMaisPedidos('todo')">Todo o período</button>
-                <button class="btn-submenu" onclick="filtrarMaisPedidos('mes')">Esse mês</button>
-                <button class="btn-submenu" onclick="filtrarMaisPedidos('3meses')">Últimos 3 meses</button>
-                <button class="btn-submenu" onclick="filtrarMaisPedidos('5meses')">Últimos 5 meses</button>
-                <button class="btn-submenu" onclick="filtrarMaisPedidos('8meses')">Últimos 8 meses</button>
-                <button class="btn-submenu" onclick="filtrarMaisPedidos('12meses')">Últimos 12 meses</button>
-            </div>
-        `;
-    }
+    semanaInfo.style.display = 'block';
+    semanaInfo.innerHTML = `
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0; border-bottom:1px solid #e5e7eb; padding-bottom:8px; margin-bottom:8px;">
+            <span style="font-weight:600; color:#0b4f6c; font-size:13px;">Organizar por:</span>
+            <button class="btn-submenu active" onclick="organizarMaisPedidos('vezes')" id="btn-organizar-vezes">Mais pedido</button>
+            <button class="btn-submenu" onclick="organizarMaisPedidos('quantidade')" id="btn-organizar-quantidade">Quantidade total pedida</button>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0;">
+            <span style="font-weight:600; color:#0b4f6c; font-size:13px;">Período:</span>
+            <button class="btn-submenu active" onclick="filtrarMaisPedidos('todo')">Todo o período</button>
+            <button class="btn-submenu" onclick="filtrarMaisPedidos('mes')">Esse mês</button>
+            <button class="btn-submenu" onclick="filtrarMaisPedidos('3meses')">Últimos 3 meses</button>
+            <button class="btn-submenu" onclick="filtrarMaisPedidos('5meses')">Últimos 5 meses</button>
+            <button class="btn-submenu" onclick="filtrarMaisPedidos('8meses')">Últimos 8 meses</button>
+            <button class="btn-submenu" onclick="filtrarMaisPedidos('12meses')">Últimos 12 meses</button>
+        </div>
+    `;
+}
     
     if (mesContainer) {
         mesContainer.style.display = 'none';
@@ -3656,23 +3681,25 @@ function mostrarProdutosMaiorLucro() {
     if (tableWrapper) tableWrapper.innerHTML = '';
     
     // ===== COM "ORGANIZAR POR:" =====
-    if (semanaInfo) {
-        semanaInfo.style.display = 'block';
-        semanaInfo.innerHTML = `
-            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0; border-bottom:1px solid #e5e7eb; padding-bottom:8px; margin-bottom:8px;">
-                <button class="btn-submenu active" onclick="organizarMaiorLucro('valor')" id="btn-organizar-valor">Valor Lucro</button>
-                <button class="btn-submenu" onclick="organizarMaiorLucro('percentual')" id="btn-organizar-percentual">% Lucro</button>
-            </div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0;">
-                <button class="btn-submenu active" onclick="filtrarMaiorLucro('todo')">Todo o período</button>
-                <button class="btn-submenu" onclick="filtrarMaiorLucro('mes')">Esse mês</button>
-                <button class="btn-submenu" onclick="filtrarMaiorLucro('3meses')">Últimos 3 meses</button>
-                <button class="btn-submenu" onclick="filtrarMaiorLucro('5meses')">Últimos 5 meses</button>
-                <button class="btn-submenu" onclick="filtrarMaiorLucro('8meses')">Últimos 8 meses</button>
-                <button class="btn-submenu" onclick="filtrarMaiorLucro('12meses')">Últimos 12 meses</button>
-            </div>
-        `;
-    }
+  if (semanaInfo) {
+    semanaInfo.style.display = 'block';
+    semanaInfo.innerHTML = `
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0; border-bottom:1px solid #e5e7eb; padding-bottom:8px; margin-bottom:8px;">
+            <span style="font-weight:600; color:#0b4f6c; font-size:13px;">Organizar por:</span>
+            <button class="btn-submenu active" onclick="organizarMaiorLucro('valor')" id="btn-organizar-valor">Valor Lucro</button>
+            <button class="btn-submenu" onclick="organizarMaiorLucro('percentual')" id="btn-organizar-percentual">% Lucro</button>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0;">
+            <span style="font-weight:600; color:#0b4f6c; font-size:13px;">Período:</span>
+            <button class="btn-submenu active" onclick="filtrarMaiorLucro('todo')">Todo o período</button>
+            <button class="btn-submenu" onclick="filtrarMaiorLucro('mes')">Esse mês</button>
+            <button class="btn-submenu" onclick="filtrarMaiorLucro('3meses')">Últimos 3 meses</button>
+            <button class="btn-submenu" onclick="filtrarMaiorLucro('5meses')">Últimos 5 meses</button>
+            <button class="btn-submenu" onclick="filtrarMaiorLucro('8meses')">Últimos 8 meses</button>
+            <button class="btn-submenu" onclick="filtrarMaiorLucro('12meses')">Últimos 12 meses</button>
+        </div>
+    `;
+}
     
     if (mesContainer) {
         mesContainer.style.display = 'none';
@@ -3708,23 +3735,25 @@ function mostrarProdutosMenosPedidos() {
     if (statsContainer) statsContainer.classList.add('stats-hidden');
     if (tableWrapper) tableWrapper.innerHTML = '';
     
-    if (semanaInfo) {
-        semanaInfo.style.display = 'block';
-        semanaInfo.innerHTML = `
-            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0; border-bottom:1px solid #e5e7eb; padding-bottom:8px; margin-bottom:8px;">
-                <button class="btn-submenu active" onclick="organizarMenosPedidos('vezes')" id="btn-organizar-menos-vezes">Menos pedido</button>
-                <button class="btn-submenu" onclick="organizarMenosPedidos('quantidade')" id="btn-organizar-menos-quantidade">Quantidade total pedida</button>
-            </div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0;">
-                <button class="btn-submenu active" onclick="filtrarMenosPedidos('todo')">Todo o período</button>
-                <button class="btn-submenu" onclick="filtrarMenosPedidos('mes')">Esse mês</button>
-                <button class="btn-submenu" onclick="filtrarMenosPedidos('3meses')">Últimos 3 meses</button>
-                <button class="btn-submenu" onclick="filtrarMenosPedidos('5meses')">Últimos 5 meses</button>
-                <button class="btn-submenu" onclick="filtrarMenosPedidos('8meses')">Últimos 8 meses</button>
-                <button class="btn-submenu" onclick="filtrarMenosPedidos('12meses')">Últimos 12 meses</button>
-            </div>
-        `;
-    }
+  if (semanaInfo) {
+    semanaInfo.style.display = 'block';
+    semanaInfo.innerHTML = `
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0; border-bottom:1px solid #e5e7eb; padding-bottom:8px; margin-bottom:8px;">
+            <span style="font-weight:600; color:#0b4f6c; font-size:13px;">Organizar por:</span>
+            <button class="btn-submenu active" onclick="organizarMenosPedidos('vezes')" id="btn-organizar-menos-vezes">Menos pedido</button>
+            <button class="btn-submenu" onclick="organizarMenosPedidos('quantidade')" id="btn-organizar-menos-quantidade">Quantidade total pedida</button>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0;">
+            <span style="font-weight:600; color:#0b4f6c; font-size:13px;">Período:</span>
+            <button class="btn-submenu active" onclick="filtrarMenosPedidos('todo')">Todo o período</button>
+            <button class="btn-submenu" onclick="filtrarMenosPedidos('mes')">Esse mês</button>
+            <button class="btn-submenu" onclick="filtrarMenosPedidos('3meses')">Últimos 3 meses</button>
+            <button class="btn-submenu" onclick="filtrarMenosPedidos('5meses')">Últimos 5 meses</button>
+            <button class="btn-submenu" onclick="filtrarMenosPedidos('8meses')">Últimos 8 meses</button>
+            <button class="btn-submenu" onclick="filtrarMenosPedidos('12meses')">Últimos 12 meses</button>
+        </div>
+    `;
+}
     
     if (mesContainer) {
         mesContainer.style.display = 'none';
@@ -3761,25 +3790,27 @@ function mostrarProdutosMaiorDiferenca() {
     if (statsContainer) statsContainer.classList.add('stats-hidden');
     if (tableWrapper) tableWrapper.innerHTML = '';
     
-    if (semanaInfo) {
-        semanaInfo.style.display = 'block';
-        semanaInfo.innerHTML = `
-            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0; border-bottom:1px solid #e5e7eb; padding-bottom:8px; margin-bottom:8px;">
-                <button class="btn-submenu active" onclick="organizarMaiorDiferenca('compra')" id="btn-organizar-compra">Compra</button>
-                <button class="btn-submenu" onclick="organizarMaiorDiferenca('venda')" id="btn-organizar-venda">Venda</button>
-                <button class="btn-submenu" onclick="organizarMaiorDiferenca('lucro')" id="btn-organizar-lucro">Lucro R$</button>
-                <button class="btn-submenu" onclick="organizarMaiorDiferenca('percentual')" id="btn-organizar-lucro-perc">Lucro %</button>
-            </div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0;">
-                <button class="btn-submenu active" onclick="filtrarMaiorDiferenca('todo')">Todo o período</button>
-                <button class="btn-submenu" onclick="filtrarMaiorDiferenca('mes')">Esse mês</button>
-                <button class="btn-submenu" onclick="filtrarMaiorDiferenca('3meses')">Últimos 3 meses</button>
-                <button class="btn-submenu" onclick="filtrarMaiorDiferenca('5meses')">Últimos 5 meses</button>
-                <button class="btn-submenu" onclick="filtrarMaiorDiferenca('8meses')">Últimos 8 meses</button>
-                <button class="btn-submenu" onclick="filtrarMaiorDiferenca('12meses')">Últimos 12 meses</button>
-            </div>
-        `;
-    }
+   if (semanaInfo) {
+    semanaInfo.style.display = 'block';
+    semanaInfo.innerHTML = `
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0; border-bottom:1px solid #e5e7eb; padding-bottom:8px; margin-bottom:8px;">
+            <span style="font-weight:600; color:#0b4f6c; font-size:13px;">Organizar por:</span>
+            <button class="btn-submenu active" onclick="organizarMaiorDiferenca('compra')" id="btn-organizar-compra">Compra</button>
+            <button class="btn-submenu" onclick="organizarMaiorDiferenca('venda')" id="btn-organizar-venda">Venda</button>
+            <button class="btn-submenu" onclick="organizarMaiorDiferenca('lucro')" id="btn-organizar-lucro">Lucro R$</button>
+            <button class="btn-submenu" onclick="organizarMaiorDiferenca('percentual')" id="btn-organizar-lucro-perc">Lucro %</button>
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0;">
+            <span style="font-weight:600; color:#0b4f6c; font-size:13px;">Período:</span>
+            <button class="btn-submenu active" onclick="filtrarMaiorDiferenca('todo')">Todo o período</button>
+            <button class="btn-submenu" onclick="filtrarMaiorDiferenca('mes')">Esse mês</button>
+            <button class="btn-submenu" onclick="filtrarMaiorDiferenca('3meses')">Últimos 3 meses</button>
+            <button class="btn-submenu" onclick="filtrarMaiorDiferenca('5meses')">Últimos 5 meses</button>
+            <button class="btn-submenu" onclick="filtrarMaiorDiferenca('8meses')">Últimos 8 meses</button>
+            <button class="btn-submenu" onclick="filtrarMaiorDiferenca('12meses')">Últimos 12 meses</button>
+        </div>
+    `;
+}
     
     if (mesContainer) {
         mesContainer.style.display = 'none';
