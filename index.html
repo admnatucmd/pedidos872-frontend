@@ -5554,58 +5554,7 @@ function adicionarBotoesProdutos() {
     console.log('✅ ' + adicionados + ' botões "Ver produtos" adicionados');
 }
 
-function tornarPedidosClicaveis() {
-    console.log('🔄 Tornando pedidos clicáveis nos detalhes...');
-    const detailTables = document.querySelectorAll('.detail-card table');
-    let encontrados = 0;
-    detailTables.forEach(function(tabela) {
-        const rows = tabela.querySelectorAll('tbody tr');
-        rows.forEach(function(row) {
-            const cells = row.querySelectorAll('td');
-            if (cells.length === 0) return;
-            const celulaPedido = cells[0];
-            const textoPedido = celulaPedido.textContent.trim();
-            if (/^\d{9}$/.test(textoPedido) && !celulaPedido.querySelector('a')) {
-                const pedidoId = textoPedido;
-                let codigoProduto = '', nomeProduto = '';
-                const tabelaPai = row.closest('table');
-                const cabecalhos = tabelaPai.querySelectorAll('thead th');
-                let idxCodigo = -1, idxProduto = -1;
-                cabecalhos.forEach(function(th, index) {
-                    const texto = th.textContent.trim();
-                    if (texto === 'Código' || texto === 'Cód') idxCodigo = index;
-                    if (texto === 'Produto' || texto.includes('Produto')) idxProduto = index;
-                });
-                if (idxCodigo !== -1 && cells[idxCodigo]) codigoProduto = cells[idxCodigo].textContent.trim();
-                if (idxProduto !== -1 && cells[idxProduto]) nomeProduto = cells[idxProduto].textContent.trim();
-                
-                const link = document.createElement('a');
-                link.href = '#';
-                link.textContent = pedidoId;
-                link.style.color = '#0b4f6c';
-                link.style.textDecoration = 'underline';
-                link.style.cursor = 'pointer';
-                link.style.fontWeight = 'bold';
-                link.title = 'Ir para o pedido ' + pedidoId;
-                link.dataset.pedidoId = pedidoId;
-                link.dataset.codigoProduto = codigoProduto || '';
-                link.dataset.nomeProduto = nomeProduto || '';
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    irParaPedido(this.dataset.pedidoId, this.dataset.codigoProduto, this.dataset.nomeProduto);
-                });
-                celulaPedido.innerHTML = '';
-                celulaPedido.appendChild(link);
-                encontrados++;
-            }
-        });
-    });
-    console.log('✅ ' + encontrados + ' pedidos nos detalhes tornados clicáveis!');
-}
-// ============================================================
-// ROTINA 2: DESTAQUE DE COLUNAS NOS BOTÕES "ORGANIZAR POR"
-// ============================================================
+
 
 function destacarCelulasMaisPedidos(colunaIndex) {
     console.log('🔄 Destacando coluna ' + colunaIndex + ' do Mais Pedidos...');
