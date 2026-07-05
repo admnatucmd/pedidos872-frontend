@@ -4845,147 +4845,154 @@ if (typeof window.organizarMenosPedidos === 'function') {
 }
 
 
-function irParaPedido(pedidoId, codigoProduto, nomeProduto) {
+function irParaPedido(pedidoId) {
     console.log('🔍 irParaPedido chamado para:', pedidoId);
-    
-    var submenuProdutos = document.getElementById('submenuProdutos');
-    var estaNaAreaProdutos = submenuProdutos && submenuProdutos.style.display === 'flex';
-    var veioDeProdutos = codigoProduto !== undefined || estaNaAreaProdutos;
-    var buscaProdutosAtiva = window.modoBuscaAtivo || false;
-    
-    if (veioDeProdutos || estaNaAreaProdutos || buscaProdutosAtiva) {
-        console.log('🎯 Abrindo em "Produtos por pedido" com destaque amarelo...');
         
-        function destacarProduto() {
-            var detailId = 'detalhe-produtos-' + pedidoId;
-            var detailRow = document.getElementById(detailId);
+        var submenuProdutos = document.getElementById('submenuProdutos');
+        var estaNaAreaProdutos = submenuProdutos && submenuProdutos.style.display === 'flex';
+        var veioDeProdutos = codigoProduto !== undefined || estaNaAreaProdutos;
+        var buscaProdutosAtiva = window.modoBuscaAtivo || false;
+        
+        // ===== SE VEIO DA ÁREA DE PRODUTOS =====
+        if (veioDeProdutos || estaNaAreaProdutos || buscaProdutosAtiva) {
+            console.log('🎯 Abrindo em "Produtos por pedido" com destaque amarelo...');
             
-            if (!detailRow || !detailRow.classList.contains('show')) {
-                setTimeout(destacarProduto, 500);
-                return;
-            }
-            
-            var tabelaDetalhes = detailRow.querySelector('table');
-            if (!tabelaDetalhes) {
-                setTimeout(destacarProduto, 500);
-                return;
-            }
-            
-            var linhasProdutos = tabelaDetalhes.querySelectorAll('tbody tr');
-            
-            if (linhasProdutos.length === 0 || linhasProdutos[0].textContent.includes('Carregando produtos')) {
-                setTimeout(destacarProduto, 500);
-                return;
-            }
-            
-            var produtoEncontrado = false;
-            
-            linhasProdutos.forEach(function(linhaProduto) {
-                var cells = linhaProduto.querySelectorAll('td');
-                var encontrou = false;
+            // ===== FUNÇÃO PARA DESTACAR O PRODUTO =====
+            function destacarProduto() {
+                var detailId = 'detalhe-produtos-' + pedidoId;
+                var detailRow = document.getElementById(detailId);
                 
-                if (codigoProduto && cells.length > 0) {
-                    var celulaCodigo = cells[0];
-                    if (celulaCodigo.textContent.trim() === String(codigoProduto)) {
-                        encontrou = true;
-                    }
+                if (!detailRow || !detailRow.classList.contains('show')) {
+                    setTimeout(destacarProduto, 500);
+                    return;
                 }
                 
-                if (!encontrou && nomeProduto && cells.length > 1) {
-                    var celulaNome = cells[1];
-                    if (celulaNome.textContent.trim().includes(nomeProduto)) {
-                        encontrou = true;
-                    }
+                var tabelaDetalhes = detailRow.querySelector('table');
+                if (!tabelaDetalhes) {
+                    setTimeout(destacarProduto, 500);
+                    return;
                 }
                 
-                if (encontrou) {
-                    linhaProduto.style.transition = 'background 0.3s';
-                    linhaProduto.style.background = '#fff3cd';
-                    linhaProduto.style.borderLeft = '4px solid #ffc107';
-                    linhaProduto.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    produtoEncontrado = true;
-                    console.log('✅ Produto destacado em AMARELO!');
+                var linhasProdutos = tabelaDetalhes.querySelectorAll('tbody tr');
+                
+                if (linhasProdutos.length === 0 || linhasProdutos[0].textContent.includes('Carregando produtos')) {
+                    setTimeout(destacarProduto, 500);
+                    return;
                 }
-            });
-            
-            if (!produtoEncontrado) {
-                setTimeout(function() {
-                    var linhasNovas = tabelaDetalhes.querySelectorAll('tbody tr');
-                    linhasNovas.forEach(function(linhaProduto) {
-                        var cells = linhaProduto.querySelectorAll('td');
-                        var encontrou = false;
-                        
-                        if (codigoProduto && cells.length > 0) {
-                            var celulaCodigo = cells[0];
-                            if (celulaCodigo.textContent.trim() === String(codigoProduto)) {
-                                encontrou = true;
-                            }
-                        }
-                        
-                        if (!encontrou && nomeProduto && cells.length > 1) {
-                            var celulaNome = cells[1];
-                            if (celulaNome.textContent.trim().includes(nomeProduto)) {
-                                encontrou = true;
-                            }
-                        }
-                        
-                        if (encontrou) {
-                            linhaProduto.style.transition = 'background 0.3s';
-                            linhaProduto.style.background = '#fff3cd';
-                            linhaProduto.style.borderLeft = '4px solid #ffc107';
-                            linhaProduto.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            console.log('✅ Produto destacado em AMARELO!');
-                        }
-                    });
-                }, 1000);
-            }
-        }
-        
-        if (typeof window.irParaProdutosDoPedido === 'function') {
-            window.irParaProdutosDoPedido(pedidoId);
-            setTimeout(destacarProduto, 1500);
-            setTimeout(destacarProduto, 3000);
-        }
-        return;
-    }
-    
-    console.log('🎯 Voltando para a tabela de pedidos...');
-    
-    if (typeof window.voltarTabelaOriginal === 'function') {
-        window.voltarTabelaOriginal();
-    }
-    
-    setTimeout(function() {
-        var rows = document.querySelectorAll('.pedido-row');
-        
-        for (var i = 0; i < rows.length; i++) {
-            var row = rows[i];
-            var cell = row.querySelector('td:first-child');
-            if (cell) {
-                var texto = cell.textContent.replace('▶', '').replace('▼', '').trim();
-                if (texto === String(pedidoId)) {
-                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    row.style.transition = 'background 0.3s';
-                    row.style.background = '#e3f2fd';
+                
+                var produtoEncontrado = false;
+                
+                linhasProdutos.forEach(function(linhaProduto) {
+                    var cells = linhaProduto.querySelectorAll('td');
+                    var encontrou = false;
                     
-                    var detailId = 'detalhe-' + pedidoId;
-                    var detailRow = document.getElementById(detailId);
-                    if (detailRow) {
-                        detailRow.classList.add('show');
-                        var icon = row.querySelector('.expand-icon');
-                        if (icon) icon.innerHTML = '▼';
+                    if (codigoProduto && cells.length > 0) {
+                        var celulaCodigo = cells[0];
+                        if (celulaCodigo.textContent.trim() === String(codigoProduto)) {
+                            encontrou = true;
+                        }
                     }
                     
+                    if (!encontrou && nomeProduto && cells.length > 1) {
+                        var celulaNome = cells[1];
+                        if (celulaNome.textContent.trim().includes(nomeProduto)) {
+                            encontrou = true;
+                        }
+                    }
+                    
+                    if (encontrou) {
+                        linhaProduto.style.transition = 'background 0.3s';
+                        linhaProduto.style.background = '#fff3cd';
+                        linhaProduto.style.borderLeft = '4px solid #ffc107';
+                        linhaProduto.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        produtoEncontrado = true;
+                        console.log('✅ Produto destacado em AMARELO!');
+                    }
+                });
+                
+                if (!produtoEncontrado) {
                     setTimeout(function() {
-                        row.style.background = '';
-                    }, 5000);
-                    break;
+                        var linhasNovas = tabelaDetalhes.querySelectorAll('tbody tr');
+                        linhasNovas.forEach(function(linhaProduto) {
+                            var cells = linhaProduto.querySelectorAll('td');
+                            var encontrou = false;
+                            
+                            if (codigoProduto && cells.length > 0) {
+                                var celulaCodigo = cells[0];
+                                if (celulaCodigo.textContent.trim() === String(codigoProduto)) {
+                                    encontrou = true;
+                                }
+                            }
+                            
+                            if (!encontrou && nomeProduto && cells.length > 1) {
+                                var celulaNome = cells[1];
+                                if (celulaNome.textContent.trim().includes(nomeProduto)) {
+                                    encontrou = true;
+                                }
+                            }
+                            
+                            if (encontrou) {
+                                linhaProduto.style.transition = 'background 0.3s';
+                                linhaProduto.style.background = '#fff3cd';
+                                linhaProduto.style.borderLeft = '4px solid #ffc107';
+                                linhaProduto.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                console.log('✅ Produto destacado em AMARELO (2ª tentativa)!');
+                            }
+                        });
+                    }, 1000);
                 }
             }
+            
+            if (typeof window.irParaProdutosDoPedido === 'function') {
+                window.irParaProdutosDoPedido(pedidoId);
+                setTimeout(destacarProduto, 1500);
+                setTimeout(destacarProduto, 3000);
+            } else {
+                irParaPedidoOriginal(pedidoId, codigoProduto, nomeProduto);
+            }
+            return;
         }
-    }, 500);
-}
+        
+        // ===== VEIO DE FORA DA ÁREA DE PRODUTOS =====
+        console.log('🎯 Voltando para a tabela de pedidos...');
+        
+        if (typeof window.voltarTabelaOriginal === 'function') {
+            window.voltarTabelaOriginal();
+        }
+        
+        setTimeout(function() {
+            var rows = document.querySelectorAll('.pedido-row');
+            
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                var cell = row.querySelector('td:first-child');
+                if (cell) {
+                    var texto = cell.textContent.replace('▶', '').replace('▼', '').trim();
+                    if (texto === String(pedidoId)) {
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        row.style.transition = 'background 0.3s';
+                        row.style.background = '#e3f2fd';
+                        
+                        var detailId = 'detalhe-' + pedidoId;
+                        var detailRow = document.getElementById(detailId);
+                        if (detailRow) {
+                            detailRow.classList.add('show');
+                            var icon = row.querySelector('.expand-icon');
+                            if (icon) icon.innerHTML = '▼';
+                        }
+                        
+                        setTimeout(function() {
+                            row.style.background = '';
+                        }, 5000);
+                        break;
+                    }
+                }
+            }
+        }, 500);
+    };
 
+    console.log('✅ irParaPedido substituída com destaque amarelo!');
+}
 
 
 function irParaProdutosDoPedido(pedidoId) {
