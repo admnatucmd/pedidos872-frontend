@@ -4838,6 +4838,274 @@ if (typeof window.organizarMenosPedidos === 'function') {
 }
 
 
+function irParaPedido(pedidoId, codigoProduto, nomeProduto) {
+    console.log('🔍 irParaPedido chamado para:', pedidoId);
+    
+    var submenuProdutos = document.getElementById('submenuProdutos');
+    var estaNaAreaProdutos = submenuProdutos && submenuProdutos.style.display === 'flex';
+    var veioDeProdutos = codigoProduto !== undefined || estaNaAreaProdutos;
+    var buscaProdutosAtiva = window.modoBuscaAtivo || false;
+    
+    if (veioDeProdutos || estaNaAreaProdutos || buscaProdutosAtiva) {
+        console.log('🎯 Abrindo em "Produtos por pedido" com destaque amarelo...');
+        
+        function destacarProduto() {
+            var detailId = 'detalhe-produtos-' + pedidoId;
+            var detailRow = document.getElementById(detailId);
+            
+            if (!detailRow || !detailRow.classList.contains('show')) {
+                setTimeout(destacarProduto, 500);
+                return;
+            }
+            
+            var tabelaDetalhes = detailRow.querySelector('table');
+            if (!tabelaDetalhes) {
+                setTimeout(destacarProduto, 500);
+                return;
+            }
+            
+            var linhasProdutos = tabelaDetalhes.querySelectorAll('tbody tr');
+            
+            if (linhasProdutos.length === 0 || linhasProdutos[0].textContent.includes('Carregando produtos')) {
+                setTimeout(destacarProduto, 500);
+                return;
+            }
+            
+            var produtoEncontrado = false;
+            
+            linhasProdutos.forEach(function(linhaProduto) {
+                var cells = linhaProduto.querySelectorAll('td');
+                var encontrou = false;
+                
+                if (codigoProduto && cells.length > 0) {
+                    var celulaCodigo = cells[0];
+                    if (celulaCodigo.textContent.trim() === String(codigoProduto)) {
+                        encontrou = true;
+                    }
+                }
+                
+                if (!encontrou && nomeProduto && cells.length > 1) {
+                    var celulaNome = cells[1];
+                    if (celulaNome.textContent.trim().includes(nomeProduto)) {
+                        encontrou = true;
+                    }
+                }
+                
+                if (encontrou) {
+                    linhaProduto.style.transition = 'background 0.3s';
+                    linhaProduto.style.background = '#fff3cd';
+                    linhaProduto.style.borderLeft = '4px solid #ffc107';
+                    linhaProduto.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    produtoEncontrado = true;
+                    console.log('✅ Produto destacado em AMARELO!');
+                }
+            });
+            
+            if (!produtoEncontrado) {
+                setTimeout(function() {
+                    var linhasNovas = tabelaDetalhes.querySelectorAll('tbody tr');
+                    linhasNovas.forEach(function(linhaProduto) {
+                        var cells = linhaProduto.querySelectorAll('td');
+                        var encontrou = false;
+                        
+                        if (codigoProduto && cells.length > 0) {
+                            var celulaCodigo = cells[0];
+                            if (celulaCodigo.textContent.trim() === String(codigoProduto)) {
+                                encontrou = true;
+                            }
+                        }
+                        
+                        if (!encontrou && nomeProduto && cells.length > 1) {
+                            var celulaNome = cells[1];
+                            if (celulaNome.textContent.trim().includes(nomeProduto)) {
+                                encontrou = true;
+                            }
+                        }
+                        
+                        if (encontrou) {
+                            linhaProduto.style.transition = 'background 0.3s';
+                            linhaProduto.style.background = '#fff3cd';
+                            linhaProduto.style.borderLeft = '4px solid #ffc107';
+                            linhaProduto.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            console.log('✅ Produto destacado em AMARELO!');
+                        }
+                    });
+                }, 1000);
+            }
+        }
+        
+        if (typeof window.irParaProdutosDoPedido === 'function') {
+            window.irParaProdutosDoPedido(pedidoId);
+            setTimeout(destacarProduto, 1500);
+            setTimeout(destacarProduto, 3000);
+        }
+        return;
+    }
+    
+    console.log('🎯 Voltando para a tabela de pedidos...');
+    
+    if (typeof window.voltarTabelaOriginal === 'function') {
+        window.voltarTabelaOriginal();
+    }
+    
+    setTimeout(function() {
+        var rows = document.querySelectorAll('.pedido-row');
+        
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            var cell = row.querySelector('td:first-child');
+            if (cell) {
+                var texto = cell.textContent.replace('▶', '').replace('▼', '').trim();
+                if (texto === String(pedidoId)) {
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    row.style.transition = 'background 0.3s';
+                    row.style.background = '#e3f2fd';
+                    
+                    var detailId = 'detalhe-' + pedidoId;
+                    var detailRow = document.getElementById(detailId);
+                    if (detailRow) {
+                        detailRow.classList.add('show');
+                        var icon = row.querySelector('.expand-icon');
+                        if (icon) icon.innerHTML = '▼';
+                    }
+                    
+                    setTimeout(function() {
+                        row.style.background = '';
+                    }, 5000);
+                    break;
+                }
+            }
+        }
+    }, 500);
+}
+
+
+
+function irParaProdutosDoPedido(pedidoId) {
+    console.log('🔍 Abrindo produtos do pedido:', pedidoId);
+    
+    var submenuProdutos = document.getElementById('submenuProdutos');
+    var btnProdutos = document.getElementById('btnProdutos');
+    
+    if (!submenuProdutos || !btnProdutos) {
+        console.error('❌ Elementos de produtos não encontrados');
+        return;
+    }
+    
+    var submenuBoletos = document.getElementById('submenuBoletos');
+    var btnBoletosPagar = document.getElementById('btnBoletosPagar');
+    if (submenuBoletos) submenuBoletos.style.display = 'none';
+    if (btnBoletosPagar) btnBoletosPagar.classList.remove('active');
+    
+    document.querySelectorAll('.btn-actions .btn').forEach(b => b.classList.remove('active'));
+    btnProdutos.classList.add('active');
+    submenuProdutos.style.display = 'flex';
+    
+    var dataTable = document.getElementById('dataTable');
+    var mesContainer = document.getElementById('mesContainer');
+    var semanaInfo = document.getElementById('semanaInfo');
+    var statsContainer = document.getElementById('statsContainer');
+    var tableWrapper = document.getElementById('tableWrapper');
+    
+    if (dataTable) dataTable.style.display = 'none';
+    if (mesContainer) mesContainer.style.display = 'none';
+    if (semanaInfo) semanaInfo.style.display = 'none';
+    if (statsContainer) statsContainer.classList.add('stats-hidden');
+    if (tableWrapper) tableWrapper.innerHTML = '';
+    
+    if (typeof window.mostrarProdutosPorPedido === 'function') {
+        window.mostrarProdutosPorPedido();
+        
+        var tentativas = 0;
+        var maxTentativas = 30;
+        
+        var intervalo = setInterval(function() {
+            tentativas++;
+            var rows = document.querySelectorAll('#tableBody tr.pedido-row');
+            var encontrado = false;
+            
+            for (var row of rows) {
+                var cell = row.querySelector('td:first-child');
+                if (cell) {
+                    var texto = cell.textContent.replace('▶', '').replace('▼', '').trim();
+                    if (texto === String(pedidoId)) {
+                        encontrado = true;
+                        console.log('✅ Pedido encontrado nos produtos!');
+                        
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        row.style.transition = 'background 0.3s';
+                        row.style.background = '#e3f2fd';
+                        
+                        var detailId = 'detalhe-produtos-' + pedidoId;
+                        var detailRow = document.getElementById(detailId);
+                        if (detailRow) {
+                            detailRow.classList.add('show');
+                            var icon = row.querySelector('.expand-icon');
+                            if (icon) icon.innerHTML = '▼';
+                            
+                            if (typeof window.carregarProdutosDetalhados === 'function') {
+                                window.carregarProdutosDetalhados(pedidoId);
+                            }
+                        }
+                        
+                        setTimeout(function() {
+                            row.style.background = '';
+                        }, 5000);
+                        
+                        clearInterval(intervalo);
+                        return;
+                    }
+                }
+            }
+            
+            if (!encontrado && tentativas >= maxTentativas) {
+                console.log('⚠️ Pedido não encontrado nos produtos');
+                clearInterval(intervalo);
+            }
+        }, 300);
+    } else {
+        console.error('❌ mostrarProdutosPorPedido não encontrada');
+    }
+}
+
+
+
+
+function irParaPedidoNaTabela(pedidoId) {
+    console.log('🔍 Procurando pedido na tabela:', pedidoId);
+    
+    var rows = document.querySelectorAll('.pedido-row');
+    for (var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+        var cell = row.querySelector('td:first-child');
+        if (cell) {
+            var texto = cell.textContent.replace('▶', '').replace('▼', '').trim();
+            if (texto === String(pedidoId)) {
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                row.style.transition = 'background 0.3s';
+                row.style.background = '#e3f2fd';
+                
+                var detailId = 'detalhe-' + pedidoId;
+                var detailRow = document.getElementById(detailId);
+                if (detailRow) {
+                    detailRow.classList.add('show');
+                    var icon = row.querySelector('.expand-icon');
+                    if (icon) icon.innerHTML = '▼';
+                }
+                
+                setTimeout(function() {
+                    row.style.background = '';
+                }, 5000);
+                console.log('✅ Pedido encontrado e destacado na tabela!');
+                return;
+            }
+        }
+    }
+    console.log('⚠️ Pedido não encontrado na tabela');
+}
+
+
+
 // ============================================================
 // FUNÇÕES DE NAVEGAÇÃO E UTILITÁRIOS (EXTRAÍDAS DOS IIFEs #14, #15, #16)
 // ============================================================
