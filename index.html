@@ -3105,70 +3105,80 @@ function processarDadosProdutos(data) {
 function tornarPedidosClicaveis() {
     console.log('🔄 Tornando pedidos clicáveis nos detalhes...');
     
-    const detailTables = document.querySelectorAll('.detail-card table');
+    // Procura em TODAS as tabelas dentro de detail-cards
+    const detailCards = document.querySelectorAll('.detail-card');
     let encontrados = 0;
     
-    detailTables.forEach(function(tabela) {
-        const rows = tabela.querySelectorAll('tbody tr');
-        rows.forEach(function(row) {
-            const cells = row.querySelectorAll('td');
-            if (cells.length === 0) return;
+    detailCards.forEach(function(card) {
+        const tabelas = card.querySelectorAll('table');
+        tabelas.forEach(function(tabela) {
+            // Pula tabelas que não têm cabeçalho
+            const cabecalhos = tabela.querySelectorAll('thead th');
+            if (cabecalhos.length < 2) return;
             
-            const celulaPedido = cells[0];
-            const textoPedido = celulaPedido.textContent.trim();
-            
-            if (/^\d{9}$/.test(textoPedido) && !celulaPedido.querySelector('a')) {
-                const pedidoId = textoPedido;
+            const rows = tabela.querySelectorAll('tbody tr');
+            rows.forEach(function(row) {
+                const cells = row.querySelectorAll('td');
+                if (cells.length < 2) return;
                 
-                let codigoProduto = '';
-                let nomeProduto = '';
+                // ⭐ PEGA O CÓDIGO E NOME DO PRODUTO (primeiras colunas) ⭐
+                var codigoProduto = cells.length > 0 ? cells[0].textContent.trim() : '';
+                var nomeProduto = cells.length > 1 ? cells[1].textContent.trim() : '';
                 
-                const tabelaPai = row.closest('table');
-                const cabecalhos = tabelaPai.querySelectorAll('thead th');
+                // Pula linhas de cabeçalho
+                if (codigoProduto === 'Código' || codigoProduto === 'Cód' || codigoProduto === 'Pedido') return;
+                if (nomeProduto === 'Produto' || nomeProduto === 'Data') return;
                 
-                let idxCodigo = -1;
-                let idxProduto = -1;
-                
-                cabecalhos.forEach(function(th, index) {
-                    const texto = th.textContent.trim();
-                    if (texto === 'Código' || texto === 'Cód') idxCodigo = index;
-                    if (texto === 'Produto' || texto.includes('Produto')) idxProduto = index;
+                // ⭐ PROCURA UM NÚMERO DE PEDIDO EM CADA CÉLULA ⭐
+                cells.forEach(function(cell, index) {
+                    // Pula se já tem um link
+                    if (cell.querySelector('a')) return;
+                    
+                    var texto = cell.textContent.trim();
+                    // Aceita números de 8 ou 9 dígitos
+                    var match = texto.match(/\b(\d{8,9})\b/);
+                    if (match) {
+                        var pedidoId = match[1];
+                        console.log('🔍 Encontrado pedido:', pedidoId, 'com produto:', codigoProduto);
+                        
+                        // ⭐ CRIA O LINK COM OS DADOS DO PRODUTO ⭐
+                        var link = document.createElement('a');
+                        link.href = '#';
+                        link.textContent = pedidoId;
+                        link.style.color = '#0b4f6c';
+                        link.style.textDecoration = 'underline';
+                        link.style.cursor = 'pointer';
+                        link.style.fontWeight = 'bold';
+                        link.title = 'Ir para o pedido ' + pedidoId;
+                        
+                        // ⭐ GUARDA OS DADOS NO DATASET ⭐
+                        link.dataset.pedidoId = pedidoId;
+                        link.dataset.codigoProduto = codigoProduto || '';
+                        link.dataset.nomeProduto = nomeProduto || '';
+                        
+                        link.addEventListener('click', function(e) {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log('🔗 Link clicado:', this.dataset.pedidoId, 'produto:', this.dataset.codigoProduto);
+                            irParaPedido(
+                                this.dataset.pedidoId, 
+                                this.dataset.codigoProduto, 
+                                this.dataset.nomeProduto
+                            );
+                        });
+                        
+                        cell.innerHTML = '';
+                        cell.appendChild(link);
+                        encontrados++;
+                    }
                 });
-                
-                if (idxCodigo !== -1 && cells[idxCodigo]) {
-                    codigoProduto = cells[idxCodigo].textContent.trim();
-                }
-                if (idxProduto !== -1 && cells[idxProduto]) {
-                    nomeProduto = cells[idxProduto].textContent.trim();
-                }
-                
-                const link = document.createElement('a');
-                link.href = '#';
-                link.textContent = pedidoId;
-                link.style.color = '#0b4f6c';
-                link.style.textDecoration = 'underline';
-                link.style.cursor = 'pointer';
-                link.style.fontWeight = 'bold';
-                link.title = 'Ir para o pedido ' + pedidoId + ' em "Produtos por pedido"';
-                link.dataset.pedidoId = pedidoId;
-                link.dataset.codigoProduto = codigoProduto || '';
-                link.dataset.nomeProduto = nomeProduto || '';
-                
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    irParaPedido(this.dataset.pedidoId, this.dataset.codigoProduto, this.dataset.nomeProduto);
-                });
-                
-                celulaPedido.innerHTML = '';
-                celulaPedido.appendChild(link);
-                encontrados++;
-            }
+            });
         });
     });
     
     console.log('✅ ' + encontrados + ' pedidos nos detalhes tornados clicáveis!');
 }
+
 
 
 // ============================================================
@@ -4981,60 +4991,9 @@ function irParaPedido(pedidoId) {
         }, 500);
     }
 
-const toggles = [
-    { nome: 'toggleDetalhesProdutos', funcao: aplicarStickyDetalhes },
-    { nome: 'toggleDetalhesProdutosMaisPedidos', funcao: aplicarStickyDetalhesMaisPedidos },
-    { nome: 'toggleDetalhesProdutosMaiorLucro', funcao: aplicarStickyDetalhesMaiorLucro },
-    { nome: 'toggleDetalhesProdutosMenosPedidos', funcao: aplicarStickyDetalhesMenosPedidos },
-    { nome: 'toggleDetalhesProdutosMaiorDiferenca', funcao: aplicarStickyDetalhesMaiorDiferenca }
-];
+    console.log('✅ irParaPedido substituída com destaque amarelo!');
+}
 
-toggles.forEach(function(item) {
-    if (typeof window[item.nome] === 'function') {
-        const original = window[item.nome];
-        window[item.nome] = function() {
-            console.log('🔍 Executando toggle:', item.nome);
-            const args = arguments;
-            original.apply(this, args);
-            
-            let tentativas = 0;
-            const maxTentativas = 20;
-            const intervalo = setInterval(function() {
-                tentativas++;
-                const detailCards = document.querySelectorAll('.detail-card');
-                let encontrado = false;
-                
-                detailCards.forEach((card) => {
-                    const tabelas = card.querySelectorAll('table');
-                    tabelas.forEach((tabela) => {
-                        const ths = tabela.querySelectorAll('th');
-                        if (ths.length > 0) {
-                            const texto = ths[0].textContent.trim();
-                            if (texto === 'Código' || texto.includes('Código') || 
-                                texto === 'Pedido' || texto.includes('Pedido')) {
-                                encontrado = true;
-                            }
-                        }
-                    });
-                });
-                
-                if (encontrado) {
-                    console.log(`✅ Detalhes carregados! Aplicando sticky...`);
-                    item.funcao();
-                    clearInterval(intervalo);
-                    return;
-                }
-                
-                if (tentativas >= maxTentativas) {
-                    console.log('⏳ Tempo esgotado, aplicando sticky mesmo assim...');
-                    item.funcao();
-                    clearInterval(intervalo);
-                }
-            }, 300);
-        };
-        console.log('✅ Interceptado toggle:', item.nome);
-    }
-});
 
 function irParaProdutosDoPedido(pedidoId) {
     console.log('🔍 Abrindo produtos do pedido:', pedidoId);
