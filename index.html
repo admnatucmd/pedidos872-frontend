@@ -5228,40 +5228,6 @@ function irParaPedido(pedidoId, codigoProduto, nomeProduto) {
     }, 500);
 }
 
-function irParaPedidoNaTabela(pedidoId) {
-    console.log('🔍 Procurando pedido na tabela:', pedidoId);
-    
-    var rows = document.querySelectorAll('.pedido-row');
-    for (var i = 0; i < rows.length; i++) {
-        var row = rows[i];
-        var cell = row.querySelector('td:first-child');
-        if (cell) {
-            var texto = cell.textContent.replace('▶', '').replace('▼', '').trim();
-            if (texto === String(pedidoId)) {
-                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                row.style.transition = 'background 0.3s';
-                row.style.background = '#e3f2fd';
-                
-                var detailId = 'detalhe-' + pedidoId;
-                var detailRow = document.getElementById(detailId);
-                if (detailRow) {
-                    detailRow.classList.add('show');
-                    var icon = row.querySelector('.expand-icon');
-                    if (icon) icon.innerHTML = '▼';
-                }
-                
-                setTimeout(function() {
-                    row.style.background = '';
-                }, 5000);
-                console.log('✅ Pedido encontrado e destacado na tabela!');
-                return;
-            }
-        }
-    }
-    console.log('⚠️ Pedido não encontrado na tabela');
-}
-
-
 
 function irParaProdutosDoPedido(pedidoId) {
     console.log('🔍 Abrindo produtos do pedido:', pedidoId);
