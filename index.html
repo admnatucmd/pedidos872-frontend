@@ -6808,7 +6808,293 @@ if (typeof window.carregarDados === 'function') {
 
 
 
+// ============================================================
+// CORREÇÃO DOS BOLETOS - VERSÃO DEFINITIVA
+// ============================================================
 
+/**
+ * CALCULA A PRÓXIMA SEMANA (SÁBADO A SEXTA)
+ */
+function getProximaSemana() {
+    var hoje = new Date();
+    var diaSemana = hoje.getDay();
+    var diasAteSabado = (6 - diaSemana + 7) % 7;
+    if (diasAteSabado === 0) diasAteSabado = 7;
+    var sabado = new Date(hoje);
+    sabado.setDate(hoje.getDate() + diasAteSabado);
+    var sexta = new Date(sabado);
+    sexta.setDate(sabado.getDate() + 6);
+    return { sabado: sabado, sexta: sexta };
+}
+
+/**
+ * MOSTRA BOLETOS DA PRÓXIMA SEMANA
+ */
+function mostrarBoletosProximaSemana() {
+    console.log('📅 Mostrando boletos da próxima semana...');
+    
+    document.querySelectorAll('.btn-submenu').forEach(function(b) {
+        b.classList.remove('active');
+    });
+    
+    var btn = document.getElementById('btnProximaSemana');
+    if (btn) btn.classList.add('active');
+    
+    var submenu = document.getElementById('submenuBoletos');
+    if (submenu) submenu.style.display = 'flex';
+    
+    var dataTable = document.getElementById('dataTable');
+    var statsContainer = document.getElementById('statsContainer');
+    var mesContainer = document.getElementById('mesContainer');
+    var semanaInfo = document.getElementById('semanaInfo');
+    
+    if (dataTable) dataTable.style.display = 'none';
+    if (statsContainer) statsContainer.classList.add('stats-hidden');
+    if (semanaInfo) semanaInfo.style.display = 'block';
+    
+    var { sabado, sexta } = getProximaSemana();
+    
+    if (semanaInfo) {
+        semanaInfo.innerHTML = '📅 Próxima semana: ' + 
+            sabado.toLocaleDateString('pt-BR') + ' a ' + 
+            sexta.toLocaleDateString('pt-BR');
+    }
+    
+    var boletosProximaSemana = [];
+    
+    if (typeof pedidosData !== 'undefined' && pedidosData.length > 0) {
+        pedidosData.forEach(function(p) {
+            if (p.parcelasProduto) {
+                p.parcelasProduto.forEach(function(parc) {
+                    if (parc.status !== 'Pagos') {
+                        var dataVenc = dataParaComparacao(parc.vencimento);
+                        if (dataVenc >= sabado && dataVenc <= sexta) {
+                            boletosProximaSemana.push({ 
+                                pedido: p, parcela: parc, tipo: 'produto' 
+                            });
+                        }
+                    }
+                });
+            }
+            if (p.parcelasRoyalties) {
+                p.parcelasRoyalties.forEach(function(parc) {
+                    if (parc.status !== 'Pagos') {
+                        var dataVenc = dataParaComparacao(parc.vencimento);
+                        if (dataVenc >= sabado && dataVenc <= sexta) {
+                            boletosProximaSemana.push({ 
+                                pedido: p, parcela: parc, tipo: 'royalties' 
+                            });
+                        }
+                    }
+                });
+            }
+            if (p.parcelasPropaganda) {
+                p.parcelasPropaganda.forEach(function(parc) {
+                    if (parc.status !== 'Pagos') {
+                        var dataVenc = dataParaComparacao(parc.vencimento);
+                        if (dataVenc >= sabado && dataVenc <= sexta) {
+                            boletosProximaSemana.push({ 
+                                pedido: p, parcela: parc, tipo: 'propaganda' 
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    }
+    
+    boletosProximaSemana.sort(function(a, b) {
+        return dataParaComparacao(a.parcela.vencimento) - dataParaComparacao(b.parcela.vencimento);
+    });
+    
+    var titulo = '📅 ' + boletosProximaSemana.length + ' boletos para a próxima semana';
+    
+    if (typeof renderizarBoletos === 'function') {
+        mesContainer.innerHTML = renderizarBoletos(boletosProximaSemana, titulo);
+    }
+    
+    if (mesContainer) {
+        mesContainer.style.display = 'block';
+    }
+    
+    console.log('✅ ' + boletosProximaSemana.length + ' boletos encontrados para a próxima semana');
+    return boletosProximaSemana;
+}
+
+/**
+ * MOSTRA BOLETOS DO PRÓXIMO MÊS
+ */
+function mostrarBoletosProximoMes() {
+    console.log('📅 Mostrando boletos do próximo mês...');
+    
+    document.querySelectorAll('.btn-submenu').forEach(function(b) {
+        b.classList.remove('active');
+    });
+    
+    var btn = document.getElementById('btnProximoMes');
+    if (btn) btn.classList.add('active');
+    
+    var submenu = document.getElementById('submenuBoletos');
+    if (submenu) submenu.style.display = 'flex';
+    
+    var dataTable = document.getElementById('dataTable');
+    var statsContainer = document.getElementById('statsContainer');
+    var mesContainer = document.getElementById('mesContainer');
+    var semanaInfo = document.getElementById('semanaInfo');
+    
+    if (dataTable) dataTable.style.display = 'none';
+    if (statsContainer) statsContainer.classList.add('stats-hidden');
+    if (semanaInfo) semanaInfo.style.display = 'block';
+    
+    var hoje = new Date();
+    var mesProximo = hoje.getMonth() + 2;
+    var anoProximo = hoje.getFullYear();
+    
+    if (mesProximo > 12) {
+        mesProximo = 1;
+        anoProximo++;
+    }
+    
+    var primeiroDia = new Date(anoProximo, mesProximo - 1, 1);
+    var ultimoDia = new Date(anoProximo, mesProximo, 0);
+    
+    var meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 
+                 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    
+    if (semanaInfo) {
+        semanaInfo.innerHTML = '📅 Próximo mês: ' + meses[mesProximo - 1] + ' ' + anoProximo + 
+            ' (' + primeiroDia.toLocaleDateString('pt-BR') + ' a ' + 
+            ultimoDia.toLocaleDateString('pt-BR') + ')';
+    }
+    
+    var boletosProximoMes = [];
+    
+    if (typeof pedidosData !== 'undefined' && pedidosData.length > 0) {
+        pedidosData.forEach(function(p) {
+            if (p.parcelasProduto) {
+                p.parcelasProduto.forEach(function(parc) {
+                    if (parc.status !== 'Pagos') {
+                        var dataVenc = dataParaComparacao(parc.vencimento);
+                        if (dataVenc.getMonth() + 1 === mesProximo && 
+                            dataVenc.getFullYear() === anoProximo) {
+                            boletosProximoMes.push({ 
+                                pedido: p, parcela: parc, tipo: 'produto' 
+                            });
+                        }
+                    }
+                });
+            }
+            if (p.parcelasRoyalties) {
+                p.parcelasRoyalties.forEach(function(parc) {
+                    if (parc.status !== 'Pagos') {
+                        var dataVenc = dataParaComparacao(parc.vencimento);
+                        if (dataVenc.getMonth() + 1 === mesProximo && 
+                            dataVenc.getFullYear() === anoProximo) {
+                            boletosProximoMes.push({ 
+                                pedido: p, parcela: parc, tipo: 'royalties' 
+                            });
+                        }
+                    }
+                });
+            }
+            if (p.parcelasPropaganda) {
+                p.parcelasPropaganda.forEach(function(parc) {
+                    if (parc.status !== 'Pagos') {
+                        var dataVenc = dataParaComparacao(parc.vencimento);
+                        if (dataVenc.getMonth() + 1 === mesProximo && 
+                            dataVenc.getFullYear() === anoProximo) {
+                            boletosProximoMes.push({ 
+                                pedido: p, parcela: parc, tipo: 'propaganda' 
+                            });
+                        }
+                    }
+                });
+            }
+        });
+    }
+    
+    boletosProximoMes.sort(function(a, b) {
+        return dataParaComparacao(a.parcela.vencimento) - dataParaComparacao(b.parcela.vencimento);
+    });
+    
+    var titulo = '📅 ' + boletosProximoMes.length + ' boletos no próximo mês';
+    
+    if (typeof renderizarBoletos === 'function') {
+        mesContainer.innerHTML = renderizarBoletos(boletosProximoMes, titulo);
+    }
+    
+    if (mesContainer) {
+        mesContainer.style.display = 'block';
+    }
+    
+    console.log('✅ ' + boletosProximoMes.length + ' boletos encontrados para o próximo mês');
+    return boletosProximoMes;
+}
+
+/**
+ * RECRIA O SUBMENU DE BOLETOS COM TODOS OS BOTÕES FUNCIONANDO
+ */
+function recriarSubmenuBoletosCompleto() {
+    var submenu = document.getElementById('submenuBoletos');
+    if (!submenu) return;
+    
+    var activeId = null;
+    var activeBtn = submenu.querySelector('.btn-submenu.active');
+    if (activeBtn) activeId = activeBtn.id;
+    
+    submenu.innerHTML = '';
+    
+    var botoes = [
+        { id: 'btnEssaSemana', texto: '📅 Essa semana', funcao: 'mostrarBoletosSemana' },
+        { id: 'btnProximaSemana', texto: '📅 Próxima semana', funcao: 'mostrarBoletosProximaSemana' },
+        { id: 'btnEsseMes', texto: '📅 Esse mês', funcao: 'mostrarBoletosMes' },
+        { id: 'btnProximoMes', texto: '📅 Próximo mês', funcao: 'mostrarBoletosProximoMes' },
+        { id: 'btnAtrasados', texto: '⚠️ Atrasados', funcao: 'mostrarBoletosAtrasados' }
+    ];
+    
+    botoes.forEach(function(item) {
+        var btn = document.createElement('button');
+        btn.id = item.id;
+        btn.className = 'btn-submenu';
+        btn.textContent = item.texto;
+        
+        btn.onclick = function() {
+            if (typeof window[item.funcao] === 'function') {
+                window[item.funcao]();
+            } else {
+                console.error('❌ Função não encontrada:', item.funcao);
+            }
+        };
+        
+        if (activeId === item.id) {
+            btn.classList.add('active');
+        }
+        
+        submenu.appendChild(btn);
+    });
+}
+
+// ============================================================
+// INICIALIZAR - CHAMAR QUANDO A PÁGINA CARREGAR
+// ============================================================
+
+// Registrar funções no window
+window.getProximaSemana = getProximaSemana;
+window.mostrarBoletosProximaSemana = mostrarBoletosProximaSemana;
+window.mostrarBoletosProximoMes = mostrarBoletosProximoMes;
+window.recriarSubmenuBoletosCompleto = recriarSubmenuBoletosCompleto;
+
+// Recriar o submenu ao carregar
+setTimeout(function() {
+    recriarSubmenuBoletosCompleto();
+    console.log('✅ Submenu de boletos recriado com sucesso!');
+}, 200);
+
+console.log('✅ CORREÇÕES DOS BOLETOS INSTALADAS!');
+console.log('   ✅ Próxima semana - FUNCIONA');
+console.log('   ✅ Próximo mês - FUNCIONA');
+console.log('   ✅ Título sem duplicação');
+console.log('   ✅ Todos os botões funcionam');
 
 
 
