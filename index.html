@@ -5708,59 +5708,7 @@ if (typeof window.voltarTabelaOriginal === 'function') {
     };
 }
 
-// ============================================================
-// CORREÇÃO: irParaPedido (IIFEs #3, #4, #14, #16)
-// ============================================================
 
-if (typeof window.irParaPedido === 'function') {
-    const irParaPedidoOriginal = window.irParaPedido;
-    window.irParaPedido = function(pedidoId, codigoProduto, nomeProduto) {
-        console.log('🔍 irParaPedido chamado para:', pedidoId);
-        const submenuProdutos = document.getElementById('submenuProdutos');
-        const estaNaAreaProdutos = submenuProdutos && submenuProdutos.style.display === 'flex';
-        const veioDeProdutos = codigoProduto !== undefined || estaNaAreaProdutos;
-        const buscaProdutosAtiva = window.modoBuscaAtivo || false;
-        
-        if (veioDeProdutos || estaNaAreaProdutos || buscaProdutosAtiva) {
-            console.log('🎯 Abrindo em "Produtos por pedido" com destaque amarelo...');
-            if (typeof window.irParaProdutosDoPedido === 'function') {
-                window.irParaProdutosDoPedido(pedidoId);
-            } else {
-                irParaPedidoOriginal(pedidoId, codigoProduto, nomeProduto);
-            }
-            return;
-        }
-        
-        console.log('🎯 Voltando para a tabela de pedidos...');
-        if (typeof window.voltarTabelaOriginal === 'function') {
-            window.voltarTabelaOriginal();
-        }
-        setTimeout(function() {
-            const rows = document.querySelectorAll('.pedido-row');
-            for (let i = 0; i < rows.length; i++) {
-                const row = rows[i];
-                const cell = row.querySelector('td:first-child');
-                if (cell) {
-                    const texto = cell.textContent.replace('▶', '').replace('▼', '').trim();
-                    if (texto === String(pedidoId)) {
-                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        row.style.transition = 'background 0.3s';
-                        row.style.background = '#e3f2fd';
-                        const detailId = 'detalhe-' + pedidoId;
-                        const detailRow = document.getElementById(detailId);
-                        if (detailRow) {
-                            detailRow.classList.add('show');
-                            const icon = row.querySelector('.expand-icon');
-                            if (icon) icon.innerHTML = '▼';
-                        }
-                        setTimeout(function() { row.style.background = ''; }, 5000);
-                        break;
-                    }
-                }
-            }
-        }, 500);
-    };
-}
 
 // ============================================================
 // INICIALIZAÇÃO GLOBAL (SUBSTITUI TODOS OS IIFEs)
