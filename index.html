@@ -5171,8 +5171,8 @@ function irParaPedido(pedidoId, codigoProduto, nomeProduto) {
         
         if (typeof window.irParaProdutosDoPedido === 'function') {
             window.irParaProdutosDoPedido(pedidoId);
-            setTimeout(destacarProduto, 1500);
-            setTimeout(destacarProduto, 3000);
+            setTimeout(function() { destacarProduto(1); }, 1500);
+            setTimeout(function() { destacarProduto(1); }, 3000);
         } else {
             if (typeof window.irParaPedidoOriginal === 'function') {
                 window.irParaPedidoOriginal(pedidoId, codigoProduto, nomeProduto);
