@@ -4937,64 +4937,64 @@ function irParaPedido(pedidoId, codigoProduto, nomeProduto) {
         console.log('🎯 Abrindo em "Produtos por pedido" com destaque amarelo...');
         
         function destacarProduto(tentativa) {
-    tentativa = tentativa || 1;
-    console.log('🟡 Tentativa ' + tentativa + ' - buscando:', codigoProduto);
-    
-    var detailId = 'detalhe-produtos-' + pedidoId;
-    var detailRow = document.getElementById(detailId);
-    
-    if (!detailRow || !detailRow.classList.contains('show')) {
-        console.log('⏳ Aguardando detalhes...');
-        if (tentativa < 15) {
-            setTimeout(function() { destacarProduto(tentativa + 1); }, 500);
+            tentativa = tentativa || 1;
+            console.log('🟡 Tentativa ' + tentativa + ' - buscando:', codigoProduto);
+            
+            var detailId = 'detalhe-produtos-' + pedidoId;
+            var detailRow = document.getElementById(detailId);
+            
+            if (!detailRow || !detailRow.classList.contains('show')) {
+                console.log('⏳ Aguardando detalhes...');
+                if (tentativa < 15) {
+                    setTimeout(function() { destacarProduto(tentativa + 1); }, 500);
+                }
+                return;
+            }
+            
+            var tabelaDetalhes = detailRow.querySelector('table');
+            if (!tabelaDetalhes) {
+                console.log('⏳ Aguardando tabela...');
+                if (tentativa < 15) {
+                    setTimeout(function() { destacarProduto(tentativa + 1); }, 500);
+                }
+                return;
+            }
+            
+            var linhasProdutos = tabelaDetalhes.querySelectorAll('tbody tr');
+            
+            if (linhasProdutos.length === 0 || linhasProdutos[0].textContent.includes('Carregando')) {
+                console.log('⏳ Aguardando produtos...');
+                if (tentativa < 15) {
+                    setTimeout(function() { destacarProduto(tentativa + 1); }, 500);
+                }
+                return;
+            }
+            
+            var encontrou = false;
+            linhasProdutos.forEach(function(linha) {
+                var cells = linha.querySelectorAll('td');
+                if (cells.length < 2) return;
+                var codigo = cells[0].textContent.trim();
+                var nome = cells[1].textContent.trim();
+                if (codigo === String(codigoProduto) || nome.includes(nomeProduto)) {
+                    console.log('✅ PRODUTO ENCONTRADO!');
+                    linha.style.transition = 'background 0.3s';
+                    linha.style.background = '#fff3cd';
+                    linha.style.borderLeft = '4px solid #ffc107';
+                    linha.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    encontrou = true;
+                }
+            });
+            
+            if (!encontrou) {
+                console.log('⏳ Produto não encontrado, tentando novamente...');
+                if (tentativa < 15) {
+                    setTimeout(function() { destacarProduto(tentativa + 1); }, 800);
+                } else {
+                    console.log('❌ Produto não encontrado após 15 tentativas');
+                }
+            }
         }
-        return;
-    }
-    
-    var tabelaDetalhes = detailRow.querySelector('table');
-    if (!tabelaDetalhes) {
-        console.log('⏳ Aguardando tabela...');
-        if (tentativa < 15) {
-            setTimeout(function() { destacarProduto(tentativa + 1); }, 500);
-        }
-        return;
-    }
-    
-    var linhasProdutos = tabelaDetalhes.querySelectorAll('tbody tr');
-    
-    if (linhasProdutos.length === 0 || linhasProdutos[0].textContent.includes('Carregando')) {
-        console.log('⏳ Aguardando produtos...');
-        if (tentativa < 15) {
-            setTimeout(function() { destacarProduto(tentativa + 1); }, 500);
-        }
-        return;
-    }
-    
-    var encontrou = false;
-    linhasProdutos.forEach(function(linha) {
-        var cells = linha.querySelectorAll('td');
-        if (cells.length < 2) return;
-        var codigo = cells[0].textContent.trim();
-        var nome = cells[1].textContent.trim();
-        if (codigo === String(codigoProduto) || nome.includes(nomeProduto)) {
-            console.log('✅ PRODUTO ENCONTRADO!');
-            linha.style.transition = 'background 0.3s';
-            linha.style.background = '#fff3cd';
-            linha.style.borderLeft = '4px solid #ffc107';
-            linha.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            encontrou = true;
-        }
-    });
-    
-    if (!encontrou) {
-        console.log('⏳ Produto não encontrado, tentando novamente...');
-        if (tentativa < 15) {
-            setTimeout(function() { destacarProduto(tentativa + 1); }, 800);
-        } else {
-            console.log('❌ Produto não encontrado após 15 tentativas');
-        }
-    }
-}
         
         if (typeof window.irParaProdutosDoPedido === 'function') {
             window.irParaProdutosDoPedido(pedidoId);
