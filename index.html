@@ -6805,11 +6805,8 @@ if (typeof window.carregarDados === 'function') {
 }
 
 
-
-
-
 // ============================================================
-// CORREÇÃO DOS BOLETOS - VERSÃO DEFINITIVA
+// CORREÇÃO DOS BOLETOS - VERSÃO DEFINITIVA COMPLETA
 // ============================================================
 
 /**
@@ -7031,9 +7028,119 @@ function mostrarBoletosProximoMes() {
     return boletosProximoMes;
 }
 
+// ============================================================
+// CORREÇÃO DOS BOTÕES - GARANTIR QUE FICAM ATIVOS (AZUL)
+// ============================================================
+
 /**
- * RECRIA O SUBMENU DE BOLETOS COM TODOS OS BOTÕES FUNCIONANDO
+ * CORRIGE mostrarBoletosMes PARA ATIVAR O BOTÃO CORRETO
  */
+if (typeof window.mostrarBoletosMes === 'function') {
+    var _originalMes = window.mostrarBoletosMes;
+    
+    window.mostrarBoletosMes = function() {
+        var resultado = _originalMes.apply(this, arguments);
+        
+        setTimeout(function() {
+            document.querySelectorAll('.btn-submenu').forEach(function(b) {
+                b.classList.remove('active');
+            });
+            var btn = document.getElementById('btnEsseMes');
+            if (btn) btn.classList.add('active');
+        }, 100);
+        
+        return resultado;
+    };
+}
+
+/**
+ * CORRIGE mostrarBoletosAtrasados PARA ATIVAR O BOTÃO CORRETO
+ */
+if (typeof window.mostrarBoletosAtrasados === 'function') {
+    var _originalAtrasados = window.mostrarBoletosAtrasados;
+    
+    window.mostrarBoletosAtrasados = function() {
+        var resultado = _originalAtrasados.apply(this, arguments);
+        
+        setTimeout(function() {
+            document.querySelectorAll('.btn-submenu').forEach(function(b) {
+                b.classList.remove('active');
+            });
+            var btn = document.getElementById('btnAtrasados');
+            if (btn) btn.classList.add('active');
+        }, 100);
+        
+        return resultado;
+    };
+}
+
+/**
+ * CORRIGE mostrarBoletosSemana PARA ATIVAR O BOTÃO CORRETO
+ */
+if (typeof window.mostrarBoletosSemana === 'function') {
+    var _originalSemana = window.mostrarBoletosSemana;
+    
+    window.mostrarBoletosSemana = function() {
+        var resultado = _originalSemana.apply(this, arguments);
+        
+        setTimeout(function() {
+            document.querySelectorAll('.btn-submenu').forEach(function(b) {
+                b.classList.remove('active');
+            });
+            var btn = document.getElementById('btnEssaSemana');
+            if (btn) btn.classList.add('active');
+        }, 100);
+        
+        return resultado;
+    };
+}
+
+/**
+ * CORRIGE mostrarBoletosProximaSemana PARA ATIVAR O BOTÃO CORRETO
+ */
+if (typeof window.mostrarBoletosProximaSemana === 'function') {
+    var _originalProxima = window.mostrarBoletosProximaSemana;
+    
+    window.mostrarBoletosProximaSemana = function() {
+        var resultado = _originalProxima.apply(this, arguments);
+        
+        setTimeout(function() {
+            document.querySelectorAll('.btn-submenu').forEach(function(b) {
+                b.classList.remove('active');
+            });
+            var btn = document.getElementById('btnProximaSemana');
+            if (btn) btn.classList.add('active');
+        }, 100);
+        
+        return resultado;
+    };
+}
+
+/**
+ * CORRIGE mostrarBoletosProximoMes PARA ATIVAR O BOTÃO CORRETO
+ */
+if (typeof window.mostrarBoletosProximoMes === 'function') {
+    var _originalProximo = window.mostrarBoletosProximoMes;
+    
+    window.mostrarBoletosProximoMes = function() {
+        var resultado = _originalProximo.apply(this, arguments);
+        
+        setTimeout(function() {
+            document.querySelectorAll('.btn-submenu').forEach(function(b) {
+                b.classList.remove('active');
+            });
+            var btn = document.getElementById('btnProximoMes');
+            if (btn) btn.classList.add('active');
+        }, 100);
+        
+        return resultado;
+    };
+}
+
+// ============================================================
+// RECRIAR SUBMENU COM TODOS OS BOTÕES FUNCIONANDO
+// ============================================================
+
 function recriarSubmenuBoletosCompleto() {
     var submenu = document.getElementById('submenuBoletos');
     if (!submenu) return;
@@ -7059,6 +7166,10 @@ function recriarSubmenuBoletosCompleto() {
         btn.textContent = item.texto;
         
         btn.onclick = function() {
+            document.querySelectorAll('.btn-submenu').forEach(function(b) {
+                b.classList.remove('active');
+            });
+            
             if (typeof window[item.funcao] === 'function') {
                 window[item.funcao]();
             } else {
@@ -7072,10 +7183,12 @@ function recriarSubmenuBoletosCompleto() {
         
         submenu.appendChild(btn);
     });
+    
+    console.log('✅ Submenu de boletos recriado com todas as correções');
 }
 
 // ============================================================
-// INICIALIZAR - CHAMAR QUANDO A PÁGINA CARREGAR
+// INICIALIZAR
 // ============================================================
 
 // Registrar funções no window
@@ -7093,8 +7206,13 @@ setTimeout(function() {
 console.log('✅ CORREÇÕES DOS BOLETOS INSTALADAS!');
 console.log('   ✅ Próxima semana - FUNCIONA');
 console.log('   ✅ Próximo mês - FUNCIONA');
+console.log('   ✅ Esse mês - FUNCIONA com botão ativo');
+console.log('   ✅ Atrasados - FUNCIONA com botão ativo');
 console.log('   ✅ Título sem duplicação');
-console.log('   ✅ Todos os botões funcionam');
+console.log('   ✅ Todos os botões ficam ativos (azul)');
+
+
+
 
 
 
