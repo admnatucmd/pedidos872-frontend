@@ -7213,7 +7213,305 @@ console.log('   ✅ Todos os botões ficam ativos (azul)');
 
 
 
+// ============================================================
+// CORREÇÃO: DETALHES DOS PRODUTOS RESPEITAM O PERÍODO
+// ============================================================
 
+/**
+ * OBTÉM O PERÍODO ATIVO SELECIONADO
+ */
+function getPeriodoAtivo() {
+    var botoes = document.querySelectorAll('#semanaInfo .btn-submenu');
+    var periodoAtivo = 'todo';
+    
+    botoes.forEach(function(btn) {
+        if (btn.classList.contains('active')) {
+            var texto = btn.textContent.trim();
+            if (texto === 'Todo o período') periodoAtivo = 'todo';
+            else if (texto === 'Esse mês') periodoAtivo = 'mes';
+            else if (texto === 'Últimos 3 meses') periodoAtivo = '3meses';
+            else if (texto === 'Últimos 5 meses') periodoAtivo = '5meses';
+            else if (texto === 'Últimos 8 meses') periodoAtivo = '8meses';
+            else if (texto === 'Últimos 12 meses') periodoAtivo = '12meses';
+        }
+    });
+    
+    return periodoAtivo;
+}
+
+/**
+ * CALCULA A DATA LIMITE PARA UM PERÍODO
+ */
+function getDataLimite(periodo) {
+    var agora = new Date();
+    var dataLimite = null;
+    
+    if (periodo === 'mes') {
+        dataLimite = new Date(agora.getFullYear(), agora.getMonth(), 1);
+    } else if (periodo === '3meses') {
+        dataLimite = new Date(agora);
+        dataLimite.setMonth(agora.getMonth() - 3);
+    } else if (periodo === '5meses') {
+        dataLimite = new Date(agora);
+        dataLimite.setMonth(agora.getMonth() - 5);
+    } else if (periodo === '8meses') {
+        dataLimite = new Date(agora);
+        dataLimite.setMonth(agora.getMonth() - 8);
+    } else if (periodo === '12meses') {
+        dataLimite = new Date(agora);
+        dataLimite.setMonth(agora.getMonth() - 12);
+    }
+    
+    return dataLimite;
+}
+
+/**
+ * FILTRA OS PEDIDOS DE UM PRODUTO PELO PERÍODO
+ */
+function filtrarPedidosDoProdutoPorPeriodo(codigo, periodo) {
+    var dataLimite = getDataLimite(periodo);
+    var pedidosFiltrados = [];
+    
+    for (var p = 0; p < produtosData.length; p++) {
+        var pedido = produtosData[p];
+        
+        if (dataLimite) {
+            var dataPedido = new Date(pedido.data.split('/').reverse().join('/'));
+            if (dataPedido < dataLimite) {
+                continue;
+            }
+        }
+        
+        if (!pedido.linhas) continue;
+        
+        var encontrou = false;
+        var quantidadeTotal = 0;
+        var valorCompraTotal = 0;
+        var valorVenda = 0;
+        
+        for (var l = 0; l < pedido.linhas.length; l++) {
+            var linha = pedido.linhas[l];
+            if (linha.codigo === codigo && !linha.isIndisponivel) {
+                encontrou = true;
+                var qtd = parseInt(linha.quantidade) || 0;
+                var valorUnit = linha.valorUnit || 0;
+                var vendaUnit = linha.vendaUnit || 0;
+                quantidadeTotal += qtd;
+                valorCompraTotal += valorUnit * qtd;
+                valorVenda = vendaUnit;
+            }
+        }
+        
+        if (encontrou) {
+            pedidosFiltrados.push({
+                pedido: pedido.pedido,
+                data: pedido.data,
+                quantidadeTotal: quantidadeTotal,
+                valorCompraTotal: valorCompraTotal,
+                valorVenda: valorVenda
+            });
+        }
+    }
+    
+    return pedidosFiltrados;
+}
+
+/**
+ * CORRIGE toggleDetalhesProdutosMaisPedidos PARA RESPEITAR O PERÍODO
+ */
+if (typeof window.toggleDetalhesProdutosMaisPedidos === 'function') {
+    var _originalToggleMaisPedidos = window.toggleDetalhesProdutosMaisPedidos;
+    
+    window.toggleDetalhesProdutosMaisPedidos = function(codigo) {
+        var row = document.getElementById('detalhe-produto-mais-pedido-' + codigo);
+        if (!row) return;
+        
+        row.classList.toggle('show');
+        var icon = row.previousElementSibling.querySelector('.expand-icon');
+        if (icon) icon.innerHTML = row.classList.contains('show') ? '▼' : '▶';
+        
+        if (row.classList.contains('show')) {
+            var container = document.getElementById('detalhe-pedidos-produto-' + codigo);
+            if (!container) return;
+            
+            var periodo = getPeriodoAtivo();
+            var pedidosFiltrados = filtrarPedidosDoProdutoPorPeriodo(codigo, periodo);
+            
+            if (pedidosFiltrados.length === 0) {
+                var periodos = {
+                    'todo': 'Todo o período',
+                    'mes': 'Esse mês',
+                    '3meses': 'Últimos 3 meses',
+                    '5meses': 'Últimos 5 meses',
+                    '8meses': 'Últimos 8 meses',
+                    '12meses': 'Últimos 12 meses'
+                };
+                container.innerHTML = '<div style="text-align:center; padding:20px; color:#999;">Nenhum pedido encontrado para este produto no período selecionado (' + (periodos[periodo] || 'Todo o período') + ').</div>';
+                return;
+            }
+            
+            var html = '<table style="width:100%; border-collapse:collapse; font-size:12px;"><thead><tr style="background:#f1f3f5;"><th style="padding:6px 8px; text-align:left;">Pedido</th><th style="padding:6px 8px; text-align:left;">Data</th><th style="padding:6px 8px; text-align:center;">Qtd</th><th style="padding:6px 8px; text-align:right;">Valor Compra Uni</th><th style="padding:6px 8px; text-align:right;">Valor Venda Uni</th><th style="padding:6px 8px; text-align:right;">Valor Compra Total</th><th style="padding:6px 8px; text-align:right;">Valor Venda Total</th><th style="padding:6px 8px; text-align:right;">Lucro Uni</th><th style="padding:6px 8px; text-align:right;">Lucro Total</th><th style="padding:6px 8px; text-align:right;">Lucro %</th></tr></thead><tbody>';
+            
+            for (var i = 0; i < pedidosFiltrados.length; i++) {
+                var item = pedidosFiltrados[i];
+                var valorCompraMedio = item.quantidadeTotal > 0 ? item.valorCompraTotal / item.quantidadeTotal : 0;
+                var valorCompraTotal = item.valorCompraTotal;
+                var valorVendaTotal = item.valorVenda * item.quantidadeTotal;
+                var lucroUni = item.valorVenda - valorCompraMedio;
+                var lucroTotal = lucroUni * item.quantidadeTotal;
+                var lucroPercentual = item.valorCompraTotal > 0 ? (lucroTotal / item.valorCompraTotal) * 100 : 0;
+                
+                html += '<tr><td style="padding:6px 8px;"><a href="#" onclick="event.stopPropagation(); irParaPedido(\'' + item.pedido + '\', \'' + codigo + '\', \'\')" style="color:#0b4f6c; text-decoration:underline; cursor:pointer; font-weight:bold;">' + item.pedido + '</a></td><td style="padding:6px 8px;">' + item.data + '</td><td style="padding:6px 8px; text-align:center;">' + item.quantidadeTotal + '</td><td style="padding:6px 8px; text-align:right;">' + formatarMoedaBR(valorCompraMedio) + '</td><td style="padding:6px 8px; text-align:right;">' + formatarMoedaBR(item.valorVenda) + '</td><td style="padding:6px 8px; text-align:right;">' + formatarMoedaBR(valorCompraTotal) + '</td><td style="padding:6px 8px; text-align:right;">' + formatarMoedaBR(valorVendaTotal) + '</td><td style="padding:6px 8px; text-align:right;">' + formatarMoedaBR(lucroUni) + '</td><td style="padding:6px 8px; text-align:right;">' + formatarMoedaBR(lucroTotal) + '</td><td style="padding:6px 8px; text-align:right;">' + lucroPercentual.toFixed(1) + '%</td></tr>';
+            }
+            html += '</tbody></table>';
+            
+            container.innerHTML = html;
+        }
+    };
+}
+
+/**
+ * INTERCEPTA filtrarMaisPedidos PARA REAPLICAR O FILTRO
+ */
+if (typeof window.filtrarMaisPedidos === 'function') {
+    var _originalFiltrarMais = window.filtrarMaisPedidos;
+    
+    window.filtrarMaisPedidos = function(periodo) {
+        var resultado = _originalFiltrarMais.apply(this, arguments);
+        
+        setTimeout(function() {
+            var detalhesAbertos = document.querySelectorAll('.parcelas-detail.show');
+            detalhesAbertos.forEach(function(row) {
+                var id = row.id || '';
+                if (id.startsWith('detalhe-produto-mais-pedido-')) {
+                    var codigo = id.replace('detalhe-produto-mais-pedido-', '');
+                    
+                    row.classList.remove('show');
+                    var icon = row.previousElementSibling.querySelector('.expand-icon');
+                    if (icon) icon.innerHTML = '▶';
+                    
+                    setTimeout(function() {
+                        row.classList.add('show');
+                        if (icon) icon.innerHTML = '▼';
+                        if (typeof window.toggleDetalhesProdutosMaisPedidos === 'function') {
+                            window.toggleDetalhesProdutosMaisPedidos(codigo);
+                        }
+                    }, 300);
+                }
+            });
+        }, 500);
+        
+        return resultado;
+    };
+}
+
+/**
+ * INTERCEPTA organizarMaisPedidos PARA REAPLICAR O FILTRO
+ */
+if (typeof window.organizarMaisPedidos === 'function') {
+    var _originalOrganizarMais = window.organizarMaisPedidos;
+    
+    window.organizarMaisPedidos = function(tipo) {
+        var resultado = _originalOrganizarMais.apply(this, arguments);
+        
+        setTimeout(function() {
+            var detalhesAbertos = document.querySelectorAll('.parcelas-detail.show');
+            detalhesAbertos.forEach(function(row) {
+                var id = row.id || '';
+                if (id.startsWith('detalhe-produto-mais-pedido-')) {
+                    var codigo = id.replace('detalhe-produto-mais-pedido-', '');
+                    
+                    row.classList.remove('show');
+                    var icon = row.previousElementSibling.querySelector('.expand-icon');
+                    if (icon) icon.innerHTML = '▶';
+                    
+                    setTimeout(function() {
+                        row.classList.add('show');
+                        if (icon) icon.innerHTML = '▼';
+                        if (typeof window.toggleDetalhesProdutosMaisPedidos === 'function') {
+                            window.toggleDetalhesProdutosMaisPedidos(codigo);
+                        }
+                    }, 300);
+                }
+            });
+        }, 500);
+        
+        return resultado;
+    };
+}
+
+/**
+ * CORRIGE renderizarMaisPedidos PARA INCLUIR O PERÍODO NO TÍTULO
+ */
+if (typeof window.renderizarMaisPedidos === 'function') {
+    var _originalRenderizarMais = window.renderizarMaisPedidos;
+    
+    window.renderizarMaisPedidos = function(produtos, titulo, organizacao) {
+        var periodo = getPeriodoAtivo();
+        var periodos = {
+            'todo': 'Todo o período',
+            'mes': 'Esse mês',
+            '3meses': 'Últimos 3 meses',
+            '5meses': 'Últimos 5 meses',
+            '8meses': 'Últimos 8 meses',
+            '12meses': 'Últimos 12 meses'
+        };
+        
+        var tituloComPeriodo = titulo.replace(/-.*$/, '') + ' - ' + (periodos[periodo] || 'Todo o período');
+        
+        return _originalRenderizarMais.call(this, produtos, tituloComPeriodo, organizacao);
+    };
+}
+
+/**
+ * REAPLICA O FILTRO EM TODOS OS DETALHES ABERTOS
+ */
+function reaplicarFiltroEmTodosDetalhes() {
+    var detalhesAbertos = document.querySelectorAll('.parcelas-detail.show');
+    var aplicados = 0;
+    
+    detalhesAbertos.forEach(function(row) {
+        var id = row.id || '';
+        if (id.startsWith('detalhe-produto-mais-pedido-')) {
+            var codigo = id.replace('detalhe-produto-mais-pedido-', '');
+            
+            row.classList.remove('show');
+            var icon = row.previousElementSibling.querySelector('.expand-icon');
+            if (icon) icon.innerHTML = '▶';
+            
+            setTimeout(function() {
+                row.classList.add('show');
+                if (icon) icon.innerHTML = '▼';
+                if (typeof window.toggleDetalhesProdutosMaisPedidos === 'function') {
+                    window.toggleDetalhesProdutosMaisPedidos(codigo);
+                }
+                aplicados++;
+            }, 300);
+        }
+    });
+}
+
+// ============================================================
+// INICIALIZAR
+// ============================================================
+
+// Registrar funções no window
+window.getPeriodoAtivo = getPeriodoAtivo;
+window.getDataLimite = getDataLimite;
+window.filtrarPedidosDoProdutoPorPeriodo = filtrarPedidosDoProdutoPorPeriodo;
+window.reaplicarFiltroEmTodosDetalhes = reaplicarFiltroEmTodosDetalhes;
+
+// Aplicar o filtro nos detalhes já abertos
+setTimeout(function() {
+    reaplicarFiltroEmTodosDetalhes();
+    console.log('✅ Filtro de período aplicado nos detalhes abertos');
+}, 500);
+
+console.log('✅ CORREÇÃO: DETALHES DOS PRODUTOS RESPEITAM O PERÍODO');
+console.log('   ✅ toggleDetalhesProdutosMaisPedidos corrigida');
+console.log('   ✅ filtrarMaisPedidos interceptada');
+console.log('   ✅ organizarMaisPedidos interceptada');
+console.log('   ✅ renderizarMaisPedidos corrigida com período no título');
 
 
 
