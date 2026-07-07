@@ -2163,67 +2163,98 @@ function mostrarPagosPorMes() {
 // toggleSubmenuProdutos (CORRIGIDO)
 // ============================================================
 
+// ============================================================
+// toggleSubmenuProdutos (VERSÃO CORRIGIDA)
+// ============================================================
+
 function toggleSubmenuProdutos() {
-    const submenu = document.getElementById('submenuProdutos');
-    const btnProdutos = document.getElementById('btnProdutos');
+    var submenu = document.getElementById('submenuProdutos');
+    var btnProdutos = document.getElementById('btnProdutos');
     
     if (!submenu || !btnProdutos) {
         console.error('❌ Elementos do submenu não encontrados!');
         return;
     }
     
+    // Se já está aberto, fechar
     if (submenu.style.display === 'flex') {
         submenu.style.display = 'none';
         btnProdutos.classList.remove('active');
-        document.querySelectorAll('.btn-submenu').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.btn-submenu').forEach(function(b) {
+            b.classList.remove('active');
+        });
         voltarTabelaOriginal();
         return;
     }
     
     // Fechar outros submenus
-    const submenuBoletos = document.getElementById('submenuBoletos');
-    const btnBoletosPagar = document.getElementById('btnBoletosPagar');
-    if (submenuBoletos) submenuBoletos.style.display = 'none';
-    if (btnBoletosPagar) btnBoletosPagar.classList.remove('active');
+    var submenuBoletos = document.getElementById('submenuBoletos');
+    var btnBoletosPagar = document.getElementById('btnBoletosPagar');
+    if (submenuBoletos) {
+        submenuBoletos.style.display = 'none';
+    }
+    if (btnBoletosPagar) {
+        btnBoletosPagar.classList.remove('active');
+    }
     
     // Mostrar submenu de produtos
-    document.querySelectorAll('.btn-actions .btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.btn-actions .btn').forEach(function(b) {
+        b.classList.remove('active');
+    });
     btnProdutos.classList.add('active');
     submenu.style.display = 'flex';
     
     // Esconder outros elementos
-    const dataTable = document.getElementById('dataTable');
-    const mesContainer = document.getElementById('mesContainer');
-    const semanaInfo = document.getElementById('semanaInfo');
-    const statsContainer = document.getElementById('statsContainer');
-    const tableWrapper = document.getElementById('tableWrapper');
+    var dataTable = document.getElementById('dataTable');
+    var mesContainer = document.getElementById('mesContainer');
+    var semanaInfo = document.getElementById('semanaInfo');
+    var statsContainer = document.getElementById('statsContainer');
+    var tableWrapper = document.getElementById('tableWrapper');
     
-    if (dataTable) dataTable.style.display = 'none';
-    if (mesContainer) mesContainer.style.display = 'none';
-    if (semanaInfo) semanaInfo.style.display = 'none';
-    if (statsContainer) statsContainer.classList.add('stats-hidden');
-    if (tableWrapper) tableWrapper.innerHTML = '';
+    if (dataTable) {
+        dataTable.style.display = 'none';
+    }
+    if (mesContainer) {
+        mesContainer.style.display = 'none';
+    }
+    if (semanaInfo) {
+        semanaInfo.style.display = 'none';
+    }
+    if (statsContainer) {
+        statsContainer.classList.add('stats-hidden');
+    }
+    if (tableWrapper) {
+        tableWrapper.innerHTML = '';
+    }
     
-    // ===== Chamar mostrarProdutosPorPedido =====
-    mostrarProdutosPorPedido();
+    // Chamar mostrarProdutosPorPedido
+    if (typeof window.mostrarProdutosPorPedido === 'function') {
+        window.mostrarProdutosPorPedido();
+    }
     
-    // ===== AGUARDAR A TABELA E APLICAR STICKY APENAS UMA VEZ =====
-    let jaAplicou = false;
-    let tentativas = 0;
-    const maxTentativas = 30;
+    // Aplicar sticky
+    var jaAplicou = false;
+    var tentativas = 0;
+    var maxTentativas = 30;
     
-    const intervalo = setInterval(function() {
+    var intervalo = setInterval(function() {
         tentativas++;
-        
-        const table = document.querySelector('#tableWrapper table');
+        var table = document.querySelector('#tableWrapper table');
         if (table && !jaAplicou) {
-            const ths = table.querySelectorAll('thead th');
+            var ths = table.querySelectorAll('thead th');
             if (ths.length > 0) {
-                console.log(`✅ Tabela detectada! Aplicando sticky...`);
+                console.log('✅ Tabela detectada! Aplicando sticky...');
                 jaAplicou = true;
                 
-                // ===== APLICAR STICKY DIRETAMENTE =====
-                aplicarStickyDireto();
+                if (typeof window.aplicarStickyDireto === 'function') {
+                    window.aplicarStickyDireto();
+                }
+                
+                // Adicionar botões de produtos
+                setTimeout(function() {
+                    adicionarBotoesProdutos();
+                    adicionarBotoesATodosDetalhes();
+                }, 300);
                 
                 clearInterval(intervalo);
                 return;
@@ -2234,7 +2265,13 @@ function toggleSubmenuProdutos() {
             console.log('⏳ Tempo esgotado, aplicando sticky...');
             if (!jaAplicou) {
                 jaAplicou = true;
-                aplicarStickyDireto();
+                if (typeof window.aplicarStickyDireto === 'function') {
+                    window.aplicarStickyDireto();
+                }
+                setTimeout(function() {
+                    adicionarBotoesProdutos();
+                    adicionarBotoesATodosDetalhes();
+                }, 300);
             }
             clearInterval(intervalo);
         }
@@ -6197,6 +6234,581 @@ console.log('   - Clique em "🔍 Buscar produto" no submenu de produtos');
 console.log('   - Digite o código ou nome do produto');
 console.log('   - Use o período para filtrar os resultados');
 console.log('   - Clique em outro botão do submenu para fechar a busca');
+
+
+
+
+
+
+
+// ============================================================
+// FUNÇÕES DO BOTÃO "VER PRODUTOS" - SEM IIFE
+// ============================================================
+
+/**
+ * ABRE A ABA DE PRODUTOS E DESTACA O PEDIDO ESPECÍFICO
+ * @param {string} pedidoId - ID do pedido para abrir
+ */
+function irParaProdutosDoPedido(pedidoId) {
+    console.log('🔍 irParaProdutosDoPedido chamado para:', pedidoId);
+    
+    // ===== 1. Verificar elementos =====
+    const submenuProdutos = document.getElementById('submenuProdutos');
+    const btnProdutos = document.getElementById('btnProdutos');
+    
+    if (!submenuProdutos || !btnProdutos) {
+        console.error('❌ Elementos de produtos não encontrados');
+        return;
+    }
+    
+    // ===== 2. Fechar outros submenus =====
+    const submenuBoletos = document.getElementById('submenuBoletos');
+    const btnBoletosPagar = document.getElementById('btnBoletosPagar');
+    if (submenuBoletos) {
+        submenuBoletos.style.display = 'none';
+    }
+    if (btnBoletosPagar) {
+        btnBoletosPagar.classList.remove('active');
+    }
+    
+    // ===== 3. Ativar submenu de produtos =====
+    document.querySelectorAll('.btn-actions .btn').forEach(function(b) {
+        b.classList.remove('active');
+    });
+    btnProdutos.classList.add('active');
+    submenuProdutos.style.display = 'flex';
+    
+    // ===== 4. Esconder outros elementos =====
+    const dataTable = document.getElementById('dataTable');
+    const mesContainer = document.getElementById('mesContainer');
+    const semanaInfo = document.getElementById('semanaInfo');
+    const statsContainer = document.getElementById('statsContainer');
+    const tableWrapper = document.getElementById('tableWrapper');
+    
+    if (dataTable) {
+        dataTable.style.display = 'none';
+    }
+    if (mesContainer) {
+        mesContainer.style.display = 'none';
+    }
+    if (semanaInfo) {
+        semanaInfo.style.display = 'none';
+    }
+    if (statsContainer) {
+        statsContainer.classList.add('stats-hidden');
+    }
+    if (tableWrapper) {
+        tableWrapper.innerHTML = '';
+    }
+    
+    // ===== 5. Mostrar a tabela de produtos =====
+    if (typeof window.mostrarProdutosPorPedido !== 'function') {
+        console.error('❌ mostrarProdutosPorPedido não encontrada');
+        return;
+    }
+    
+    window.mostrarProdutosPorPedido();
+    
+    // ===== 6. Aguardar carregar e destacar o pedido =====
+    let tentativas = 0;
+    const maxTentativas = 40;
+    
+    var intervalo = setInterval(function() {
+        tentativas++;
+        
+        // Procurar o pedido na tabela de produtos
+        var rows = document.querySelectorAll('#tableBody tr.pedido-row');
+        var encontrado = false;
+        
+        for (var i = 0; i < rows.length; i++) {
+            var row = rows[i];
+            var cell = row.querySelector('td:first-child');
+            if (cell) {
+                var texto = cell.textContent.replace('▶', '').replace('▼', '').trim();
+                if (texto === String(pedidoId)) {
+                    encontrado = true;
+                    console.log('✅ Pedido encontrado nos produtos!');
+                    
+                    // Scroll até o pedido
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Destacar o pedido
+                    row.style.transition = 'background 0.3s';
+                    row.style.background = '#e3f2fd';
+                    
+                    // Abrir os detalhes do pedido
+                    var detailId = 'detalhe-produtos-' + pedidoId;
+                    var detailRow = document.getElementById(detailId);
+                    if (detailRow) {
+                        detailRow.classList.add('show');
+                        var icon = row.querySelector('.expand-icon');
+                        if (icon) {
+                            icon.innerHTML = '▼';
+                        }
+                        
+                        // Carregar produtos detalhados
+                        if (typeof window.carregarProdutosDetalhados === 'function') {
+                            window.carregarProdutosDetalhados(pedidoId);
+                        }
+                    }
+                    
+                    // Adicionar botões de organização
+                    if (typeof window.adicionarBotoesAoPedido === 'function') {
+                        setTimeout(function() {
+                            window.adicionarBotoesAoPedido(pedidoId);
+                        }, 500);
+                    }
+                    
+                    setTimeout(function() {
+                        row.style.background = '';
+                    }, 5000);
+                    
+                    clearInterval(intervalo);
+                    return;
+                }
+            }
+        }
+        
+        if (!encontrado && tentativas >= maxTentativas) {
+            console.log('⚠️ Pedido não encontrado nos produtos após ' + maxTentativas + ' tentativas');
+            clearInterval(intervalo);
+        }
+    }, 300);
+}
+
+/**
+ * ADICIONA BOTÕES "VER PRODUTOS" A TODOS OS PEDIDOS NA LISTA
+ */
+function adicionarBotoesProdutos() {
+    console.log('🔄 Adicionando botões "Ver produtos" aos pedidos...');
+    
+    var rows = document.querySelectorAll('.pedido-row');
+    var adicionados = 0;
+    
+    for (var i = 0; i < rows.length; i++) {
+        var row = rows[i];
+        
+        // Verificar se já tem o botão
+        if (row.querySelector('.btn-produtos-pedido')) {
+            continue;
+        }
+        
+        // Encontrar o ID do pedido
+        var cell = row.querySelector('td:first-child');
+        if (!cell) continue;
+        
+        var pedidoId = cell.textContent.replace('▶', '').replace('▼', '').trim();
+        if (!pedidoId) continue;
+        
+        // Encontrar a última célula da linha (onde está a situação)
+        var cells = row.querySelectorAll('td');
+        var lastCell = cells[cells.length - 1];
+        
+        if (!lastCell) continue;
+        
+        // Criar o botão
+        var btn = document.createElement('button');
+        btn.className = 'btn-produtos-pedido';
+        btn.textContent = 'Ver produtos';
+        btn.style.cssText = [
+            'background: #e8f4f8',
+            'color: #0b4f6c',
+            'border: 1px solid #d0e4ed',
+            'padding: 3px 10px',
+            'border-radius: 4px',
+            'cursor: pointer',
+            'font-size: 10px',
+            'font-weight: 500',
+            'transition: all 0.2s',
+            'margin-left: 8px',
+            'white-space: nowrap',
+            'letter-spacing: 0.3px'
+        ].join(';');
+        
+        btn.addEventListener('mouseenter', function() {
+            this.style.background = '#d4e8f0';
+            this.style.borderColor = '#a8c8d8';
+        });
+        btn.addEventListener('mouseleave', function() {
+            this.style.background = '#e8f4f8';
+            this.style.borderColor = '#d0e4ed';
+        });
+        
+        // Evento de clique
+        btn.addEventListener('click', function(e) {
+            e.stopPropagation(); // Evitar abrir detalhes do pedido
+            var pid = this.getAttribute('data-pedido-id');
+            console.log('🔍 Botão "Ver produtos" clicado para o pedido:', pid);
+            if (typeof window.irParaProdutosDoPedido === 'function') {
+                window.irParaProdutosDoPedido(pid);
+            } else {
+                console.error('❌ irParaProdutosDoPedido não encontrada');
+            }
+        });
+        
+        btn.setAttribute('data-pedido-id', pedidoId);
+        
+        // Adicionar o botão na célula
+        lastCell.appendChild(btn);
+        adicionados++;
+    }
+    
+    if (adicionados > 0) {
+        console.log('✅ ' + adicionados + ' botões "Ver produtos" adicionados');
+    }
+    return adicionados;
+}
+
+/**
+ * CORRIGE A FUNÇÃO irParaPedido PARA FUNCIONAR EM AMBOS OS CONTEXTOS
+ */
+function corrigirIrParaPedido() {
+    if (typeof window.irParaPedido !== 'function') {
+        console.warn('⚠️ irParaPedido não encontrada, criando...');
+        window.irParaPedido = function(pedidoId, codigoProduto, nomeProduto) {
+            console.log('🔍 irParaPedido chamado para:', pedidoId);
+            
+            var submenuProdutos = document.getElementById('submenuProdutos');
+            var estaNaAreaProdutos = submenuProdutos && submenuProdutos.style.display === 'flex';
+            var veioDeProdutos = codigoProduto !== undefined || estaNaAreaProdutos;
+            
+            if (veioDeProdutos || estaNaAreaProdutos) {
+                console.log('🎯 Abrindo em "Produtos por pedido"');
+                if (typeof window.irParaProdutosDoPedido === 'function') {
+                    window.irParaProdutosDoPedido(pedidoId);
+                }
+                return;
+            }
+            
+            console.log('🎯 Voltando para a tabela de pedidos...');
+            if (typeof window.voltarTabelaOriginal === 'function') {
+                window.voltarTabelaOriginal();
+            }
+            
+            setTimeout(function() {
+                var rows = document.querySelectorAll('.pedido-row');
+                for (var i = 0; i < rows.length; i++) {
+                    var row = rows[i];
+                    var cell = row.querySelector('td:first-child');
+                    if (cell) {
+                        var texto = cell.textContent.replace('▶', '').replace('▼', '').trim();
+                        if (texto === String(pedidoId)) {
+                            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            row.style.transition = 'background 0.3s';
+                            row.style.background = '#e3f2fd';
+                            
+                            var detailId = 'detalhe-' + pedidoId;
+                            var detailRow = document.getElementById(detailId);
+                            if (detailRow) {
+                                detailRow.classList.add('show');
+                                var icon = row.querySelector('.expand-icon');
+                                if (icon) icon.innerHTML = '▼';
+                            }
+                            
+                            setTimeout(function() {
+                                row.style.background = '';
+                            }, 5000);
+                            break;
+                        }
+                    }
+                }
+            }, 500);
+        };
+        console.log('✅ irParaPedido criada');
+    }
+}
+
+/**
+ * INICIALIZA TODAS AS FUNÇÕES DE NAVEGAÇÃO
+ */
+function inicializarNavegacaoProdutos() {
+    console.log('🚀 Inicializando sistema de navegação de produtos...');
+    
+    // 1. Corrigir irParaPedido
+    corrigirIrParaPedido();
+    
+    // 2. Adicionar botões "Ver produtos"
+    setTimeout(function() {
+        adicionarBotoesProdutos();
+    }, 300);
+    
+    // 3. Interceptar renderizarTabela
+    if (typeof window.renderizarTabela === 'function') {
+        var originalRenderizar = window.renderizarTabela;
+        window.renderizarTabela = function() {
+            originalRenderizar.apply(this, arguments);
+            setTimeout(function() {
+                adicionarBotoesProdutos();
+            }, 400);
+        };
+        console.log('✅ renderizarTabela interceptada');
+    }
+    
+    // 4. Interceptar voltarTabelaOriginal
+    if (typeof window.voltarTabelaOriginal === 'function') {
+        var originalVoltar = window.voltarTabelaOriginal;
+        window.voltarTabelaOriginal = function() {
+            var resultado = originalVoltar.apply(this, arguments);
+            setTimeout(function() {
+                adicionarBotoesProdutos();
+            }, 400);
+            return resultado;
+        };
+        console.log('✅ voltarTabelaOriginal interceptada');
+    }
+    
+    // 5. Interceptar toggleDetalhesProdutos
+    if (typeof window.toggleDetalhesProdutos === 'function') {
+        var originalToggleDetalhes = window.toggleDetalhesProdutos;
+        window.toggleDetalhesProdutos = function(pedidoId) {
+            var resultado = originalToggleDetalhes.apply(this, arguments);
+            setTimeout(function() {
+                if (typeof window.adicionarBotoesAoPedido === 'function') {
+                    window.adicionarBotoesAoPedido(pedidoId);
+                }
+            }, 500);
+            return resultado;
+        };
+        console.log('✅ toggleDetalhesProdutos interceptada');
+    }
+    
+    console.log('✅ Sistema de navegação inicializado!');
+}
+
+// ============================================================
+// ADICIONAR BOTÕES DE ORGANIZAÇÃO AOS DETALHES
+// ============================================================
+
+/**
+ * ADICIONA BOTÕES DE ORGANIZAÇÃO A UM PEDIDO ESPECÍFICO
+ */
+function adicionarBotoesAoPedido(pedidoId) {
+    console.log('🔄 Adicionando botões ao pedido:', pedidoId);
+    
+    var detailRow = document.getElementById('detalhe-produtos-' + pedidoId);
+    if (!detailRow) return false;
+    if (!detailRow.classList.contains('show')) return false;
+    
+    var detailCard = detailRow.querySelector('.detail-card');
+    if (!detailCard) return false;
+    
+    if (detailCard.querySelector('.btn-organizar-detalhe')) return true;
+    
+    // Encontrar o botão toggle existente
+    var toggleBtn = detailCard.querySelector('button[onclick*="toggleVisualizacaoProdutos"]');
+    if (!toggleBtn) {
+        var botoes = detailCard.querySelectorAll('button');
+        for (var i = 0; i < botoes.length; i++) {
+            if (botoes[i].textContent.includes('Mostrar igual do site natura')) {
+                toggleBtn = botoes[i];
+                break;
+            }
+        }
+    }
+    if (!toggleBtn) {
+        setTimeout(function() {
+            adicionarBotoesAoPedido(pedidoId);
+        }, 500);
+        return false;
+    }
+    
+    // Criar container de botões
+    var container = document.createElement('div');
+    container.style.cssText = [
+        'display:flex',
+        'flex-wrap:wrap',
+        'align-items:center',
+        'gap:8px',
+        'margin-top:8px',
+        'padding:6px 0',
+        'border-top:1px solid #e5e7eb'
+    ].join(';');
+    
+    var label = document.createElement('span');
+    label.textContent = 'Organizar pedido por:';
+    label.style.cssText = 'font-size:12px; font-weight:600; color:#555; margin-right:4px;';
+    container.appendChild(label);
+    
+    // Botão: Maior lucro R$
+    var btn1 = document.createElement('button');
+    btn1.className = 'btn-organizar-detalhe';
+    btn1.textContent = 'Maior lucro R$';
+    btn1.style.cssText = 'background:#e8f4f8; color:#0b4f6c; border:1px solid #d0e4ed; padding:3px 10px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:500;';
+    btn1.onclick = function() {
+        organizarDetalhe(pedidoId, 'lucro');
+    };
+    container.appendChild(btn1);
+    
+    // Botão: Maior lucro %
+    var btn2 = document.createElement('button');
+    btn2.className = 'btn-organizar-detalhe';
+    btn2.textContent = 'Maior lucro %';
+    btn2.style.cssText = 'background:#e8f4f8; color:#0b4f6c; border:1px solid #d0e4ed; padding:3px 10px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:500;';
+    btn2.onclick = function() {
+        organizarDetalhe(pedidoId, 'lucroPercentual');
+    };
+    container.appendChild(btn2);
+    
+    // Botão: Maior qtd
+    var btn3 = document.createElement('button');
+    btn3.className = 'btn-organizar-detalhe';
+    btn3.textContent = 'Maior qtd';
+    btn3.style.cssText = 'background:#e8f4f8; color:#0b4f6c; border:1px solid #d0e4ed; padding:3px 10px; border-radius:4px; cursor:pointer; font-size:10px; font-weight:500;';
+    btn3.onclick = function() {
+        organizarDetalhe(pedidoId, 'quantidade');
+    };
+    container.appendChild(btn3);
+    
+    toggleBtn.parentNode.insertBefore(container, toggleBtn.nextSibling);
+    return true;
+}
+
+/**
+ * ORGANIZA OS PRODUTOS DENTRO DO DETALHE
+ */
+function organizarDetalhe(pedidoId, criterio) {
+    console.log('🔄 Organizando pedido ' + pedidoId + ' por: ' + criterio);
+    
+    var detailRow = document.getElementById('detalhe-produtos-' + pedidoId);
+    if (!detailRow) return;
+    
+    var tabela = detailRow.querySelector('table');
+    if (!tabela) return;
+    
+    var tbody = tabela.querySelector('tbody');
+    if (!tbody) return;
+    
+    var todasLinhas = tbody.querySelectorAll('tr');
+    var linhaProdutos = null;
+    
+    for (var i = 0; i < todasLinhas.length; i++) {
+        if (todasLinhas[i].id === 'body-condensado-' + pedidoId) {
+            linhaProdutos = todasLinhas[i];
+            break;
+        }
+    }
+    
+    if (!linhaProdutos) return;
+    
+    var tabelaProdutos = linhaProdutos.querySelector('table');
+    if (!tabelaProdutos) return;
+    
+    var tbodyProdutos = tabelaProdutos.querySelector('tbody');
+    if (!tbodyProdutos) return;
+    
+    var linhasProdutos = tbodyProdutos.querySelectorAll('tr');
+    if (linhasProdutos.length === 0) return;
+    
+    var colunaIndex = criterio === 'lucro' ? 8 : (criterio === 'lucroPercentual' ? 9 : 2);
+    
+    function extrairValor(row) {
+        var cells = row.querySelectorAll('td');
+        if (cells.length <= colunaIndex) return 0;
+        var texto = cells[colunaIndex].textContent.trim();
+        texto = texto.replace(/R\$\s*/g, '');
+        texto = texto.replace(/\./g, '').replace(',', '.');
+        texto = texto.replace(/%/g, '');
+        return parseFloat(texto) || 0;
+    }
+    
+    var linhasArray = Array.from(linhasProdutos);
+    linhasArray.sort(function(a, b) {
+        return extrairValor(b) - extrairValor(a);
+    });
+    
+    tbodyProdutos.innerHTML = '';
+    for (var i = 0; i < linhasArray.length; i++) {
+        tbodyProdutos.appendChild(linhasArray[i]);
+    }
+    
+    var todasLinhasAtualizadas = tbodyProdutos.querySelectorAll('tr');
+    for (var i = 0; i < todasLinhasAtualizadas.length; i++) {
+        var row = todasLinhasAtualizadas[i];
+        var cells = row.querySelectorAll('td');
+        if (cells.length > colunaIndex) {
+            for (var j = 0; j < cells.length; j++) {
+                if (j === colunaIndex) {
+                    cells[j].style.fontWeight = 'bold';
+                    cells[j].style.color = '#0b4f6c';
+                    cells[j].style.background = '#e3f2fd';
+                } else {
+                    cells[j].style.fontWeight = '';
+                    cells[j].style.color = '';
+                    cells[j].style.background = '';
+                }
+            }
+        }
+    }
+    
+    console.log('✅ Pedido ' + pedidoId + ' organizado por ' + criterio);
+}
+
+/**
+ * ADICIONA BOTÕES DE ORGANIZAÇÃO A TODOS OS DETALHES ABERTOS
+ */
+function adicionarBotoesATodosDetalhes() {
+    console.log('🔄 Adicionando botões a todos os detalhes abertos...');
+    
+    var detailRows = document.querySelectorAll('.parcelas-detail.show');
+    var adicionados = 0;
+    
+    for (var i = 0; i < detailRows.length; i++) {
+        var row = detailRows[i];
+        var id = row.id || '';
+        if (id.startsWith('detalhe-produtos-')) {
+            var pedidoId = id.replace('detalhe-produtos-', '');
+            if (adicionarBotoesAoPedido(pedidoId)) {
+                adicionados++;
+            }
+        }
+    }
+    
+    if (adicionados > 0) {
+        console.log('✅ Botões adicionados a ' + adicionados + ' detalhes');
+    }
+    return adicionados;
+}
+
+// ============================================================
+// INICIALIZAR TUDO
+// ============================================================
+
+// Inicializar quando a página carregar
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Inicializando sistema de produtos...');
+    
+    // Aguardar um pouco para garantir que a tabela foi renderizada
+    setTimeout(function() {
+        inicializarNavegacaoProdutos();
+        adicionarBotoesATodosDetalhes();
+    }, 1000);
+});
+
+// Também inicializar após carregar dados
+if (typeof window.carregarDados === 'function') {
+    var originalCarregarDados = window.carregarDados;
+    window.carregarDados = function() {
+        var resultado = originalCarregarDados.apply(this, arguments);
+        
+        if (resultado && typeof resultado.then === 'function') {
+            resultado.then(function() {
+                setTimeout(function() {
+                    adicionarBotoesProdutos();
+                    adicionarBotoesATodosDetalhes();
+                }, 600);
+            });
+        }
+        
+        return resultado;
+    };
+    console.log('✅ carregarDados interceptada');
+}
+
+
+
+
+
+
 
 
 
