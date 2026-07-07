@@ -4958,8 +4958,8 @@ function irParaPedido(pedidoId) {
             
             if (typeof window.irParaProdutosDoPedido === 'function') {
                 window.irParaProdutosDoPedido(pedidoId);
-                setTimeout(destacarProduto, 1500);
-                setTimeout(destacarProduto, 3000);
+                setTimeout(function() { destacarProduto(1); }, 1500);
+                setTimeout(function() { destacarProduto(1); }, 3000);
             } else {
                 irParaPedidoOriginal(pedidoId, codigoProduto, nomeProduto);
             }
