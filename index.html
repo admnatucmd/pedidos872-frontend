@@ -3103,82 +3103,95 @@ function processarDadosProdutos(data) {
 // ============================================================
 
 function tornarPedidosClicaveis() {
-    console.log('🔄 Tornando pedidos clicáveis nos detalhes...');
+    console.log('🔄 Tornando pedidos clicáveis com produto do TÍTULO...');
     
-    // Procura em TODAS as tabelas dentro de detail-cards
-    const detailCards = document.querySelectorAll('.detail-card');
-    let encontrados = 0;
+    var detailCards = document.querySelectorAll('.detail-card');
+    var encontrados = 0;
     
     detailCards.forEach(function(card) {
-        const tabelas = card.querySelectorAll('table');
+        var titulo = card.querySelector('strong');
+        if (!titulo) return;
+        
+        var tituloTexto = titulo.textContent;
+        
+        var codigoProduto = '';
+        var nomeProduto = '';
+        
+        var matchCodigo = tituloTexto.match(/produto\s*(\d+)/i);
+        if (matchCodigo) {
+            codigoProduto = matchCodigo[1];
+        }
+        
+        var matchNome = tituloTexto.match(/-\s*(.+?)(?:\s*\(|$)/);
+        if (matchNome) {
+            nomeProduto = matchNome[1].trim();
+        }
+        
+        if (!codigoProduto || !nomeProduto) return;
+        
+        var tabelas = card.querySelectorAll('table');
         tabelas.forEach(function(tabela) {
-            // Pula tabelas que não têm cabeçalho
-            const cabecalhos = tabela.querySelectorAll('thead th');
-            if (cabecalhos.length < 2) return;
+            var cabecalhos = tabela.querySelectorAll('thead th');
+            var isTabelaPedidos = false;
+            cabecalhos.forEach(function(th) {
+                if (th.textContent.trim() === 'Pedido') {
+                    isTabelaPedidos = true;
+                }
+            });
             
-            const rows = tabela.querySelectorAll('tbody tr');
+            if (!isTabelaPedidos) return;
+            
+            var rows = tabela.querySelectorAll('tbody tr');
             rows.forEach(function(row) {
-                const cells = row.querySelectorAll('td');
-                if (cells.length < 2) return;
+                var cells = row.querySelectorAll('td');
+                if (cells.length === 0) return;
                 
-                // ⭐ PEGA O CÓDIGO E NOME DO PRODUTO (primeiras colunas) ⭐
-                var codigoProduto = cells.length > 0 ? cells[0].textContent.trim() : '';
-                var nomeProduto = cells.length > 1 ? cells[1].textContent.trim() : '';
+                var celulaPedido = cells[0];
+                var textoPedido = celulaPedido.textContent.trim();
                 
-                // Pula linhas de cabeçalho
-                if (codigoProduto === 'Código' || codigoProduto === 'Cód' || codigoProduto === 'Pedido') return;
-                if (nomeProduto === 'Produto' || nomeProduto === 'Data') return;
-                
-                // ⭐ PROCURA UM NÚMERO DE PEDIDO EM CADA CÉLULA ⭐
-                cells.forEach(function(cell, index) {
-                    // Pula se já tem um link
-                    if (cell.querySelector('a')) return;
+                if (textoPedido.match(/^\d{8,9}$/)) {
+                    var pedidoId = textoPedido;
                     
-                    var texto = cell.textContent.trim();
-                    // Aceita números de 8 ou 9 dígitos
-                    var match = texto.match(/\b(\d{8,9})\b/);
-                    if (match) {
-                        var pedidoId = match[1];
-                        console.log('🔍 Encontrado pedido:', pedidoId, 'com produto:', codigoProduto);
+                    var linkAntigo = celulaPedido.querySelector('a');
+                    if (linkAntigo) {
+                        celulaPedido.innerHTML = pedidoId;
+                    }
+                    
+                    var link = document.createElement('a');
+                    link.href = '#';
+                    link.textContent = pedidoId;
+                    link.style.cssText = 'color:#0b4f6c;text-decoration:underline;cursor:pointer;font-weight:bold;';
+                    link.title = 'Ir para o pedido ' + pedidoId;
+                    
+                    link.dataset.pedidoId = pedidoId;
+                    link.dataset.codigoProduto = codigoProduto;
+                    link.dataset.nomeProduto = nomeProduto;
+                    
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        console.log('🔗 CLICOU no pedido:', this.dataset.pedidoId);
+                        console.log('🔗 Produto:', this.dataset.codigoProduto, '-', this.dataset.nomeProduto);
                         
-                        // ⭐ CRIA O LINK COM OS DADOS DO PRODUTO ⭐
-                        var link = document.createElement('a');
-                        link.href = '#';
-                        link.textContent = pedidoId;
-                        link.style.color = '#0b4f6c';
-                        link.style.textDecoration = 'underline';
-                        link.style.cursor = 'pointer';
-                        link.style.fontWeight = 'bold';
-                        link.title = 'Ir para o pedido ' + pedidoId;
-                        
-                        // ⭐ GUARDA OS DADOS NO DATASET ⭐
-                        link.dataset.pedidoId = pedidoId;
-                        link.dataset.codigoProduto = codigoProduto || '';
-                        link.dataset.nomeProduto = nomeProduto || '';
-                        
-                        link.addEventListener('click', function(e) {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            console.log('🔗 Link clicado:', this.dataset.pedidoId, 'produto:', this.dataset.codigoProduto);
-                            irParaPedido(
+                        if (typeof window.irParaPedido === 'function') {
+                            window.irParaPedido(
                                 this.dataset.pedidoId, 
                                 this.dataset.codigoProduto, 
                                 this.dataset.nomeProduto
                             );
-                        });
-                        
-                        cell.innerHTML = '';
-                        cell.appendChild(link);
-                        encontrados++;
-                    }
-                });
+                        }
+                    });
+                    
+                    celulaPedido.innerHTML = '';
+                    celulaPedido.appendChild(link);
+                    encontrados++;
+                }
             });
         });
     });
     
-    console.log('✅ ' + encontrados + ' pedidos nos detalhes tornados clicáveis!');
+    console.log('✅ ' + encontrados + ' pedidos corrigidos com produto do TÍTULO!');
 }
-
 
 
 // ============================================================
@@ -5082,38 +5095,47 @@ function irParaProdutosDoPedido(pedidoId) {
 
 function irParaPedido(pedidoId, codigoProduto, nomeProduto) {
     console.log('🔍 irParaPedido chamado para:', pedidoId);
+    console.log('   📌 Código produto:', codigoProduto);
+    console.log('   📌 Nome produto:', nomeProduto);
     
     var submenuProdutos = document.getElementById('submenuProdutos');
     var estaNaAreaProdutos = submenuProdutos && submenuProdutos.style.display === 'flex';
     var veioDeProdutos = codigoProduto !== undefined || estaNaAreaProdutos;
     var buscaProdutosAtiva = window.modoBuscaAtivo || false;
     
+    console.log('   📊 Está na área de produtos?', estaNaAreaProdutos);
+    console.log('   📊 Veio de produtos?', veioDeProdutos);
+    
     if (veioDeProdutos || estaNaAreaProdutos || buscaProdutosAtiva) {
         console.log('🎯 Abrindo em "Produtos por pedido" com destaque amarelo...');
         
         function destacarProduto() {
+            console.log('🔍 Procurando produto para destacar:', codigoProduto, nomeProduto);
+            
             var detailId = 'detalhe-produtos-' + pedidoId;
             var detailRow = document.getElementById(detailId);
             
             if (!detailRow || !detailRow.classList.contains('show')) {
+                console.log('⏳ Detalhes ainda não abertos, aguardando...');
                 setTimeout(destacarProduto, 500);
                 return;
             }
             
             var tabelaDetalhes = detailRow.querySelector('table');
             if (!tabelaDetalhes) {
+                console.log('⏳ Tabela de detalhes não encontrada, aguardando...');
                 setTimeout(destacarProduto, 500);
                 return;
             }
             
             var linhasProdutos = tabelaDetalhes.querySelectorAll('tbody tr');
+            var produtoEncontrado = false;
             
             if (linhasProdutos.length === 0 || linhasProdutos[0].textContent.includes('Carregando produtos')) {
+                console.log('⏳ Produtos ainda carregando, aguardando...');
                 setTimeout(destacarProduto, 500);
                 return;
             }
-            
-            var produtoEncontrado = false;
             
             linhasProdutos.forEach(function(linhaProduto) {
                 var cells = linhaProduto.querySelectorAll('td');
@@ -5139,13 +5161,18 @@ function irParaPedido(pedidoId, codigoProduto, nomeProduto) {
                     linhaProduto.style.borderLeft = '4px solid #ffc107';
                     linhaProduto.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     produtoEncontrado = true;
-                    console.log('✅ Produto destacado em AMARELO!');
+                    console.log('✅ Produto ' + (codigoProduto || nomeProduto) + ' encontrado e destacado em AMARELO!');
                 }
             });
             
             if (!produtoEncontrado) {
+                console.log('⚠️ Produto não encontrado nos detalhes');
+                
                 setTimeout(function() {
+                    console.log('🔄 Tentando novamente destacar o produto...');
                     var linhasNovas = tabelaDetalhes.querySelectorAll('tbody tr');
+                    var encontradoNovo = false;
+                    
                     linhasNovas.forEach(function(linhaProduto) {
                         var cells = linhaProduto.querySelectorAll('td');
                         var encontrou = false;
@@ -5169,9 +5196,14 @@ function irParaPedido(pedidoId, codigoProduto, nomeProduto) {
                             linhaProduto.style.background = '#fff3cd';
                             linhaProduto.style.borderLeft = '4px solid #ffc107';
                             linhaProduto.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                            console.log('✅ Produto destacado em AMARELO!');
+                            encontradoNovo = true;
+                            console.log('✅ Produto ' + (codigoProduto || nomeProduto) + ' encontrado e destacado em AMARELO!');
                         }
                     });
+                    
+                    if (!encontradoNovo) {
+                        console.log('⚠️ Produto não encontrado após tentativa extra');
+                    }
                 }, 1000);
             }
         }
@@ -5180,6 +5212,10 @@ function irParaPedido(pedidoId, codigoProduto, nomeProduto) {
             window.irParaProdutosDoPedido(pedidoId);
             setTimeout(destacarProduto, 1500);
             setTimeout(destacarProduto, 3000);
+        } else {
+            if (typeof window.irParaPedidoOriginal === 'function') {
+                window.irParaPedidoOriginal(pedidoId, codigoProduto, nomeProduto);
+            }
         }
         return;
     }
@@ -5191,7 +5227,10 @@ function irParaPedido(pedidoId, codigoProduto, nomeProduto) {
     }
     
     setTimeout(function() {
+        console.log('🔍 Procurando pedido na tabela de pedidos:', pedidoId);
+        
         var rows = document.querySelectorAll('.pedido-row');
+        var encontrado = false;
         
         for (var i = 0; i < rows.length; i++) {
             var row = rows[i];
@@ -5199,6 +5238,9 @@ function irParaPedido(pedidoId, codigoProduto, nomeProduto) {
             if (cell) {
                 var texto = cell.textContent.replace('▶', '').replace('▼', '').trim();
                 if (texto === String(pedidoId)) {
+                    encontrado = true;
+                    console.log('✅ Pedido encontrado!');
+                    
                     row.scrollIntoView({ behavior: 'smooth', block: 'center' });
                     row.style.transition = 'background 0.3s';
                     row.style.background = '#e3f2fd';
@@ -5218,9 +5260,12 @@ function irParaPedido(pedidoId, codigoProduto, nomeProduto) {
                 }
             }
         }
+        
+        if (!encontrado) {
+            console.log('⚠️ Pedido não encontrado na tabela');
+        }
     }, 500);
 }
-
 
 function irParaPedidoNaTabela(pedidoId) {
     console.log('🔍 Procurando pedido na tabela:', pedidoId);
