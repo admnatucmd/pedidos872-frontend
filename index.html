@@ -5318,7 +5318,9 @@ function irParaProdutosDoPedido(pedidoId) {
     if (submenuBoletos) submenuBoletos.style.display = 'none';
     if (btnBoletosPagar) btnBoletosPagar.classList.remove('active');
     
-    document.querySelectorAll('.btn-actions .btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.btn-actions .btn').forEach(function(b) {
+        b.classList.remove('active');
+    });
     btnProdutos.classList.add('active');
     submenuProdutos.style.display = 'flex';
     
@@ -5339,56 +5341,40 @@ function irParaProdutosDoPedido(pedidoId) {
         
         var tentativas = 0;
         var maxTentativas = 30;
-        
         var intervalo = setInterval(function() {
             tentativas++;
             var rows = document.querySelectorAll('#tableBody tr.pedido-row');
-            var encontrado = false;
-            
-            for (var row of rows) {
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
                 var cell = row.querySelector('td:first-child');
                 if (cell) {
                     var texto = cell.textContent.replace('▶', '').replace('▼', '').trim();
                     if (texto === String(pedidoId)) {
-                        encontrado = true;
-                        console.log('✅ Pedido encontrado nos produtos!');
-                        
+                        console.log('✅ Pedido encontrado!');
                         row.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        row.style.transition = 'background 0.3s';
                         row.style.background = '#e3f2fd';
-                        
                         var detailId = 'detalhe-produtos-' + pedidoId;
                         var detailRow = document.getElementById(detailId);
                         if (detailRow) {
                             detailRow.classList.add('show');
                             var icon = row.querySelector('.expand-icon');
                             if (icon) icon.innerHTML = '▼';
-                            
                             if (typeof window.carregarProdutosDetalhados === 'function') {
                                 window.carregarProdutosDetalhados(pedidoId);
                             }
                         }
-                        
-                        setTimeout(function() {
-                            row.style.background = '';
-                        }, 5000);
-                        
                         clearInterval(intervalo);
                         return;
                     }
                 }
             }
-            
-            if (!encontrado && tentativas >= maxTentativas) {
-                console.log('⚠️ Pedido não encontrado nos produtos');
+            if (tentativas >= maxTentativas) {
+                console.log('⚠️ Pedido não encontrado');
                 clearInterval(intervalo);
             }
         }, 300);
-    } else {
-        console.error('❌ mostrarProdutosPorPedido não encontrada');
     }
 }
-
 
 
 
