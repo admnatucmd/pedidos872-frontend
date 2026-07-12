@@ -9154,6 +9154,171 @@ console.log('✅ Código de ordenação carregado com sucesso!');
 
 
 
+// ============================================================
+// CORREÇÃO DEFINITIVA: DESTACAR APENAS O PRODUTO ESPECÍFICO
+// ============================================================
+
+function destacarProdutoEspecifico(pedidoId, codigoProduto) {
+    console.log('🟡 Destacando produto específico:', codigoProduto, 'no pedido:', pedidoId);
+    
+    // ===== 1. LIMPAR TODOS OS DESTAQUES =====
+    document.querySelectorAll('#tableBody tr').forEach(function(row) {
+        row.style.background = '';
+        row.style.borderLeft = '';
+        row.style.transition = '';
+    });
+    
+    // ===== 2. ENCONTRAR O DETALHE DO PEDIDO =====
+    const detalheId = 'detalhe-produtos-' + pedidoId;
+    const detalheRow = document.getElementById(detalheId);
+    
+    if (!detalheRow) {
+        console.log('⚠️ Detalhe do pedido não encontrado:', detalheId);
+        return false;
+    }
+    
+    if (!detalheRow.classList.contains('show')) {
+        detalheRow.classList.add('show');
+        const icon = document.getElementById('icon-' + pedidoId);
+        if (icon) icon.innerHTML = '▼';
+    }
+    
+    // ===== 3. PROCURAR O PRODUTO NA TABELA DE DETALHES =====
+    const tabelaDetalhes = detalheRow.querySelector('table');
+    if (!tabelaDetalhes) {
+        console.log('⚠️ Tabela de detalhes não encontrada');
+        return false;
+    }
+    
+    const tbodyDetalhes = tabelaDetalhes.querySelector('tbody');
+    if (!tbodyDetalhes) {
+        console.log('⚠️ Tbody da tabela de detalhes não encontrada');
+        return false;
+    }
+    
+    // Verificar se os produtos já foram carregados
+    const linhasProdutos = tbodyDetalhes.querySelectorAll('tr');
+    if (linhasProdutos.length === 0 || linhasProdutos[0].textContent.includes('Clique para carregar')) {
+        console.log('⏳ Produtos ainda não carregados, aguardando...');
+        
+        if (typeof window.carregarProdutosDetalhados === 'function') {
+            window.carregarProdutosDetalhados(pedidoId);
+        }
+        
+        setTimeout(function() {
+            destacarProdutoEspecifico(pedidoId, codigoProduto);
+        }, 1000);
+        
+        return false;
+    }
+    
+    // ===== 4. DESTACAR APENAS O PRODUTO ESPECÍFICO =====
+    let encontrou = false;
+    
+    linhasProdutos.forEach(function(row) {
+        const cells = row.querySelectorAll('td');
+        if (cells.length < 2) return;
+        
+        // PEGAR APENAS O CÓDIGO DA PRIMEIRA COLUNA
+        const codigo = cells[0]?.textContent?.trim() || '';
+        
+        // COMPARAR APENAS O CÓDIGO EXATO (NÃO USAR includes)
+        if (codigo === String(codigoProduto)) {
+            console.log('✅ PRODUTO ENCONTRADO! Destacando APENAS este...');
+            row.style.background = '#fff3cd';
+            row.style.borderLeft = '4px solid #ffc107';
+            row.style.transition = 'background 0.3s';
+            row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            encontrou = true;
+        } else {
+            row.style.background = '';
+            row.style.borderLeft = '';
+        }
+    });
+    
+    if (!encontrou) {
+        console.log('⚠️ Produto ' + codigoProduto + ' não encontrado nos detalhes');
+    } else {
+        console.log('✅ Destaque aplicado apenas no produto:', codigoProduto);
+    }
+    
+    return encontrou;
+}
+
+// ============================================================
+// CORRIGIR A FUNÇÃO irParaPedido
+// ============================================================
+
+if (typeof window.irParaPedido === 'function') {
+    const _originalIrParaPedido = window.irParaPedido;
+    
+    window.irParaPedido = function(pedidoId, codigoProduto, nomeProduto) {
+        console.log('🔍 irParaPedido (corrigido) para:', pedidoId);
+        console.log('   📌 Código produto:', codigoProduto);
+        
+        var submenuProdutos = document.getElementById('submenuProdutos');
+        var estaNaAreaProdutos = submenuProdutos && submenuProdutos.style.display === 'flex';
+        var veioDeProdutos = codigoProduto !== undefined || estaNaAreaProdutos;
+        
+        if (veioDeProdutos || estaNaAreaProdutos) {
+            console.log('🎯 Abrindo em "Produtos por pedido" com destaque amarelo...');
+            
+            if (typeof window.irParaProdutosDoPedido === 'function') {
+                window.irParaProdutosDoPedido(pedidoId);
+            }
+            
+            if (codigoProduto) {
+                var tentativas = [500, 1000, 1500, 2000, 3000];
+                tentativas.forEach(function(tempo) {
+                    setTimeout(function() {
+                        destacarProdutoEspecifico(pedidoId, codigoProduto);
+                    }, tempo);
+                });
+            }
+            return;
+        }
+        
+        console.log('🎯 Voltando para a tabela de pedidos...');
+        if (typeof window.voltarTabelaOriginal === 'function') {
+            window.voltarTabelaOriginal();
+        }
+        
+        setTimeout(function() {
+            var rows = document.querySelectorAll('.pedido-row');
+            for (var i = 0; i < rows.length; i++) {
+                var row = rows[i];
+                var cell = row.querySelector('td:first-child');
+                if (cell) {
+                    var texto = cell.textContent.replace('▶', '').replace('▼', '').trim();
+                    if (texto === String(pedidoId)) {
+                        row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        row.style.transition = 'background 0.3s';
+                        row.style.background = '#e3f2fd';
+                        
+                        var detailId = 'detalhe-' + pedidoId;
+                        var detailRow = document.getElementById(detailId);
+                        if (detailRow) {
+                            detailRow.classList.add('show');
+                            var icon = row.querySelector('.expand-icon');
+                            if (icon) icon.innerHTML = '▼';
+                        }
+                        
+                        setTimeout(function() {
+                            row.style.background = '';
+                        }, 5000);
+                        break;
+                    }
+                }
+            }
+        }, 500);
+    };
+    
+    console.log('✅ irParaPedido corrigida com destaque específico!');
+}
+
+console.log('✅ CORREÇÃO DE DESTAQUE INSTALADA!');
+
+
 
 
 
