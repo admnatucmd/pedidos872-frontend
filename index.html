@@ -8658,7 +8658,6 @@ function buscarProdutosPrecoMedioPorTermo(termo, periodo) {
             const codigo = (linha.codigo || '').toLowerCase();
             const produto = (linha.produto || '').toLowerCase();
             
-            // Verifica se o termo está no código ou no nome do produto
             if (codigo.indexOf(termoLower) !== -1 || produto.indexOf(termoLower) !== -1) {
                 const chave = linha.codigo;
                 
@@ -8680,7 +8679,7 @@ function buscarProdutosPrecoMedioPorTermo(termo, periodo) {
                         lucrosPercentuais: [lucroPercentual],
                         precoMedioMin: valorUnit,
                         precoMedioMax: valorUnit,
-                        precoMedio: valorUnit,
+                        precoMedio: valorUnit,  // Temporário, será recalculado
                         pedidos: [{
                             pedido: pedido.pedido,
                             data: pedido.data,
@@ -8715,24 +8714,56 @@ function buscarProdutosPrecoMedioPorTermo(termo, periodo) {
                         lucroPercentual: lucroPercentual
                     });
                     
-                    // Atualizar preço médio (min e max)
                     if (valorUnit < item.precoMedioMin) item.precoMedioMin = valorUnit;
                     if (valorUnit > item.precoMedioMax) item.precoMedioMax = valorUnit;
-                    item.precoMedio = (item.precoMedioMin + item.precoMedioMax) / 2;
                 }
             }
         }
     }
     
-    // Converter mapa para array e ordenar
+    // ===== RECALCULAR PREÇO MÉDIO PONDERADO PARA CADA PRODUTO =====
     const resultadosArray = Object.values(produtosMap);
     
-    // Ordenar por preço médio (padrão)
+    for (let i = 0; i < resultadosArray.length; i++) {
+        const prod = resultadosArray[i];
+        
+        // Calcular preço médio ponderado usando os pedidos
+        let totalUnidades = 0;
+        let somaValores = 0;
+        
+        if (prod.pedidos && prod.pedidos.length > 0) {
+            for (let j = 0; j < prod.pedidos.length; j++) {
+                const pedido = prod.pedidos[j];
+                const qtd = pedido.quantidade || 0;
+                const valorCompra = pedido.valorCompra || 0;
+                if (qtd > 0 && valorCompra > 0) {
+                    totalUnidades += qtd;
+                    somaValores += valorCompra * qtd;
+                }
+            }
+        }
+        
+        // Se não conseguiu, usar a média dos valores de compra
+        if (totalUnidades === 0 && prod.valoresCompra && prod.valoresCompra.length > 0) {
+            for (let j = 0; j < prod.valoresCompra.length; j++) {
+                const val = prod.valoresCompra[j];
+                if (val > 0) {
+                    totalUnidades += 1;
+                    somaValores += val;
+                }
+            }
+        }
+        
+        // Atualizar com o preço ponderado
+        prod.precoMedio = totalUnidades > 0 ? somaValores / totalUnidades : (prod.precoMedioMin + prod.precoMedioMax) / 2;
+    }
+    
+    // Ordenar por preço médio
     resultadosArray.sort(function(a, b) {
         return b.precoMedio - a.precoMedio;
     });
     
-    console.log('✅ ' + resultadosArray.length + ' produtos encontrados para o termo "' + termo + '"');
+    console.log('✅ ' + resultadosArray.length + ' produtos encontrados para o termo "' + termo + '" (com PREÇO PONDERADO)');
     return resultadosArray;
 }
 
