@@ -7968,7 +7968,7 @@ function calcularProdutosPrecoMedio(periodo) {
         }
     }
     
-    // ===== 3. CALCULAR PREÇO MÉDIO POR PRODUTO =====
+    // ===== 3. CALCULAR PREÇO MÉDIO PONDERADO POR PRODUTO =====
     const resultados = Object.values(produtos);
     
     for (let i = 0; i < resultados.length; i++) {
@@ -7980,10 +7980,41 @@ function calcularProdutosPrecoMedio(periodo) {
             // Maior valor de compra
             const maxCompra = Math.max.apply(null, prod.valoresCompra);
             
-            // Preço médio = (menor + maior) / 2
             prod.precoMedioMin = minCompra;
             prod.precoMedioMax = maxCompra;
-            prod.precoMedio = (minCompra + maxCompra) / 2;
+            
+            // ===== PREÇO MÉDIO PONDERADO =====
+            // Calcula a média real considerando a quantidade de cada compra
+            let totalUnidades = 0;
+            let somaValores = 0;
+            
+            // Usar os pedidos do produto para calcular a média ponderada
+            if (prod.pedidos && prod.pedidos.length > 0) {
+                for (let j = 0; j < prod.pedidos.length; j++) {
+                    const pedido = prod.pedidos[j];
+                    const qtd = pedido.quantidade || 0;
+                    const valorCompra = pedido.valorCompra || 0;
+                    if (qtd > 0 && valorCompra > 0) {
+                        totalUnidades += qtd;
+                        somaValores += valorCompra * qtd;
+                    }
+                }
+            }
+            
+            // Se não conseguiu pelos pedidos, usar os valores de compra
+            if (totalUnidades === 0 && prod.valoresCompra && prod.valoresCompra.length > 0) {
+                for (let j = 0; j < prod.valoresCompra.length; j++) {
+                    const val = prod.valoresCompra[j];
+                    if (val > 0) {
+                        totalUnidades += 1;
+                        somaValores += val;
+                    }
+                }
+            }
+            
+            // Preço médio ponderado (ou média simples como fallback)
+            prod.precoMedio = totalUnidades > 0 ? somaValores / totalUnidades : (minCompra + maxCompra) / 2;
+            
         } else {
             prod.precoMedioMin = 0;
             prod.precoMedioMax = 0;
