@@ -7692,7 +7692,7 @@ console.log('✅ Função baixarBoletosPagosDoMes instalada!');
 
 /**
  * MOSTRA A VISUALIZAÇÃO DE PREÇO MÉDIO DE COMPRA
- * IDÊNTICO AO BOTÃO "MAIS PEDIDOS", MAS COM A COLUNA PREÇO MÉDIO
+ * COM BUSCA INTEGRADA
  */
 function mostrarProdutosPrecoMedio() {
     console.log('💰 ABRINDO PREÇO MÉDIO DE COMPRA...');
@@ -7705,7 +7705,6 @@ function mostrarProdutosPrecoMedio() {
     if (botoesProdutos.length > 5) {
         botoesProdutos[5].classList.add('active');
     } else {
-        // Fallback: procurar pelo texto
         botoesProdutos.forEach(b => {
             if (b.textContent.trim().includes('Preço médio')) {
                 b.classList.add('active');
@@ -7713,7 +7712,7 @@ function mostrarProdutosPrecoMedio() {
         });
     }
     
-    // ===== 2. CONFIGURAR A SEMANA INFO =====
+    // ===== 2. CONFIGURAR A SEMANA INFO COM BUSCA =====
     const submenu = document.getElementById('submenuProdutos');
     if (submenu) {
         submenu.style.display = 'flex';
@@ -7731,14 +7730,52 @@ function mostrarProdutosPrecoMedio() {
     if (tableWrapper) tableWrapper.innerHTML = '';
     if (mesContainer) mesContainer.style.display = 'none';
     
+    // ===== 3. CRIAR BARRA DE BUSCA NO SEMANA INFO =====
     if (semanaInfo) {
         semanaInfo.style.display = 'block';
+        semanaInfo.style.background = '#e8f5e9';
+        semanaInfo.style.padding = '12px 16px';
+        semanaInfo.style.borderRadius = '8px';
+        semanaInfo.style.marginBottom = '12px';
+        semanaInfo.style.border = '1px solid #c8e6c9';
+        
         semanaInfo.innerHTML = `
+            <!-- BARRA DE BUSCA DO PREÇO MÉDIO -->
+            <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0; margin-bottom:8px; border-bottom:1px solid #c8e6c9; padding-bottom:10px;">
+                <span style="font-weight:600; color:#0b4f6c; font-size:13px;">🔍 Buscar produto:</span>
+                <div style="position:relative; flex:1; min-width:200px; max-width:400px;">
+                    <input 
+                        type="text" 
+                        id="inputBuscaPrecoMedio" 
+                        placeholder="Digite código ou nome do produto..." 
+                        style="width:100%; padding:6px 32px 6px 12px; border:1px solid #ccc; border-radius:6px; font-size:13px; box-sizing:border-box;"
+                        oninput="executarBuscaPrecoMedio()"
+                        onkeypress="if(event.key==='Enter') executarBuscaPrecoMedio()"
+                    >
+                    <button 
+                        id="btnClearPrecoMedio" 
+                        style="position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; font-size:14px; color:#999; padding:4px 6px; border-radius:4px; display:none; z-index:1;"
+                        onclick="limparBuscaPrecoMedio()"
+                    >✕</button>
+                </div>
+                <button 
+                    onclick="executarBuscaPrecoMedio()" 
+                    style="background:#0b4f6c; color:white; border:none; padding:5px 16px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600;"
+                >🔍 Buscar</button>
+                <button 
+                    onclick="limparBuscaPrecoMedio()" 
+                    style="background:#6c757d; color:white; border:none; padding:5px 16px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600;"
+                >✕ Limpar</button>
+            </div>
+            
+            <!-- BOTÕES DE ORGANIZAÇÃO -->
             <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0; border-bottom:1px solid #e5e7eb; padding-bottom:8px; margin-bottom:8px;">
                 <span style="font-weight:600; color:#0b4f6c; font-size:13px;">Organizar por:</span>
                 <button class="btn-submenu active" onclick="organizarPrecoMedio('compra')" id="btn-organizar-preco-compra">Preço médio</button>
                 <button class="btn-submenu" onclick="organizarPrecoMedio('vezes')" id="btn-organizar-preco-vezes">Vezes pedido</button>
             </div>
+            
+            <!-- BOTÕES DE PERÍODO -->
             <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center; padding:4px 0;">
                 <span style="font-weight:600; color:#0b4f6c; font-size:13px;">Período:</span>
                 <button class="btn-submenu active" onclick="filtrarPrecoMedio('todo')">Todo o período</button>
@@ -7751,14 +7788,35 @@ function mostrarProdutosPrecoMedio() {
         `;
     }
     
-    // ===== 3. CALCULAR E RENDERIZAR =====
+    // ===== 4. CONFIGURAR BOTÃO DE LIMPAR =====
+    setTimeout(function() {
+        const input = document.getElementById('inputBuscaPrecoMedio');
+        const btnClear = document.getElementById('btnClearPrecoMedio');
+        if (input && btnClear) {
+            input.addEventListener('input', function() {
+                btnClear.style.display = this.value.length > 0 ? 'block' : 'none';
+            });
+            input.addEventListener('focus', function() {
+                btnClear.style.display = this.value.length > 0 ? 'block' : 'none';
+            });
+            input.addEventListener('blur', function() {
+                setTimeout(function() {
+                    btnClear.style.display = input.value.length > 0 ? 'block' : 'none';
+                }, 200);
+            });
+        }
+    }, 100);
+    
+    // ===== 5. CALCULAR E RENDERIZAR =====
     window.periodoAtualPrecoMedio = 'todo';
     window.organizacaoAtualPrecoMedio = 'compra';
+    window.termoBuscaPrecoMedio = '';
+    window.modoBuscaPrecoMedioAtivo = false;
     
     const produtos = calcularProdutosPrecoMedio('todo');
     renderizarPrecoMedio(produtos, '💰 Preço médio de compra - Todo o período', 'compra');
     
-    // ===== 4. APLICAR ESTILOS =====
+    // ===== 6. APLICAR ESTILOS =====
     setTimeout(() => { 
         aplicarTudoCompleto(); 
         aplicarEstiloCompactoProdutos(); 
@@ -7982,7 +8040,7 @@ function renderizarPrecoMedio(produtos, titulo, organizacao) {
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Menor Compra</th>
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Maior Compra</th>
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap; color:#0b4f6c; font-weight:bold; background:#e3f2fd;">
-                            ⭐ Preço Médio de Compra
+                             Preço Médio de Compra
                         </th>
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Valor Venda</th>
                         <th style="padding:12px 10px; text-align:right; border-bottom:2px solid #e5e7eb; white-space:nowrap;">Lucro Uni</th>
@@ -8333,11 +8391,23 @@ function filtrarPrecoMedio(periodo) {
         }
     });
     
-    // ===== 2. CALCULAR E RENDERIZAR =====
+    // ===== 2. VERIFICAR SE TEM BUSCA ATIVA =====
     window.periodoAtualPrecoMedio = periodo;
-    const produtos = calcularProdutosPrecoMedio(periodo);
-    const titulo = '💰 Preço médio de compra - ' + periodos[periodo];
+    const termoBusca = window.termoBuscaPrecoMedio || '';
     const organizacao = window.organizacaoAtualPrecoMedio || 'compra';
+    
+    let produtos;
+    let titulo;
+    
+    if (termoBusca !== '' && window.modoBuscaPrecoMedioAtivo) {
+        // Busca ativa: filtrar resultados da busca pelo período
+        produtos = buscarProdutosPrecoMedioPorTermo(termoBusca, periodo);
+        titulo = '🔍 Resultados para "' + termoBusca + '" - ' + produtos.length + ' produto(s) (' + (periodos[periodo] || 'Todo o período') + ')';
+    } else {
+        // Sem busca: mostrar lista completa
+        produtos = calcularProdutosPrecoMedio(periodo);
+        titulo = '💰 Preço médio de compra - ' + (periodos[periodo] || 'Todo o período');
+    }
     
     renderizarPrecoMedio(produtos, titulo, organizacao);
     
@@ -8365,13 +8435,13 @@ function filtrarPrecoMedio(periodo) {
         });
         aplicarTudoCompleto();
         aplicarEstiloCompactoProdutos();
+        destacarCelulasPrecoMedio(organizacao);
     }, 500);
 }
 
-// ============================================================
-// ORGANIZAR PREÇO MÉDIO
-// ============================================================
-
+/**
+ * ORGANIZAR PREÇO MÉDIO (RESPEITANDO BUSCA ATIVA)
+ */
 function organizarPrecoMedio(tipo) {
     console.log('🔄 Organizando preço médio por:', tipo);
     
@@ -8390,7 +8460,119 @@ function organizarPrecoMedio(tipo) {
         window.organizacaoAtualPrecoMedio = 'vezes';
     }
     
-    // ===== 2. CALCULAR E RENDERIZAR =====
+    // ===== 2. VERIFICAR SE TEM BUSCA ATIVA =====
+    const periodo = window.periodoAtualPrecoMedio || 'todo';
+    const termoBusca = window.termoBuscaPrecoMedio || '';
+    const periodos = {
+        'todo': 'Todo o período',
+        'mes': 'Esse mês',
+        '3meses': 'Últimos 3 meses',
+        '5meses': 'Últimos 5 meses',
+        '8meses': 'Últimos 8 meses',
+        '12meses': 'Últimos 12 meses'
+    };
+    
+    let produtos;
+    let titulo;
+    
+    if (termoBusca !== '' && window.modoBuscaPrecoMedioAtivo) {
+        // Busca ativa: organizar resultados da busca
+        produtos = buscarProdutosPrecoMedioPorTermo(termoBusca, periodo);
+        titulo = '🔍 Resultados para "' + termoBusca + '" - ' + produtos.length + ' produto(s) (' + (periodos[periodo] || 'Todo o período') + ')';
+    } else {
+        // Sem busca: organizar lista completa
+        produtos = calcularProdutosPrecoMedio(periodo);
+        titulo = '💰 Preço médio de compra - ' + (periodos[periodo] || 'Todo o período');
+    }
+    
+    renderizarPrecoMedio(produtos, titulo, tipo);
+    setTimeout(() => {
+        aplicarTudoCompleto();
+        aplicarEstiloCompactoProdutos();
+        destacarCelulasPrecoMedio(tipo);
+    }, 100);
+}
+
+
+
+
+// ============================================================
+// FUNÇÕES DE BUSCA DO PREÇO MÉDIO
+// ============================================================
+
+/**
+ * EXECUTA A BUSCA DE PRODUTOS NO PREÇO MÉDIO
+ */
+function executarBuscaPrecoMedio() {
+    const input = document.getElementById('inputBuscaPrecoMedio');
+    if (!input) return;
+    
+    const termo = input.value.trim();
+    window.termoBuscaPrecoMedio = termo;
+    
+    if (termo === '') {
+        // Se estiver vazio, mostra a lista completa
+        window.modoBuscaPrecoMedioAtivo = false;
+        const periodo = window.periodoAtualPrecoMedio || 'todo';
+        const produtos = calcularProdutosPrecoMedio(periodo);
+        const periodos = {
+            'todo': 'Todo o período',
+            'mes': 'Esse mês',
+            '3meses': 'Últimos 3 meses',
+            '5meses': 'Últimos 5 meses',
+            '8meses': 'Últimos 8 meses',
+            '12meses': 'Últimos 12 meses'
+        };
+        const titulo = '💰 Preço médio de compra - ' + (periodos[periodo] || 'Todo o período');
+        const organizacao = window.organizacaoAtualPrecoMedio || 'compra';
+        renderizarPrecoMedio(produtos, titulo, organizacao);
+        setTimeout(() => {
+            aplicarTudoCompleto();
+            aplicarEstiloCompactoProdutos();
+            destacarCelulasPrecoMedio(organizacao);
+        }, 100);
+        return;
+    }
+    
+    // Buscar produtos pelo termo
+    window.modoBuscaPrecoMedioAtivo = true;
+    const periodo = window.periodoAtualPrecoMedio || 'todo';
+    const produtosFiltrados = buscarProdutosPrecoMedioPorTermo(termo, periodo);
+    const periodos = {
+        'todo': 'Todo o período',
+        'mes': 'Esse mês',
+        '3meses': 'Últimos 3 meses',
+        '5meses': 'Últimos 5 meses',
+        '8meses': 'Últimos 8 meses',
+        '12meses': 'Últimos 12 meses'
+    };
+    const titulo = '🔍 Resultados para "' + termo + '" - ' + produtosFiltrados.length + ' produto(s) (' + (periodos[periodo] || 'Todo o período') + ')';
+    const organizacao = window.organizacaoAtualPrecoMedio || 'compra';
+    renderizarPrecoMedio(produtosFiltrados, titulo, organizacao);
+    setTimeout(() => {
+        aplicarTudoCompleto();
+        aplicarEstiloCompactoProdutos();
+        destacarCelulasPrecoMedio(organizacao);
+    }, 100);
+}
+
+/**
+ * LIMPA A BUSCA DO PREÇO MÉDIO
+ */
+function limparBuscaPrecoMedio() {
+    const input = document.getElementById('inputBuscaPrecoMedio');
+    const btnClear = document.getElementById('btnClearPrecoMedio');
+    
+    if (input) {
+        input.value = '';
+        if (btnClear) btnClear.style.display = 'none';
+        input.focus();
+    }
+    
+    window.termoBuscaPrecoMedio = '';
+    window.modoBuscaPrecoMedioAtivo = false;
+    
+    // Recarregar lista completa
     const periodo = window.periodoAtualPrecoMedio || 'todo';
     const produtos = calcularProdutosPrecoMedio(periodo);
     const periodos = {
@@ -8402,14 +8584,134 @@ function organizarPrecoMedio(tipo) {
         '12meses': 'Últimos 12 meses'
     };
     const titulo = '💰 Preço médio de compra - ' + (periodos[periodo] || 'Todo o período');
-    
-    renderizarPrecoMedio(produtos, titulo, tipo);
+    const organizacao = window.organizacaoAtualPrecoMedio || 'compra';
+    renderizarPrecoMedio(produtos, titulo, organizacao);
     setTimeout(() => {
         aplicarTudoCompleto();
         aplicarEstiloCompactoProdutos();
-        destacarCelulasPrecoMedio(tipo);
+        destacarCelulasPrecoMedio(organizacao);
     }, 100);
 }
+
+/**
+ * BUSCA PRODUTOS POR TERMO NO PREÇO MÉDIO
+ */
+function buscarProdutosPrecoMedioPorTermo(termo, periodo) {
+    console.log('🔍 Buscando produtos com termo:', termo);
+    
+    const dataLimite = getDataLimitePrecoMedio(periodo);
+    const termoLower = termo.toLowerCase();
+    const resultados = [];
+    
+    if (typeof produtosData === 'undefined' || produtosData.length === 0) {
+        return resultados;
+    }
+    
+    // Mapa para agrupar produtos encontrados
+    const produtosMap = {};
+    
+    for (let p = 0; p < produtosData.length; p++) {
+        const pedido = produtosData[p];
+        
+        if (dataLimite) {
+            const dataPedido = new Date(pedido.data.split('/').reverse().join('/'));
+            if (dataPedido < dataLimite) continue;
+        }
+        
+        if (!pedido.linhas || pedido.linhas.length === 0) continue;
+        
+        for (let l = 0; l < pedido.linhas.length; l++) {
+            const linha = pedido.linhas[l];
+            if (linha.isIndisponivel) continue;
+            
+            const codigo = (linha.codigo || '').toLowerCase();
+            const produto = (linha.produto || '').toLowerCase();
+            
+            // Verifica se o termo está no código ou no nome do produto
+            if (codigo.indexOf(termoLower) !== -1 || produto.indexOf(termoLower) !== -1) {
+                const chave = linha.codigo;
+                
+                if (!produtosMap[chave]) {
+                    const qtd = parseInt(linha.quantidade) || 0;
+                    const valorUnit = linha.valorUnit || 0;
+                    const vendaUnit = linha.vendaUnit || 0;
+                    const lucroUni = vendaUnit - valorUnit;
+                    const lucroPercentual = valorUnit > 0 ? (lucroUni / valorUnit) * 100 : 0;
+                    
+                    produtosMap[chave] = {
+                        codigo: linha.codigo || '',
+                        produto: linha.produto || '',
+                        vezes: 1,
+                        quantidadeTotal: qtd,
+                        valoresCompra: [valorUnit],
+                        valoresVenda: [vendaUnit],
+                        lucros: [lucroUni],
+                        lucrosPercentuais: [lucroPercentual],
+                        precoMedioMin: valorUnit,
+                        precoMedioMax: valorUnit,
+                        precoMedio: valorUnit,
+                        pedidos: [{
+                            pedido: pedido.pedido,
+                            data: pedido.data,
+                            quantidade: qtd,
+                            valorCompra: valorUnit,
+                            valorVenda: vendaUnit,
+                            lucroUni: lucroUni,
+                            lucroPercentual: lucroPercentual
+                        }]
+                    };
+                } else {
+                    const item = produtosMap[chave];
+                    const qtd = parseInt(linha.quantidade) || 0;
+                    const valorUnit = linha.valorUnit || 0;
+                    const vendaUnit = linha.vendaUnit || 0;
+                    const lucroUni = vendaUnit - valorUnit;
+                    const lucroPercentual = valorUnit > 0 ? (lucroUni / valorUnit) * 100 : 0;
+                    
+                    item.vezes++;
+                    item.quantidadeTotal += qtd;
+                    item.valoresCompra.push(valorUnit);
+                    item.valoresVenda.push(vendaUnit);
+                    item.lucros.push(lucroUni);
+                    item.lucrosPercentuais.push(lucroPercentual);
+                    item.pedidos.push({
+                        pedido: pedido.pedido,
+                        data: pedido.data,
+                        quantidade: qtd,
+                        valorCompra: valorUnit,
+                        valorVenda: vendaUnit,
+                        lucroUni: lucroUni,
+                        lucroPercentual: lucroPercentual
+                    });
+                    
+                    // Atualizar preço médio (min e max)
+                    if (valorUnit < item.precoMedioMin) item.precoMedioMin = valorUnit;
+                    if (valorUnit > item.precoMedioMax) item.precoMedioMax = valorUnit;
+                    item.precoMedio = (item.precoMedioMin + item.precoMedioMax) / 2;
+                }
+            }
+        }
+    }
+    
+    // Converter mapa para array e ordenar
+    const resultadosArray = Object.values(produtosMap);
+    
+    // Ordenar por preço médio (padrão)
+    resultadosArray.sort(function(a, b) {
+        return b.precoMedio - a.precoMedio;
+    });
+    
+    console.log('✅ ' + resultadosArray.length + ' produtos encontrados para o termo "' + termo + '"');
+    return resultadosArray;
+}
+
+// ============================================================
+// REGISTRAR FUNÇÕES DE BUSCA GLOBALMENTE
+// ============================================================
+
+window.executarBuscaPrecoMedio = executarBuscaPrecoMedio;
+window.limparBuscaPrecoMedio = limparBuscaPrecoMedio;
+window.buscarProdutosPrecoMedioPorTermo = buscarProdutosPrecoMedioPorTermo;
 
 // ============================================================
 // REGISTRAR FUNÇÕES GLOBALMENTE
