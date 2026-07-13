@@ -3643,55 +3643,29 @@ function atualizarSetasCabecalho() {
 }
 
 function ordenarProdutosPorPedido(coluna) {
-    console.log('📊 Ordenando por:', coluna);
-    
-    // Inicializar
-    if (!window.ordenacaoProdutosPorPedido) {
-        window.ordenacaoProdutosPorPedido = { coluna: null, ordem: 'asc' };
-    }
-    
-    // Inverter ou resetar
     if (window.ordenacaoProdutosPorPedido.coluna === coluna) {
         window.ordenacaoProdutosPorPedido.ordem = window.ordenacaoProdutosPorPedido.ordem === 'asc' ? 'desc' : 'asc';
     } else {
         window.ordenacaoProdutosPorPedido.coluna = coluna;
         window.ordenacaoProdutosPorPedido.ordem = 'asc';
     }
+    var ordem = window.ordenacaoProdutosPorPedido.ordem;
+    var colunaIndex = { 'pedido': 0, 'data': 1, 'produtosUnicos': 2, 'quantidadeTotal': 3, 'pontos': 4, 'precoCompra': 5, 'precoVenda': 6, 'lucro': 7, 'lucroPercentual': 8, 'indisponiveis': 9 };
+    var idx = colunaIndex[coluna];
+    if (idx === undefined) return;
+    var tbody = document.getElementById('tableBody');
+    if (!tbody) return;
+    var rows = Array.from(tbody.querySelectorAll('tr.pedido-row'));
+    if (rows.length === 0) return;
+    var rowsComDetalhes = rows.map(function(row) {
+        var pedidoId = row.querySelector('td') ? row.querySelector('td').textContent.replace('▶', '').replace('▼', '').trim() : null;
+        var detalheRow = pedidoId ? document.getElementById('detalhe-produtos-' + pedidoId) : null;
+        return { row: row, detalheRow: detalheRow, pedidoId: pedidoId };
+    });
     
-    const ordem = window.ordenacaoProdutosPorPedido.ordem;
-    console.log('   Ordem:', ordem === 'asc' ? '⬆️ MENOR→MAIOR' : '⬇️ MAIOR→MENOR');
-    
-    // Pegar dados
-    let dadosParaOrdenar = window.produtosDataFiltrados || window.produtosData || [];
-    
-    if (dadosParaOrdenar.length === 0) {
-        console.log('⚠️ Nenhum dado encontrado');
-        return;
-    }
-    
-    // Mapear colunas
-    const colunaMap = {
-        'pedido': 'pedido',
-        'data': 'data',
-        'produtosUnicos': 'produtosUnicos',
-        'quantidadeTotal': 'totalProdutos',
-        'pontos': 'totalPontos',
-        'precoCompra': 'precoCompra',
-        'precoVenda': 'precoVenda',
-        'lucro': 'lucroTotal',
-        'lucroPercentual': 'lucroPercentual',
-        'indisponiveis': 'produtosIndisponiveis'
-    };
-    
-    const campo = colunaMap[coluna];
-    if (!campo) {
-        console.log('❌ Coluna inválida:', coluna);
-        return;
-    }
-    
-    // ===== FUNÇÃO PARA CONVERTER DATA =====
+    // ===== FUNÇÃO PARA CONVERTER DATA (IGUAL DO CONSOLE) =====
     function parseData(str) {
-        if (!str || str === 'Sem Data') return 0;
+        if (!str || str === 'Sem Data' || str === '') return 0;
         var partes = str.split('/');
         if (partes.length === 3) {
             return new Date(partes[2], partes[1] - 1, partes[0]).getTime();
@@ -3699,20 +3673,26 @@ function ordenarProdutosPorPedido(coluna) {
         return new Date(str).getTime() || 0;
     }
     
-    // ===== ORDENAR =====
-    dadosParaOrdenar.sort(function(a, b) {
-        let valA = a[campo] !== undefined ? a[campo] : 0;
-        let valB = b[campo] !== undefined ? b[campo] : 0;
+    rowsComDetalhes.sort(function(a, b) {
+        var cellsA = a.row.querySelectorAll('td');
+        var cellsB = b.row.querySelectorAll('td');
+        if (cellsA.length <= idx || cellsB.length <= idx) return 0;
+        var valA = cellsA[idx].textContent.trim();
+        var valB = cellsB[idx].textContent.trim();
         
-        if (coluna === 'data') {
+        if (coluna === 'precoCompra' || coluna === 'precoVenda' || coluna === 'lucro' || coluna === 'lucroPercentual') {
+            valA = parseFloat(valA.replace(/[R$\s.,]/g, '').replace(',', '.')) || 0;
+            valB = parseFloat(valB.replace(/[R$\s.,]/g, '').replace(',', '.')) || 0;
+        } else if (coluna === 'produtosUnicos' || coluna === 'quantidadeTotal' || coluna === 'pontos' || coluna === 'indisponiveis') {
+            valA = parseInt(valA) || 0;
+            valB = parseInt(valB) || 0;
+        } else if (coluna === 'data') {
+            // ===== USA A MESMA FUNÇÃO DO CONSOLE =====
             valA = parseData(valA);
             valB = parseData(valB);
-        } else if (typeof valA === 'string') {
+        } else {
             valA = valA.toLowerCase();
             valB = valB.toLowerCase();
-        } else {
-            valA = parseFloat(valA) || 0;
-            valB = parseFloat(valB) || 0;
         }
         
         if (valA < valB) return ordem === 'asc' ? -1 : 1;
@@ -3720,15 +3700,12 @@ function ordenarProdutosPorPedido(coluna) {
         return 0;
     });
     
-    // Atualizar global
-    window.produtosDataFiltrados = dadosParaOrdenar;
-    
-    // Recriar a tabela
-    if (typeof recriarTabelaProdutos === 'function') {
-        recriarTabelaProdutos(dadosParaOrdenar);
-    }
-    
-    console.log('✅ Ordenado por:', coluna, '| Ordem:', ordem === 'asc' ? '⬆️ MENOR→MAIOR' : '⬇️ MAIOR→MENOR');
+    rowsComDetalhes.forEach(function(item) {
+        tbody.appendChild(item.row);
+        if (item.detalheRow) tbody.appendChild(item.detalheRow);
+    });
+    atualizarSetasCabecalho();
+    setTimeout(() => { aplicarTudoCompleto(); }, 100);
 }
 
 function filtrarProdutosPorPedido(periodo) {
