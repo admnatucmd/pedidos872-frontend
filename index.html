@@ -9101,8 +9101,22 @@ function recriarTabelaProdutos(dadosParaOrdenar) {
     
     container.innerHTML = html;
     
-    // ===== ATUALIZAR SETAS =====
+     // ===== ATUALIZAR SETAS =====
     atualizarSetasCabecalho();
+    
+    // ===== REATIVAR CLICK NOS PEDIDOS =====
+    setTimeout(function() {
+        document.querySelectorAll('.pedido-row').forEach(function(row) {
+            row.removeEventListener('click', row._clickHandler);
+            var pedidoId = row.querySelector('td')?.textContent?.replace('▶', '').replace('▼', '').trim() || '';
+            if (pedidoId) {
+                row._clickHandler = function() {
+                    toggleDetalhesProdutos(pedidoId);
+                };
+                row.addEventListener('click', row._clickHandler);
+            }
+        });
+    }, 100);
     
     console.log('✅ TABELA RECRIADA COM SUCESSO!');
 }
