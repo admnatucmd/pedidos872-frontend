@@ -3675,17 +3675,17 @@ function ordenarProdutosPorPedido(coluna) {
             valA = parseInt(valA) || 0;
             valB = parseInt(valB) || 0;
          } else if (coluna === 'data') {
-            var partesA = valA.split('/'), partesB = valB.split('/');
-            if (partesA.length === 3 && partesB.length === 3) {
-                // DATA - Formato DD/MM/YYYY
-                valA = new Date(partesA[2], partesA[1] - 1, partesA[0]).getTime();
-                valB = new Date(partesB[2], partesB[1] - 1, partesB[0]).getTime();
-            } else {
-                // Fallback para outros formatos
-                valA = new Date(valA).getTime() || 0;
-                valB = new Date(valB).getTime() || 0;
-            }
-        } else {
+    function parseData(str) {
+        if (!str || str === 'Sem Data' || str === '') return 0;
+        var partes = str.split('/');
+        if (partes.length === 3) {
+            return new Date(partes[2], partes[1] - 1, partes[0]).getTime();
+        }
+        return new Date(str).getTime() || 0;
+    }
+    valA = parseData(valA);
+    valB = parseData(valB);
+} else {
             valA = valA.toLowerCase();
             valB = valB.toLowerCase();
         }
