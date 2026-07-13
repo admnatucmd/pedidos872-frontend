@@ -9104,19 +9104,13 @@ function recriarTabelaProdutos(dadosParaOrdenar) {
      // ===== ATUALIZAR SETAS =====
     atualizarSetasCabecalho();
     
-    // ===== REATIVAR CLICK NOS PEDIDOS =====
-    setTimeout(function() {
-        document.querySelectorAll('.pedido-row').forEach(function(row) {
-            row.removeEventListener('click', row._clickHandler);
-            var pedidoId = row.querySelector('td')?.textContent?.replace('▶', '').replace('▼', '').trim() || '';
-            if (pedidoId) {
-                row._clickHandler = function() {
-                    toggleDetalhesProdutos(pedidoId);
-                };
-                row.addEventListener('click', row._clickHandler);
-            }
-        });
-    }, 100);
+    // ===== REATIVAR CLIQUE =====
+    document.querySelectorAll('.pedido-row').forEach(function(row) {
+        var pedidoId = row.querySelector('td')?.textContent?.replace('▶', '').replace('▼', '').trim() || '';
+        if (pedidoId) {
+            row.onclick = function() { toggleDetalhesProdutos(pedidoId); };
+        }
+    });
     
     console.log('✅ TABELA RECRIADA COM SUCESSO!');
 }
