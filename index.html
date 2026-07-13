@@ -9459,6 +9459,150 @@ if (typeof window.irParaPedido === 'function') {
 console.log('✅ CORREÇÃO DE DESTAQUE INSTALADA!');
 
 
+// ============================================================
+// FUNÇÃO: INVERTER LISTA (COM SETA AZUL NA COLUNA ATIVA)
+// ============================================================
+
+// ===== A FUNÇÃO QUE INVERTE =====
+function inverterLista() {
+    console.log('🔄 Invertendo lista...');
+    
+    var tbody = document.getElementById('tableBody');
+    if (!tbody) {
+        console.log('❌ tbody não encontrado');
+        return;
+    }
+    
+    var rows = Array.from(tbody.querySelectorAll('tr.pedido-row'));
+    if (rows.length === 0) {
+        console.log('⚠️ Nenhuma linha encontrada');
+        return;
+    }
+    
+    var rowsComDetalhes = rows.map(function(row) {
+        var pedidoId = row.querySelector('td') ? row.querySelector('td').textContent.replace('▶', '').replace('▼', '').trim() : null;
+        var detalheRow = pedidoId ? document.getElementById('detalhe-produtos-' + pedidoId) : null;
+        return { row: row, detalheRow: detalheRow, pedidoId: pedidoId };
+    });
+    
+    rowsComDetalhes.reverse();
+    
+    while (tbody.firstChild) {
+        tbody.removeChild(tbody.firstChild);
+    }
+    
+    rowsComDetalhes.forEach(function(item) {
+        tbody.appendChild(item.row);
+        if (item.detalheRow) {
+            tbody.appendChild(item.detalheRow);
+        }
+    });
+    
+    console.log('✅ Lista invertida!');
+}
+
+// ===== VARIÁVEL PARA CONTROLAR A SETA ATIVA =====
+var setaAtiva = null;
+
+// ===== CRIAR SETA NA COLUNA ATIVA =====
+function atualizarSeta(coluna) {
+    // Remover seta anterior
+    if (setaAtiva) {
+        setaAtiva.remove();
+        setaAtiva = null;
+    }
+    
+    // Encontrar o cabeçalho da coluna
+    var headers = document.querySelectorAll('#tableWrapper thead th');
+    var thEncontrado = null;
+    
+    headers.forEach(function(th) {
+        var dataColuna = th.getAttribute('data-coluna');
+        if (dataColuna === coluna) {
+            thEncontrado = th;
+        }
+    });
+    
+    if (!thEncontrado) return;
+    if (thEncontrado.querySelector('.seta-inverter')) return;
+    
+    // ===== CRIAR SETA AZUL ESCURO =====
+    var seta = document.createElement('span');
+    seta.className = 'seta-inverter';
+    seta.textContent = '↕';
+    seta.style.cssText = [
+        'display:inline-block',
+        'font-size:12px',
+        'cursor:pointer',
+        'color:#0b4f6c',
+        'text-align:center',
+        'margin-left:6px',
+        'font-weight:bold',
+        'padding:0 4px',
+        'border-radius:3px',
+        'transition:all 0.2s',
+        'user-select:none',
+        'vertical-align:middle'
+    ].join(';');
+    seta.title = 'Clique para INVERTER a ordem';
+    
+    seta.onclick = function(e) {
+        e.stopPropagation();
+        e.preventDefault();
+        inverterLista();
+        this.style.color = '#ffcc00';
+        setTimeout(function() {
+            this.style.color = '#0b4f6c';
+        }.bind(this), 300);
+    };
+    
+    seta.onmouseenter = function() {
+        this.style.color = '#ffcc00';
+        this.style.background = 'rgba(11, 79, 108, 0.1)';
+    };
+    seta.onmouseleave = function() {
+        this.style.color = '#0b4f6c';
+        this.style.background = 'transparent';
+    };
+    
+    thEncontrado.appendChild(seta);
+    setaAtiva = seta;
+}
+
+// ===== SUBSTITUIR A FUNÇÃO DE ORDENAÇÃO =====
+var _originalOrdenar = window.ordenarProdutosPorPedido;
+
+window.ordenarProdutosPorPedido = function(coluna) {
+    if (typeof _originalOrdenar === 'function') {
+        _originalOrdenar(coluna);
+    }
+    
+    setTimeout(function() {
+        atualizarSeta(coluna);
+    }, 300);
+};
+
+// ===== INICIALIZAR QUANDO A TABELA CARREGAR =====
+function inicializarSeta() {
+    setTimeout(function() {
+        var colunaAtiva = window.ordenacaoProdutosPorPedido?.coluna || 'produtosUnicos';
+        atualizarSeta(colunaAtiva);
+    }, 500);
+}
+
+// Executar inicialização
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+    setTimeout(inicializarSeta, 500);
+} else {
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(inicializarSeta, 500);
+    });
+}
+
+console.log('✅ SISTEMA DE INVERSÃO INSTALADO!');
+
+
+
 
 
 
