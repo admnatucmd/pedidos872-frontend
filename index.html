@@ -8853,10 +8853,20 @@ window.produtosDataFiltrados = window.produtosDataFiltrados || [];
 // ============================================================
 
 function formatarMoedaBR(valor) {
-    if (valor === undefined || valor === null) return 'R$ 0,00';
-    return 'R$ ' + valor.toFixed(2).replace('.', ',');
+    // Garantir que é um número
+    const numero = typeof valor === 'number' ? valor : parseFloat(valor) || 0;
+    
+    // Formatar com 2 casas decimais
+    const partes = numero.toFixed(2).split('.');
+    const inteiro = partes[0];
+    const decimal = partes[1];
+    
+    // Adicionar pontos de milhar no inteiro
+    const inteiroComPontos = inteiro.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    
+    // Retornar com R$ e vírgula
+    return 'R$ ' + inteiroComPontos + ',' + decimal;
 }
-
 // ============================================================
 // 3. FUNÇÃO PRINCIPAL DE ORDENAÇÃO
 // ============================================================
