@@ -9101,16 +9101,8 @@ function recriarTabelaProdutos(dadosParaOrdenar) {
     
     container.innerHTML = html;
     
-     // ===== ATUALIZAR SETAS =====
+    // ===== ATUALIZAR SETAS =====
     atualizarSetasCabecalho();
-    
-    // ===== REATIVAR CLIQUE =====
-    document.querySelectorAll('.pedido-row').forEach(function(row) {
-        var pedidoId = row.querySelector('td')?.textContent?.replace('▶', '').replace('▼', '').trim() || '';
-        if (pedidoId) {
-            row.onclick = function() { toggleDetalhesProdutos(pedidoId); };
-        }
-    });
     
     console.log('✅ TABELA RECRIADA COM SUCESSO!');
 }
