@@ -3674,11 +3674,16 @@ function ordenarProdutosPorPedido(coluna) {
         } else if (coluna === 'produtosUnicos' || coluna === 'quantidadeTotal' || coluna === 'pontos' || coluna === 'indisponiveis') {
             valA = parseInt(valA) || 0;
             valB = parseInt(valB) || 0;
-        } else if (coluna === 'data') {
+         } else if (coluna === 'data') {
             var partesA = valA.split('/'), partesB = valB.split('/');
             if (partesA.length === 3 && partesB.length === 3) {
+                // DATA - Formato DD/MM/YYYY
                 valA = new Date(partesA[2], partesA[1] - 1, partesA[0]).getTime();
                 valB = new Date(partesB[2], partesB[1] - 1, partesB[0]).getTime();
+            } else {
+                // Fallback para outros formatos
+                valA = new Date(valA).getTime() || 0;
+                valB = new Date(valB).getTime() || 0;
             }
         } else {
             valA = valA.toLowerCase();
