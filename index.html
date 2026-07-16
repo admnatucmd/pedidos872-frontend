@@ -9518,31 +9518,34 @@ console.log('✅ SISTEMA DE INVERSÃO INSTALADO!');
 
 
 
-// ============================================================
-// MANTER SERVIDOR ATIVO (EVITAR SLEEP DO RENDER)
-// ============================================================
+    // ============================================================
+    // MANTER SERVIDOR ATIVO (PING A CADA 2 MINUTOS)
+    // ============================================================
 
-console.log('🔄 Iniciando manutenção do servidor...');
+    var contadorPing = 0;
 
-function pingServidor() {
-    fetch('https://api-pedidos.gtgo.com.br/api/status', {
-        method: 'GET',
-        credentials: 'include'
-    }).catch(function() {});
-}
+    function pingTeste() {
+        contadorPing++;
+        console.log('💓 Ping #' + contadorPing + ' - ' + new Date().toLocaleTimeString());
+        
+        fetch('https://api-pedidos.gtgo.com.br/api/status', {
+            method: 'GET',
+            credentials: 'include'
+        })
+        .then(function(response) {
+            if (response.ok) {
+                console.log('   ✅ Servidor respondeu');
+            }
+        })
+        .catch(function() {
+            console.log('   ⚠️ Erro no ping');
+        });
+    }
 
-// Ping imediato
-pingServidor();
+    pingTeste();
+    setInterval(pingTeste, 120000);
 
-// Ping a cada 8 minutos (240000 ms)
-setInterval(pingServidor, 480000);
-
-console.log('✅ Ping configurado a cada 4 minutos');
-
-
-
-
-
+    console.log('✅ Ping configurado a cada 2 minutos');
 
 
 
