@@ -9518,6 +9518,36 @@ console.log('✅ SISTEMA DE INVERSÃO INSTALADO!');
 
 
 
+// ============================================================
+// MANTER SERVIDOR ATIVO (EVITAR SLEEP DO RENDER)
+// ============================================================
+
+console.log('🔄 Iniciando manutenção do servidor...');
+
+function pingServidor() {
+    fetch('https://api-pedidos.gtgo.com.br/api/status', {
+        method: 'GET',
+        credentials: 'include'
+    }).catch(function() {});
+}
+
+// Ping imediato
+pingServidor();
+
+// Ping a cada 8 minutos (240000 ms)
+setInterval(pingServidor, 480000);
+
+console.log('✅ Ping configurado a cada 4 minutos');
+
+
+
+
+
+
+
+
+
+
 
 
 </script>
