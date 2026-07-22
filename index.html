@@ -636,6 +636,57 @@ const nomesMeses = {
 
 function getNomeMes(numero) { return nomesMeses[numero] || numero; }
 
+
+// ===== EXTRAIR DATA MAIS RECENTE DA COLUNA J =====
+function extrairDataProcessamento(data) {
+    if (!data || data.length < 2) return null;
+    
+    let dataMaisRecente = null;
+    
+    // Percorre todas as linhas (começando da linha 1, ignorando cabeçalho)
+    for (let i = 1; i < data.length; i++) {
+        const linha = data[i];
+        
+        // Verifica se tem coluna J (índice 9)
+        if (linha.length > 9) {
+            const valor = String(linha[9] || '').trim();
+            
+            if (valor && valor !== '') {
+                // Tenta converter para data no formato "22/07/2026 16:09"
+                const match = valor.match(/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2})/);
+                if (match) {
+                    const dia = parseInt(match[1]);
+                    const mes = parseInt(match[2]) - 1;
+                    const ano = parseInt(match[3]);
+                    const hora = parseInt(match[4]);
+                    const min = parseInt(match[5]);
+                    
+                    const dataConvertida = new Date(ano, mes, dia, hora, min);
+                    
+                    if (!isNaN(dataConvertida.getTime())) {
+                        if (!dataMaisRecente || dataConvertida > dataMaisRecente) {
+                            dataMaisRecente = dataConvertida;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    if (dataMaisRecente) {
+        return dataMaisRecente.toLocaleString('pt-BR', {
+            day: '2-digit',
+            month: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+        });
+    }
+    
+    return null;
+}
+
+
 // ===== CARREGAR DADOS VIA API DO BACKEND =====
 async function carregarDados() {
     const loadingDiv = document.getElementById('loadingMsg');
@@ -680,6 +731,8 @@ async function carregarDados() {
         if (pedidosData.length === 0) {
             throw new Error('Nenhum pedido encontrado na planilha');
         }
+
+	const dataProcessamento = extrairDataProcessamento(result.data);
         
         // ===== RENDERIZAR =====
         document.getElementById('mesContainer').style.display = 'none';
@@ -690,7 +743,7 @@ async function carregarDados() {
         renderizarTabela();
         table.style.display = 'table';
         document.getElementById('statsContainer').classList.remove('stats-hidden');
-        document.getElementById('lastUpdate').innerHTML = `📆 Dados atualizados em: ${new Date().toLocaleString('pt-BR')}`;
+        document.getElementById('lastUpdate').innerHTML = `📆 Dados atualizados em: ${dataProcessamento || new Date().toLocaleString('pt-BR')}`;
         
         statusDiv.textContent = '✅ Dados carregados com sucesso!';
         statusDiv.style.color = '#28a745';
