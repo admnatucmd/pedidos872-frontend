@@ -296,7 +296,52 @@
 
 
 
+/* ===== NOTIFICAÇÃO DE LOGIN ===== */
+#loading-notification {
+    position: fixed;
+    z-index: 99999;
+    bottom: 20px;
+    right: 20px;
+    padding: 16px 24px;
+    background: #f59e0b;
+    color: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
 
+#loading-notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+#loading-notification .spinner {
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+#loading-notification .spinner svg {
+    width: 100%;
+    height: 100%;
+}
+
+#loading-notification .texto {
+    font-weight: 600;
+    font-size: 14px;
+    margin: 0;
+}
 
 
 
@@ -455,6 +500,54 @@ let produtosPorPedido = {};
 // SISTEMA DE AUTENTICAÇÃO
 // ============================================================
 
+// ============================================================
+// NOTIFICAÇÃO DE LOGIN
+// ============================================================
+
+function criarNotificacaoLogin() {
+    // Remover notificação antiga se existir
+    removerNotificacaoLogin();
+    
+    // Criar container
+    var container = document.createElement('div');
+    container.id = 'loading-notification';
+    container.className = 'show';
+    
+    // Ícone da bolinha girando
+    var icon = document.createElement('div');
+    icon.className = 'spinner';
+    icon.innerHTML = `
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707"></path>
+        </svg>
+    `;
+
+    // Texto
+    var texto = document.createElement('p');
+    texto.className = 'texto';
+    texto.textContent = 'Autenticando Login...';
+
+    // Montar
+    container.appendChild(icon);
+    container.appendChild(texto);
+    document.body.appendChild(container);
+}
+
+function removerNotificacaoLogin() {
+    var notif = document.getElementById('loading-notification');
+    if (notif) {
+        notif.classList.remove('show');
+        notif.style.opacity = '0';
+        notif.style.transform = 'translateY(10px)';
+        setTimeout(function() {
+            if (notif.parentNode) {
+                notif.parentNode.removeChild(notif);
+            }
+        }, 300);
+    }
+}
+
+
 async function fazerLogin() {
     const username = document.getElementById('loginUser').value.trim();
     const password = document.getElementById('loginPass').value;
@@ -467,6 +560,9 @@ async function fazerLogin() {
     }
     
     errorDiv.classList.add('hidden');
+    
+    // ===== MOSTRAR NOTIFICAÇÃO DE CARREGAMENTO =====
+    criarNotificacaoLogin();
     
     try {
         const response = await fetch(`${API_BASE_URL}/api/login`, {
@@ -481,6 +577,9 @@ async function fazerLogin() {
         
         const data = await response.json();
         
+        // ===== REMOVER NOTIFICAÇÃO =====
+        removerNotificacaoLogin();
+        
         if (data.success) {
             currentUser = data.user;
             document.getElementById('loginScreen').style.display = 'none';
@@ -488,7 +587,6 @@ async function fazerLogin() {
             localStorage.setItem('usuario', data.user);
             localStorage.setItem('loja', data.loja);
             
-            // ===== CARREGAR DADOS (NÃO PRECISA MAIS DE CSV_URL) =====
             carregarDados();
             showNotification(`✅ Bem-vindo, ${data.user}!`, 'success');
         } else {
@@ -496,12 +594,14 @@ async function fazerLogin() {
             errorDiv.classList.remove('hidden');
         }
     } catch (error) {
+        // ===== REMOVER NOTIFICAÇÃO EM CASO DE ERRO =====
+        removerNotificacaoLogin();
+        
         errorDiv.textContent = 'Erro ao conectar ao servidor';
         errorDiv.classList.remove('hidden');
         console.error('Erro no login:', error);
     }
 }
-
 
 async function verificarLogin() {
     try {
