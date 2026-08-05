@@ -357,7 +357,7 @@
     <div class="max-w-md w-full">
         <div class="bg-white p-8 rounded-lg shadow-md" style="border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
             <div class="text-center mb-8">
-                <h1 class="text-3xl font-bold text-gray-900 mb-2" style="color: #0b4f6c;">Gestão de Pedidos</h1>
+                 <h1 style="font-size: 26px; font-weight: 700; margin: 0 0 5px 0; line-height: 1.2; letter-spacing: -0.5px; color: #ffffff; font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">Gestão de Pedidos</h1>
                 <p class="text-gray-600">Faça login para acessar o sistema</p>
             </div>
             
@@ -843,7 +843,7 @@ async function carregarDados() {
         renderizarTabela();
         table.style.display = 'table';
         document.getElementById('statsContainer').classList.remove('stats-hidden');
-        document.getElementById('lastUpdate').innerHTML = `📆 Dados atualizados em: ${dataProcessamento || new Date().toLocaleString('pt-BR')}`;
+        document.getElementById('lastUpdate').innerHTML = `Dados atualizados em: ${dataProcessamento || new Date().toLocaleString('pt-BR')}`;
         
         statusDiv.textContent = '✅ Dados carregados com sucesso!';
         statusDiv.style.color = '#28a745';
