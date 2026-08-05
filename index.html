@@ -402,8 +402,9 @@
 <div class="container">
     <div class="header">
         <div style="display: flex; justify-content: space-between; align-items: center;">
+ <img src="Logo.png" alt="GTGO Logo" style="height: 35px; width: auto; object-fit: contain;">
             <div>
-                <h1 style="font-size: 24px; font-weight: 500; margin: 0 0 5px 0; line-height: 1.2; letter-spacing: -0.5px; color: #ffffff; font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">Gestão de Pedidos e Boletos</h1>
+                <h1 style="font-size: 24px; font-weight: 700; margin: 0 0 5px 0; line-height: 1.2; letter-spacing: -0.0px; color: #ffffff; font-family: 'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">Gestão de Pedidos Boletos e Produtos</h1>
                 <div class="subtitle"><span id="syncStatus">🔄 Sincronizando...</span></div>
                 <div class="last-update" id="lastUpdate"></div>
             </div>
@@ -845,7 +846,7 @@ async function carregarDados() {
         document.getElementById('statsContainer').classList.remove('stats-hidden');
         document.getElementById('lastUpdate').innerHTML = `Dados atualizados em: ${dataProcessamento || new Date().toLocaleString('pt-BR')}`;
         
-        statusDiv.textContent = '✅ Dados carregados com sucesso!';
+        statusDiv.textContent = 'Dados carregados com sucesso!';
         statusDiv.style.color = '#28a745';
         
     } catch (error) {
