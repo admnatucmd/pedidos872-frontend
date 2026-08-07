@@ -4035,7 +4035,7 @@ function toggleVisualizacaoProdutos(pedidoId) {
     if (bodyCondensado.style.display === 'none') {
         bodyCondensado.style.display = '';
         bodyOriginal.style.display = 'none';
-        toggleText.textContent = 'Mostrar igual do site natura';
+        toggleText.textContent = 'Mostrar produtos duplicados';
     } else {
         bodyCondensado.style.display = 'none';
         bodyOriginal.style.display = '';
@@ -5315,7 +5315,7 @@ function adicionarBotoesAoPedido(pedidoId) {
     if (!toggleBtn) {
         const botoes = detailCard.querySelectorAll('button');
         botoes.forEach(function(btn) {
-            if (btn.textContent.includes('Mostrar igual do site natura')) {
+            if (btn.textContent.includes('Mostrar produtos duplicados')) {
                 toggleBtn = btn;
             }
         });
@@ -6727,7 +6727,7 @@ function adicionarBotoesAoPedido(pedidoId) {
     if (!toggleBtn) {
         var botoes = detailCard.querySelectorAll('button');
         for (var i = 0; i < botoes.length; i++) {
-            if (botoes[i].textContent.includes('Mostrar igual do site natura')) {
+            if (botoes[i].textContent.includes('Mostrar produtos duplicados')) {
                 toggleBtn = botoes[i];
                 break;
             }
