@@ -465,7 +465,7 @@
         <div>Total geral: <strong id="totalGeral">R$ 0,00</strong></div>
     </div>
 
-    <div id="loadingMsg" class="loading" style="display:none;">⏳ Carregando dados da planilha...</div>
+    <div id="loadingMsg" class="loading" style="display:none;">⏳ Carregando dados...</div>
     <div id="errorMsg" class="error" style="display:none;"></div>
 
     <div class="table-wrapper" id="tableWrapper">
@@ -809,7 +809,7 @@ async function carregarDados() {
     errorDiv.style.display = 'none';
     table.style.display = 'none';
     document.getElementById('statsContainer').classList.add('stats-hidden');
-    statusDiv.textContent = '🔄 Carregando dados da planilha...';
+    statusDiv.textContent = '🔄 Carregando dados...';
     
     try {
         await buscarPagamentosBackend();
@@ -3974,7 +3974,7 @@ async function carregarProdutosDetalhados(pedidoId) {
         const bodyCondensado = 'body-condensado-' + pedidoId;
         const bodyOriginal = 'body-original-' + pedidoId;
         
-        html += '<tr><td colspan="13" style="padding:8px 8px; text-align:center; background:#f0f4f8; border-bottom:2px solid #e0e0e0;"><button onclick="toggleVisualizacaoProdutos(\'' + pedidoId + '\')" style="background:#ffcc80; color:#333; border:none; padding:6px 18px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600;"><span id="toggle-text-' + pedidoId + '">Mostrar igual do site natura</span></button></td></tr>';
+        html += '<tr><td colspan="13" style="padding:8px 8px; text-align:center; background:#f0f4f8; border-bottom:2px solid #e0e0e0;"><button onclick="toggleVisualizacaoProdutos(\'' + pedidoId + '\')" style="background:#ffcc80; color:#333; border:none; padding:6px 18px; border-radius:6px; cursor:pointer; font-size:12px; font-weight:600;"><span id="toggle-text-' + pedidoId + '">Mostrar produtos duplicados (verde)</span></button></td></tr>';
         
         html += '<tr id="' + bodyCondensado + '"><td colspan="13"><div style="width:100%;"><table style="width:100%; border-collapse:collapse; font-size:12px;"><thead><tr style="background:#f1f3f5;"><th style="padding:6px 8px; text-align:left; border-bottom:1px solid #ddd;">Código</th><th style="padding:6px 8px; text-align:left; border-bottom:1px solid #ddd;">Produto</th><th style="padding:6px 8px; text-align:center; border-bottom:1px solid #ddd;">Qtd</th><th style="padding:6px 8px; text-align:center; border-bottom:1px solid #ddd;">Pontos</th><th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Valor Unit</th><th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Valor Total</th><th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Venda Unit</th><th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Venda Total</th><th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Lucro</th><th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Lucro %</th><th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Lucro c/ Desc</th><th style="padding:6px 8px; text-align:right; border-bottom:1px solid #ddd;">Lucro % c/ Desc</th><th style="padding:6px 8px; text-align:left; border-bottom:1px solid #ddd;">Referência</th></tr></thead><tbody>';
         for (var chave in produtosAgrupados) {
