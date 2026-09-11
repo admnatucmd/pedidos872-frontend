@@ -14,6 +14,7 @@
     <title>Gestão de Pedidos e Boletos</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* ===== RESET E BASE ===== */
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -9930,11 +9931,12 @@ function mostrarFaturamentoLucro() {
 function carregarDadosFaturamentoCompleto() {
     console.log('📊 Carregando dados completos de faturamento...');
 
-    const API_BASE_URL = 'https://api-pedidos.gtgo.com.br';
+    const API_BASE = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) ? API_BASE_URL : 'https://api-pedidos.gtgo.com.br';
 
-    // ===== CARREGAR ABA "LUCRO" (VENDAS) =====
+    // ===== CARREGAR ABA "LUCRO" (COM CREDENCIAIS DE LOGIN) =====
     fetch(API_BASE + '/api/sheet-data?sheet=Lucro', {
         method: 'GET',
+        credentials: 'include', // <-- CORREÇÃO: Envia o cookie de autenticação
         headers: { 'Content-Type': 'application/json' }
     })
     .then(function(response) {
@@ -9945,9 +9947,10 @@ function carregarDadosFaturamentoCompleto() {
         if (!resultLucro.success) throw new Error(resultLucro.error || 'Erro ao buscar Lucro');
         console.log('✅ Aba "Lucro" carregada:', resultLucro.data ? resultLucro.data.length : 0, 'linhas');
 
-        // ===== CARREGAR ABA "PRODUTOS" =====
+        // ===== CARREGAR ABA "PRODUTOS" (COM CREDENCIAIS DE LOGIN) =====
         return fetch(API_BASE + '/api/sheet-data?sheet=Produtos', {
             method: 'GET',
+            credentials: 'include', // <-- CORREÇÃO: Envia o cookie de autenticação
             headers: { 'Content-Type': 'application/json' }
         })
         .then(function(response) {
@@ -10992,17 +10995,6 @@ document.addEventListener('click', function(e) {
 });
 
 
-console.log('📊 TESTE: Primeiro documento com novas colunas:');
-if (documentosArray.length > 0) {
-    const primeiroDoc = documentosArray[0];
-    console.log('   Setor:', primeiroDoc.nomeSetor);
-    console.log('   Linha:', primeiroDoc.nomeLinha);
-    console.log('   Valor Total Documento:', primeiroDoc.valorTotalDocumento);
-    if (primeiroDoc.itens && primeiroDoc.itens.length > 0) {
-        console.log('   Primeiro item - Setor:', primeiroDoc.itens[0].nomeSetor);
-        console.log('   Primeiro item - Linha:', primeiroDoc.itens[0].nomeLinha);
-    }
-}
 
     function exibirRelatorioFaturamentoCompleto(mesesOrdenados, meses, documentosArray) {
     console.log('📊 Exibindo relatório completo...');
@@ -29838,6 +29830,7 @@ function carregarDadosEstoqueCompleto() {
 
     fetch(API_BASE + '/api/sheet-data?sheet=Estoque', {
         method: 'GET',
+        credentials: 'include', // <-- CORREÇÃO: Envia o cookie de autenticação
         headers: { 'Content-Type': 'application/json' }
     })
     .then(function(response) {
@@ -29847,13 +29840,11 @@ function carregarDadosEstoqueCompleto() {
     .then(function(resultEstoque) {
         if (!resultEstoque.success) throw new Error(resultEstoque.error || 'Erro ao buscar dados de Estoque');
 
-        // Documentos de venda históricos para cruzar giro e custo médio recente
         const dadosAtuais = typeof getDadosAtuais === 'function' ? getDadosAtuais() : (window.dadosFaturamento || {});
         const docsVendas = dadosAtuais.todosDocumentos || dadosAtuais.documentos || [];
 
         processarDadosEstoqueCompleto(resultEstoque.data, docsVendas);
 
-        // Se a view atual for 'estoque', re-renderiza mantendo a aba aberta
         if (window.viewAtiva === 'estoque') {
             renderizarFaturamento(dadosAtuais, 'estoque');
         }
