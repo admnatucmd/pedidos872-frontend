@@ -9930,7 +9930,7 @@ function mostrarFaturamentoLucro() {
 function carregarDadosFaturamentoCompleto() {
     console.log('📊 Carregando dados completos de faturamento...');
 
-    const API_BASE = API_BASE_URL || 'http://localhost:8080';
+    const API_BASE_URL = 'https://api-pedidos.gtgo.com.br';
 
     // ===== CARREGAR ABA "LUCRO" (VENDAS) =====
     fetch(API_BASE + '/api/sheet-data?sheet=Lucro', {
@@ -29834,7 +29834,7 @@ function mostrarEstoque() {
 
 // 2. Busca os dados da aba "Estoque" na API
 function carregarDadosEstoqueCompleto() {
-    const API_BASE = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) ? API_BASE_URL : 'http://localhost:8080';
+    const API_BASE = (typeof API_BASE_URL !== 'undefined' && API_BASE_URL) ? API_BASE_URL : 'https://api-pedidos.gtgo.com.br';
 
     fetch(API_BASE + '/api/sheet-data?sheet=Estoque', {
         method: 'GET',
